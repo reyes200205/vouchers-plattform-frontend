@@ -4,20 +4,20 @@ import type { NavigationMenuItem } from '@nuxt/ui'
 const links = [[{
   label: 'General',
   icon: 'i-lucide-user',
-  to: '/settings',
+  to: '/general/settings',
   exact: true
 }, {
   label: 'Members',
   icon: 'i-lucide-users',
-  to: '/settings/members'
+  to: '/general/settings/members'
 }, {
   label: 'Notifications',
   icon: 'i-lucide-bell',
-  to: '/settings/notifications'
+  to: '/general/settings/notifications'
 }, {
   label: 'Security',
   icon: 'i-lucide-shield',
-  to: '/settings/security'
+  to: '/general/settings/security'
 }], [{
   label: 'Documentation',
   icon: 'i-lucide-book-open',
