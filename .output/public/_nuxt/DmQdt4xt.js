@@ -1,0 +1,1 @@
+import"./DUwATmym.js";import{b as e,k as t,mt as n}from"./Dd8x-jxf.js";var r=t({__name:`index`,setup(t){return(t,r)=>(n(),e(`div`))}});export{r as default};
