@@ -3,9 +3,8 @@ import type { TableColumn } from '@nuxt/ui'
 import { upperFirst } from 'scule'
 import { getPaginationRowModel } from '@tanstack/table-core'
 import type { Row } from '@tanstack/table-core'
-import type { User } from '~/types'
+import type { Branch } from '~/types'
 
-const UAvatar = resolveComponent('UAvatar')
 const UButton = resolveComponent('UButton')
 const UBadge = resolveComponent('UBadge')
 const UDropdownMenu = resolveComponent('UDropdownMenu')
@@ -15,30 +14,30 @@ const toast = useToast()
 const table = useTemplateRef('table')
 
 const columnFilters = ref([{
-  id: 'email',
+  id: 'code',
   value: ''
 }])
 const columnVisibility = ref()
 const rowSelection = ref({})
 
-const { data, status } = await useFetch<User[]>('/api/customers', {
+const { data, status } = await useFetch<Branch[]>('/api/branches', {
   lazy: true
 })
 
-function getRowItems(row: Row<User>) {
+function getRowItems(row: Row<Branch>) {
   return [
     {
       type: 'label',
-      label: 'Actions'
+      label: 'Acciones'
     },
     {
-      label: 'Copy customer ID',
+      label: 'Copiar ID de sucursal',
       icon: 'i-lucide-copy',
       onSelect() {
         navigator.clipboard.writeText(row.original.id.toString())
         toast.add({
-          title: 'Copied to clipboard',
-          description: 'Customer ID copied to clipboard'
+          title: 'Copiado',
+          description: 'ID de sucursal copiado al portapapeles'
         })
       }
     },
@@ -46,31 +45,27 @@ function getRowItems(row: Row<User>) {
       type: 'separator'
     },
     {
-      label: 'View customer details',
+      label: 'Ver detalles de sucursal',
       icon: 'i-lucide-list'
-    },
-    {
-      label: 'View customer payments',
-      icon: 'i-lucide-wallet'
     },
     {
       type: 'separator'
     },
     {
-      label: 'Delete customer',
+      label: 'Eliminar sucursal',
       icon: 'i-lucide-trash',
       color: 'error',
       onSelect() {
         toast.add({
-          title: 'Customer deleted',
-          description: 'The customer has been deleted.'
+          title: 'Sucursal eliminada',
+          description: 'La sucursal ha sido eliminada con éxito.'
         })
       }
     }
   ]
 }
 
-const columns: TableColumn<User>[] = [
+const columns: TableColumn<Branch>[] = [
   {
     id: 'select',
     header: ({ table }) =>
@@ -95,29 +90,20 @@ const columns: TableColumn<User>[] = [
   },
   {
     accessorKey: 'name',
-    header: 'Name',
+    header: 'Nombre',
     cell: ({ row }) => {
-      return h('div', { class: 'flex items-center gap-3' }, [
-        h(UAvatar, {
-          ...row.original.avatar,
-          size: 'lg'
-        }),
-        h('div', undefined, [
-          h('p', { class: 'font-medium text-highlighted' }, row.original.name),
-          h('p', { class: '' }, `@${row.original.name}`)
-        ])
-      ])
+      return h('div', { class: 'font-medium text-highlighted' }, row.original.name)
     }
   },
   {
-    accessorKey: 'email',
+    accessorKey: 'code',
     header: ({ column }) => {
       const isSorted = column.getIsSorted()
 
       return h(UButton, {
         color: 'neutral',
         variant: 'ghost',
-        label: 'Email',
+        label: 'Código',
         icon: isSorted
           ? isSorted === 'asc'
             ? 'i-lucide-arrow-up-narrow-wide'
@@ -129,19 +115,25 @@ const columns: TableColumn<User>[] = [
     }
   },
   {
+    accessorKey: 'manager',
+    header: 'Administrador'
+  },
+  {
+    accessorKey: 'phone',
+    header: 'Teléfono'
+  },
+  {
     accessorKey: 'location',
-    header: 'Location',
-    cell: ({ row }) => row.original.location
+    header: 'Ubicación'
   },
   {
     accessorKey: 'status',
-    header: 'Status',
+    header: 'Estado',
     filterFn: 'equals',
     cell: ({ row }) => {
       const color = {
-        subscribed: 'success' as const,
-        unsubscribed: 'error' as const,
-        bounced: 'warning' as const
+        active: 'success' as const,
+        inactive: 'error' as const
       }[row.original.status]
 
       return h(UBadge, { class: 'capitalize', variant: 'subtle', color }, () =>
@@ -191,12 +183,12 @@ watch(() => statusFilter.value, (newVal) => {
   }
 })
 
-const email = computed({
+const code = computed({
   get: (): string => {
-    return (table.value?.tableApi?.getColumn('email')?.getFilterValue() as string) || ''
+    return (table.value?.tableApi?.getColumn('code')?.getFilterValue() as string) || ''
   },
   set: (value: string) => {
-    table.value?.tableApi?.getColumn('email')?.setFilterValue(value || undefined)
+    table.value?.tableApi?.getColumn('code')?.setFilterValue(value || undefined)
   }
 })
 
@@ -207,15 +199,15 @@ const pagination = ref({
 </script>
 
 <template>
-  <UDashboardPanel id="customers">
+  <UDashboardPanel id="branches">
     <template #header>
-      <UDashboardNavbar title="Customers">
+      <UDashboardNavbar title="Sucursales">
         <template #leading>
           <UDashboardSidebarCollapse />
         </template>
 
         <template #right>
-          <CustomersAddModal />
+          <BranchesAddModal />
         </template>
       </UDashboardNavbar>
     </template>
@@ -223,17 +215,17 @@ const pagination = ref({
     <template #body>
       <div class="flex flex-wrap items-center justify-between gap-1.5">
         <UInput
-          v-model="email"
+          v-model="code"
           class="max-w-sm"
           icon="i-lucide-search"
-          placeholder="Filter emails..."
+          placeholder="Filtrar por código..."
         />
 
         <div class="flex flex-wrap items-center gap-1.5">
-          <CustomersDeleteModal :count="table?.tableApi?.getFilteredSelectedRowModel().rows.length">
+          <BranchesDeleteModal :count="table?.tableApi?.getFilteredSelectedRowModel().rows.length">
             <UButton
               v-if="table?.tableApi?.getFilteredSelectedRowModel().rows.length"
-              label="Delete"
+              label="Eliminar"
               color="error"
               variant="subtle"
               icon="i-lucide-trash"
@@ -244,18 +236,17 @@ const pagination = ref({
                 </UKbd>
               </template>
             </UButton>
-          </CustomersDeleteModal>
+          </BranchesDeleteModal>
 
           <USelect
             v-model="statusFilter"
             :items="[
-              { label: 'All', value: 'all' },
-              { label: 'Subscribed', value: 'subscribed' },
-              { label: 'Unsubscribed', value: 'unsubscribed' },
-              { label: 'Bounced', value: 'bounced' }
+              { label: 'Todos', value: 'all' },
+              { label: 'Activas', value: 'active' },
+              { label: 'Inactivas', value: 'inactive' }
             ]"
             :ui="{ trailingIcon: 'group-data-[state=open]:rotate-180 transition-transform duration-200' }"
-            placeholder="Filter status"
+            placeholder="Filtrar estado"
             class="min-w-28"
           />
           <UDropdownMenu
@@ -278,7 +269,7 @@ const pagination = ref({
             :content="{ align: 'end' }"
           >
             <UButton
-              label="Display"
+              label="Columnas"
               color="neutral"
               variant="outline"
               trailing-icon="i-lucide-settings-2"
@@ -312,8 +303,8 @@ const pagination = ref({
 
       <div class="flex items-center justify-between gap-3 border-t border-default pt-4 mt-auto">
         <div class="text-sm text-muted">
-          {{ table?.tableApi?.getFilteredSelectedRowModel().rows.length || 0 }} of
-          {{ table?.tableApi?.getFilteredRowModel().rows.length || 0 }} row(s) selected.
+          {{ table?.tableApi?.getFilteredSelectedRowModel().rows.length || 0 }} de
+          {{ table?.tableApi?.getFilteredRowModel().rows.length || 0 }} fila(s) seleccionadas.
         </div>
 
         <div class="flex items-center gap-1.5">

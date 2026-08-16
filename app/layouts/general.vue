@@ -29,6 +29,13 @@ const links = [[{
     open.value = false
   }
 }, {
+  label: 'Branches',
+  icon: 'i-lucide-store',
+  to: '/general/branches',
+  onSelect: () => {
+    open.value = false
+  }
+}, {
   label: 'Settings',
   to: '/general/settings',
   icon: 'i-lucide-settings',
