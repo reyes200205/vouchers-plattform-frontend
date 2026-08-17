@@ -1,4 +1,4 @@
-import { aE as usePrimitiveElement, V as VisuallyHidden_default } from '../virtual/entry.mjs';
+import { aF as usePrimitiveElement, V as VisuallyHidden_default } from '../virtual/entry.mjs';
 import { defineComponent, computed, openBlock, createElementBlock, Fragment, createCommentVNode, createBlock, mergeProps, renderList, watch } from 'vue';
 
 //#region node_modules/.pnpm/reka-ui@2.10.1_vue@3.5.41_typescript@6.0.3_/node_modules/reka-ui/dist/VisuallyHidden/VisuallyHiddenInputBubble.js

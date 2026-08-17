@@ -13025,54 +13025,64 @@ var virtual_nuxt_node_modules_2F_cache_2Fnuxt_2F_nuxt_2Froutes_default = [
 	{
 		name: "general-branches",
 		path: "/general/branches",
-		component: () => import('../build/branches-CUfqw4bA.mjs')
+		component: () => import('../build/branches-BfgTG4dc.mjs')
 	},
 	{
 		name: "general-customers",
 		path: "/general/customers",
-		component: () => import('../build/customers-Bzvxg-Cs.mjs')
+		component: () => import('../build/customers-DB0voRQo.mjs')
 	},
 	{
 		name: "general-inbox",
 		path: "/general/inbox",
-		component: () => import('../build/inbox-nooWp-x9.mjs')
+		component: () => import('../build/inbox-DEbGLlX6.mjs')
 	},
 	{
 		name: void 0,
 		path: "/general/settings",
-		component: () => import('../build/settings-OkCRl3IC.mjs'),
+		component: () => import('../build/settings-CXdgg8IH.mjs'),
 		children: [
 			{
 				name: "general-settings-members",
 				path: "members",
-				component: () => import('../build/members-C3HEtTpY.mjs')
+				component: () => import('../build/members-D0g6vKqs.mjs')
 			},
 			{
 				name: "general-settings-notifications",
 				path: "notifications",
-				component: () => import('../build/notifications-DqmbFdQQ.mjs')
+				component: () => import('../build/notifications-bc94yzcL.mjs')
 			},
 			{
 				name: "general-settings-security",
 				path: "security",
-				component: () => import('../build/security-r16BVMLf.mjs')
+				component: () => import('../build/security-Cyt7K2X4.mjs')
 			},
 			{
 				name: "general-settings",
 				path: "",
-				component: () => import('../build/settings-xl8fi4Ld.mjs')
+				component: () => import('../build/settings-D218VWM1.mjs')
 			}
 		]
 	},
 	{
+		name: "registro-verificacion-list",
+		path: "/registro-verificacion/list",
+		component: () => import('../build/list-DsPq8it_.mjs')
+	},
+	{
+		name: "registro-verificacion-new",
+		path: "/registro-verificacion/new",
+		component: () => import('../build/new-B3_JhtOg.mjs')
+	},
+	{
 		name: "distributor-portal",
 		path: "/distributor-portal",
-		component: () => import('../build/distributor-portal-BzIGNxpz.mjs')
+		component: () => import('../build/distributor-portal-9GwJDuk6.mjs')
 	},
 	{
 		name: "general",
 		path: "/general",
-		component: () => import('../build/general-Bg6o8pD8.mjs')
+		component: () => import('../build/general-CVyPjw99.mjs')
 	},
 	{
 		name: "login",
@@ -13082,7 +13092,7 @@ var virtual_nuxt_node_modules_2F_cache_2Fnuxt_2F_nuxt_2Froutes_default = [
 	{
 		name: "registro-verificacion",
 		path: "/registro-verificacion",
-		component: () => import('../build/registro-verificacion-D2IqqZrC.mjs')
+		component: () => import('../build/registro-verificacion-DgwpGnP1.mjs')
 	},
 	{
 		name: "index",
@@ -17535,9 +17545,9 @@ function resolveLayoutName(route, name) {
 //#region virtual:nuxt:node_modules%2F.cache%2Fnuxt%2F.nuxt%2Flayouts.mjs
 var virtual_nuxt_node_modules_2F_cache_2Fnuxt_2F_nuxt_2Flayouts_default = {
 	default: defineAsyncComponent(() => import('../build/default-BA_2QT4E.mjs').then((m) => m.default || m)),
-	"distributor-portal": defineAsyncComponent(() => import('../build/distributor-portal-nxgvyrZw.mjs').then((m) => m.default || m)),
-	general: defineAsyncComponent(() => import('../build/general-BGGm0K2V.mjs').then((m) => m.default || m)),
-	"registro-verificacion": defineAsyncComponent(() => import('../build/registro-verificacion-qEwzvYHv.mjs').then((m) => m.default || m))
+	"distributor-portal": defineAsyncComponent(() => import('../build/distributor-portal-CjaUdIgd.mjs').then((m) => m.default || m)),
+	general: defineAsyncComponent(() => import('../build/general-C-yYqjqG.mjs').then((m) => m.default || m)),
+	"registro-verificacion": defineAsyncComponent(() => import('../build/registro-verificacion-BVIpX49C.mjs').then((m) => m.default || m))
 };
 //#endregion
 //#region node_modules/.pnpm/nuxt@4.5.2_@babel+plugin-sy_3e15249cd7c1540f4c07c4c9f2fb9b7b/node_modules/nuxt/dist/app/components/nuxt-layout.js
@@ -18113,5 +18123,5 @@ const entry = /*#__PURE__*/Object.freeze(/*#__PURE__*/Object.defineProperty({
   default: entry_default
 }, Symbol.toStringTag, { value: 'Module' }));
 
-export { $fetch$2 as $, AUTOFOCUS_ON_MOUNT as A, formInputsInjectionKey as B, ClientOnly as C, formLoadingInjectionKey as D, EVENT_OPTIONS as E, FieldGroupReset as F, formOptionsInjectionKey as G, formStateInjectionKey as H, formatTimeAgo as I, get as J, getActiveElement as K, getDisplayValue as L, getSlotChildrenText as M, NuxtLink as N, getTabbableCandidates as O, Presence_default as P, getTabbableEdges as Q, injectConfigProviderContext as R, injectTooltipProviderContext as S, Teleport_default as T, inputIdInjectionKey as U, VisuallyHidden_default as V, isArrayOfArray as W, isNullish as X, looseToNumber as Y, navigateTo as Z, __commonJSMin as _, AUTOFOCUS_ON_UNMOUNT as a, omit as a0, onKeyStroke as a1, page_default as a2, pausableFilter as a3, pickLinkProps as a4, reactiveOmit as a5, reactivePick as a6, refAutoReset as a7, refDebounced as a8, refThrottled as a9, useMouseInElement as aA, useNuxtApp as aB, useParentElement as aC, usePortal as aD, usePrimitiveElement as aE, useRequestFetch as aF, useResizeObserver as aG, useRoute$1 as aH, useRouter as aI, useRuntimeConfig as aJ, useStorage as aK, useTimeoutFn as aL, useToast as aM, useVModel as aN, syncRef as aa, transformUI as ab, tryOnBeforeUnmount as ac, tryOnScopeDispose as ad, tv as ae, unrefElement as af, useActiveElement as ag, useAppConfig as ah, useAsyncData as ai, useBreakpoints as aj, useCollection as ak, useColorMode as al, useComponentIcons as am, useComponentProps as an, useCookie as ao, useDebounceFn as ap, useEmitAsProps as aq, useEventBus as ar, useEventListener as as, useFieldGroup as at, useFormField as au, useForwardExpose as av, useForwardProps as aw, useForwardProps$1 as ax, useLocale as ay, useMounted as az, Primitive as b, __exportAll as c, __reExport as d, _sfc_main$a as e, _sfc_main$1$1 as f, _sfc_main$2$1 as g, _sfc_main$7 as h, _sfc_main$8 as i, _sfc_main$9 as j, breakpointsTailwind as k, createContext as l, createEventHook as m, createGlobalState as n, createRef as o, createReusableTemplate as p, createSharedComposable as q, dataDiagnostics as r, defineKeyedFunctionFactory as s, entry as t, fetchDefaults as u, focus as v, focusFirst as w, formBusInjectionKey as x, formErrorsInjectionKey as y, formFieldInjectionKey as z };
+export { $fetch$2 as $, AUTOFOCUS_ON_MOUNT as A, formInputsInjectionKey as B, ClientOnly as C, formLoadingInjectionKey as D, EVENT_OPTIONS as E, FieldGroupReset as F, formOptionsInjectionKey as G, formStateInjectionKey as H, formatTimeAgo as I, get as J, getActiveElement as K, getDisplayValue as L, getSlotChildrenText as M, NuxtLink as N, getTabbableCandidates as O, Presence_default as P, getTabbableEdges as Q, injectConfigProviderContext as R, injectTooltipProviderContext as S, Teleport_default as T, inputIdInjectionKey as U, VisuallyHidden_default as V, isArrayOfArray as W, isNullish as X, looseToNumber as Y, navigateTo as Z, __commonJSMin as _, AUTOFOCUS_ON_UNMOUNT as a, omit as a0, onKeyStroke as a1, page_default as a2, pausableFilter as a3, pickLinkProps as a4, reactiveComputed as a5, reactiveOmit as a6, reactivePick as a7, refAutoReset as a8, refDebounced as a9, useMounted as aA, useMouseInElement as aB, useNuxtApp as aC, useParentElement as aD, usePortal as aE, usePrimitiveElement as aF, useRequestFetch as aG, useResizeObserver as aH, useRoute$1 as aI, useRouter as aJ, useRuntimeConfig as aK, useStorage as aL, useTimeoutFn as aM, useToast as aN, useVModel as aO, refThrottled as aa, syncRef as ab, transformUI as ac, tryOnBeforeUnmount as ad, tryOnScopeDispose as ae, tv as af, unrefElement as ag, useActiveElement as ah, useAppConfig as ai, useAsyncData as aj, useBreakpoints as ak, useCollection as al, useColorMode as am, useComponentIcons as an, useComponentProps as ao, useCookie as ap, useDebounceFn as aq, useEmitAsProps as ar, useEventBus as as, useEventListener as at, useFieldGroup as au, useFormField as av, useForwardExpose as aw, useForwardProps as ax, useForwardProps$1 as ay, useLocale as az, Primitive as b, __exportAll as c, __reExport as d, _sfc_main$a as e, _sfc_main$1$1 as f, _sfc_main$2$1 as g, _sfc_main$7 as h, _sfc_main$8 as i, _sfc_main$9 as j, breakpointsTailwind as k, createContext as l, createEventHook as m, createGlobalState as n, createRef as o, createReusableTemplate as p, createSharedComposable as q, dataDiagnostics as r, defineKeyedFunctionFactory as s, entry as t, fetchDefaults as u, focus as v, focusFirst as w, formBusInjectionKey as x, formErrorsInjectionKey as y, formFieldInjectionKey as z };
 //# sourceMappingURL=entry.mjs.map
