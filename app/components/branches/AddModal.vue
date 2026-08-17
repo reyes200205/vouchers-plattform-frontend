@@ -2,33 +2,61 @@
 import * as z from 'zod'
 import type { FormSubmitEvent } from '@nuxt/ui'
 
+const emit = defineEmits<{ created: [] }>()
+
 const schema = z.object({
-  name: z.string().min(2, 'Too short'),
   code: z.string().min(2, 'Too short'),
-  phone: z.string().min(5, 'Invalid phone number'),
-  manager: z.string().min(2, 'Too short'),
-  location: z.string().min(2, 'Too short')
+  name: z.string().min(2, 'Too short'),
+  address: z.string().optional(),
+  phone: z.string().optional()
 })
 const open = ref(false)
 
 type Schema = z.output<typeof schema>
 
 const state = reactive<Partial<Schema>>({
-  name: '',
   code: '',
-  phone: '',
-  manager: '',
-  location: ''
+  name: '',
+  address: '',
+  phone: ''
 })
 
+const { createBranch } = useBranches()
 const toast = useToast()
+const submitting = ref(false)
+
 async function onSubmit(event: FormSubmitEvent<Schema>) {
-  toast.add({
-    title: 'Success',
-    description: `Nueva sucursal ${event.data.name} agregada`,
-    color: 'success'
-  })
-  open.value = false
+  submitting.value = true
+
+  try {
+    await createBranch({
+      code: event.data.code,
+      name: event.data.name,
+      address: event.data.address || undefined,
+      phone: event.data.phone || undefined
+    })
+
+    toast.add({
+      title: 'Sucursal creada',
+      description: `La sucursal ${event.data.name} fue creada correctamente`,
+      color: 'success'
+    })
+
+    state.code = ''
+    state.name = ''
+    state.address = ''
+    state.phone = ''
+    open.value = false
+    emit('created')
+  } catch {
+    toast.add({
+      title: 'Error',
+      description: 'No se pudo crear la sucursal. Verifica los datos e intenta de nuevo.',
+      color: 'error'
+    })
+  } finally {
+    submitting.value = false
+  }
 }
 </script>
 
@@ -43,20 +71,17 @@ async function onSubmit(event: FormSubmitEvent<Schema>) {
         class="space-y-4"
         @submit="onSubmit"
       >
-        <UFormField label="Nombre" placeholder="Sucursal Centro" name="name">
-          <UInput v-model="state.name" class="w-full" />
-        </UFormField>
         <UFormField label="Código" placeholder="SUC-001" name="code">
           <UInput v-model="state.code" class="w-full" />
         </UFormField>
+        <UFormField label="Nombre" placeholder="Sucursal Centro" name="name">
+          <UInput v-model="state.name" class="w-full" />
+        </UFormField>
+        <UFormField label="Dirección" placeholder="Calle 123, Ciudad" name="address">
+          <UInput v-model="state.address" class="w-full" />
+        </UFormField>
         <UFormField label="Teléfono" placeholder="555-0101" name="phone">
           <UInput v-model="state.phone" class="w-full" />
-        </UFormField>
-        <UFormField label="Administrador" placeholder="Carlos Pérez" name="manager">
-          <UInput v-model="state.manager" class="w-full" />
-        </UFormField>
-        <UFormField label="Ubicación" placeholder="Ciudad de México, MX" name="location">
-          <UInput v-model="state.location" class="w-full" />
         </UFormField>
 
         <div class="flex justify-end gap-2">
@@ -71,6 +96,7 @@ async function onSubmit(event: FormSubmitEvent<Schema>) {
             color="primary"
             variant="solid"
             type="submit"
+            :loading="submitting"
           />
         </div>
       </UForm>

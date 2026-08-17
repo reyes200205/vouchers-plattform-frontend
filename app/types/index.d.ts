@@ -12,16 +12,13 @@ export interface User {
   location: string
 }
 
-export type BranchStatus = 'active' | 'inactive'
-
 export interface Branch {
   id: number
-  name: string
   code: string
-  phone: string
-  manager: string
-  status: BranchStatus
-  location: string
+  name: string
+  address: string | null
+  phone: string | null
+  is_active: boolean
 }
 
 export interface Mail {

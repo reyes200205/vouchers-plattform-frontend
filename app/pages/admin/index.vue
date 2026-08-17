@@ -31,9 +31,15 @@ const recentActivities = [
         <p>Resumen general y control de la plataforma Mis Vales.</p>
       </div>
 
-      <button class="primary-btn" @click="navigateTo('/admin/vales/nuevo')">
-        <span>➕</span> Nuevo Vale
-      </button>
+      <div class="header-actions">
+        <button class="primary-btn" @click="navigateTo('/admin/gerentes-generales')">
+          <span>👤</span> Registrar Gerente General
+        </button>
+
+        <button class="primary-btn" @click="navigateTo('/admin/vales/nuevo')">
+          <span>➕</span> Nuevo Vale
+        </button>
+      </div>
     </header>
 
     <!-- METRICAS / KPIS -->
@@ -105,6 +111,12 @@ const recentActivities = [
 }
 
 /* Header */
+.header-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
 .dashboard-header {
   background: linear-gradient(135deg, #0d2747 0%, #1e3a8a 100%);
   color: #ffffff;

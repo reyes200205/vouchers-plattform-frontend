@@ -1,32 +1,28 @@
 <script setup lang="ts">
 import { ref } from 'vue'
 
-const email = ref('')
+const { login, roleHome } = useAuth()
+
+const username = ref('')
 const password = ref('')
 const showPassword = ref(false)
 const rememberMe = ref(false)
 const loading = ref(false)
+const errorMessage = ref('')
 
 const handleSubmit = async () => {
-  if (!email.value || !password.value) {
+  if (!username.value || !password.value) {
     return
   }
 
   loading.value = true
+  errorMessage.value = ''
 
   try {
-    console.log({
-      email: email.value,
-      password: password.value,
-      rememberMe: rememberMe.value
-    })
-
-    // Simulación de respuesta de red
-    await new Promise(resolve => setTimeout(resolve, 1000))
-
-    // Redirección nativa de Nuxt 3 hacia /admin
-    await navigateTo('/admin')
+    const roleCode = await login(username.value, password.value)
+    await navigateTo(roleHome(roleCode))
   } catch (error) {
+    errorMessage.value = 'Usuario o contraseña incorrectos.'
     console.error('Error al iniciar sesión:', error)
   } finally {
     loading.value = false
@@ -198,11 +194,11 @@ const handleSubmit = async () => {
           <!-- FORMULARIO -->
           <form @submit.prevent="handleSubmit">
 
-            <!-- Correo -->
+            <!-- Usuario -->
             <div class="form-group">
 
-              <label for="email">
-                Correo electrónico
+              <label for="username">
+                Usuario
               </label>
 
               <div class="input-wrapper">
@@ -229,11 +225,11 @@ const handleSubmit = async () => {
                 </svg>
 
                 <input
-                  id="email"
-                  v-model="email"
-                  type="email"
-                  placeholder="ejemplo@empresa.com"
-                  autocomplete="email"
+                  id="username"
+                  v-model="username"
+                  type="text"
+                  placeholder="usuario"
+                  autocomplete="username"
                   required
                 />
 
@@ -320,6 +316,11 @@ const handleSubmit = async () => {
               </span>
 
             </label>
+
+            <!-- Error -->
+            <p v-if="errorMessage" class="login-error">
+              {{ errorMessage }}
+            </p>
 
             <!-- Botón -->
             <button
@@ -860,6 +861,18 @@ const handleSubmit = async () => {
   accent-color: var(--blue);
 
   cursor: pointer;
+}
+
+
+.login-error {
+  margin: 0 0 16px;
+  padding: 10px 14px;
+
+  border-radius: 8px;
+  background: #fdecea;
+
+  color: #b3261e;
+  font-size: 14px;
 }
 
 

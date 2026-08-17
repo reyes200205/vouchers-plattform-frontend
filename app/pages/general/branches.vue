@@ -20,9 +20,9 @@ const columnFilters = ref([{
 const columnVisibility = ref()
 const rowSelection = ref({})
 
-const { data, status } = await useFetch<Branch[]>('/api/branches', {
-  lazy: true
-})
+const { listBranches } = useBranches()
+
+const { data, status, refresh } = await useAsyncData<Branch[]>('branches', () => listBranches())
 
 function getRowItems(row: Row<Branch>) {
   return [
@@ -96,6 +96,10 @@ const columns: TableColumn<Branch>[] = [
     }
   },
   {
+    accessorKey: 'address',
+    header: 'Dirección'
+  },
+  {
     accessorKey: 'code',
     header: ({ column }) => {
       const isSorted = column.getIsSorted()
@@ -115,29 +119,18 @@ const columns: TableColumn<Branch>[] = [
     }
   },
   {
-    accessorKey: 'manager',
-    header: 'Administrador'
-  },
-  {
     accessorKey: 'phone',
     header: 'Teléfono'
   },
   {
-    accessorKey: 'location',
-    header: 'Ubicación'
-  },
-  {
-    accessorKey: 'status',
+    accessorKey: 'is_active',
     header: 'Estado',
     filterFn: 'equals',
     cell: ({ row }) => {
-      const color = {
-        active: 'success' as const,
-        inactive: 'error' as const
-      }[row.original.status]
+      const color = row.original.is_active ? ('success' as const) : ('error' as const)
 
       return h(UBadge, { class: 'capitalize', variant: 'subtle', color }, () =>
-        row.original.status
+        row.original.is_active ? 'Activa' : 'Inactiva'
       )
     }
   },
@@ -173,13 +166,13 @@ const statusFilter = ref('all')
 watch(() => statusFilter.value, (newVal) => {
   if (!table?.value?.tableApi) return
 
-  const statusColumn = table.value.tableApi.getColumn('status')
+  const statusColumn = table.value.tableApi.getColumn('is_active')
   if (!statusColumn) return
 
   if (newVal === 'all') {
     statusColumn.setFilterValue(undefined)
   } else {
-    statusColumn.setFilterValue(newVal)
+    statusColumn.setFilterValue(newVal === 'active')
   }
 })
 
@@ -207,7 +200,7 @@ const pagination = ref({
         </template>
 
         <template #right>
-          <BranchesAddModal />
+          <BranchesAddModal @created="refresh" />
         </template>
       </UDashboardNavbar>
     </template>
