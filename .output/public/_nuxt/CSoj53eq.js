@@ -1,1 +1,0 @@
-import{L as e}from"./Dd8x-jxf.js";function t(){let t=e()?.vnode?.scopeId;return t?{[t]:``}:{}}export{t};

@@ -67,7 +67,7 @@ onMounted(async () => {
 
     <template #body>
       <div v-if="status === 'pending' && !stats" class="flex items-center justify-center py-16">
-        <ULoadingIcon />
+        <UIcon name="i-lucide-loader-circle" class="size-8 animate-spin text-muted" />
       </div>
 
       <template v-else>

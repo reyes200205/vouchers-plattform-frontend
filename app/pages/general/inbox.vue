@@ -101,7 +101,7 @@ async function onDecided() {
 
     <template #body>
       <div v-if="status === 'pending'" class="flex items-center justify-center py-16">
-        <ULoadingIcon />
+        <UIcon name="i-lucide-loader-circle" class="size-8 animate-spin text-muted" />
       </div>
 
       <div v-else-if="status === 'error'" class="flex flex-col items-center justify-center gap-4 py-16 text-center">
@@ -120,15 +120,15 @@ async function onDecided() {
 
       <template v-else>
         <div v-if="selectedTab === 'applications'" class="h-full overflow-y-auto">
-          <ApplicationsPanel :items="data.applications?.items ?? []" @decided="onDecided" />
+          <InboxApplicationsPanel :items="data.applications?.items ?? []" @decided="onDecided" />
         </div>
 
         <div v-else-if="selectedTab === 'credit'" class="h-full overflow-y-auto">
-          <CreditPanel :items="data.credit_increases?.items ?? []" @decided="onDecided" />
+          <InboxCreditPanel :items="data.credit_increases?.items ?? []" @decided="onDecided" />
         </div>
 
         <div v-else class="h-full overflow-y-auto">
-          <RedemptionsPanel :items="data.redemptions?.items ?? []" @decided="onDecided" />
+          <InboxRedemptionsPanel :items="data.redemptions?.items ?? []" @decided="onDecided" />
         </div>
       </template>
     </template>

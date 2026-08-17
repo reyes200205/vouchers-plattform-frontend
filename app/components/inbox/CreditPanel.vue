@@ -51,7 +51,7 @@ const currency = new Intl.NumberFormat('es-MX', { style: 'currency', currency: '
             </p>
           </div>
 
-          <DecideCreditModal :item="item" @decided="emit('decided')" />
+          <InboxDecideCreditModal :item="item" @decided="emit('decided')" />
         </div>
       </div>
     </div>

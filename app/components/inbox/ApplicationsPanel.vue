@@ -73,7 +73,7 @@ const emit = defineEmits<{ decided: [] }>()
             </div>
           </div>
 
-          <DecideApplicationModal :application="item" @decided="emit('decided')" />
+          <InboxDecideApplicationModal :application="item" @decided="emit('decided')" />
         </div>
       </div>
     </div>
