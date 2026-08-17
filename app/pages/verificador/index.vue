@@ -3,13 +3,13 @@ definePageMeta({
   layout: 'default'
 })
 
-const { user } = useAuth()
+const { roleName } = useAuth()
 </script>
 
 <template>
   <div class="role-landing">
     <h1>Bienvenido</h1>
-    <p>Tu rol es: <strong>{{ user?.role?.name ?? 'Verificador' }}</strong></p>
+    <p>Tu rol es: <strong>{{ roleName ?? 'Verificador' }}</strong></p>
   </div>
 </template>
 

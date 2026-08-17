@@ -7,14 +7,15 @@ interface AuthPerson {
 interface AuthRole {
   code: string
   name: string
+  branch_id: number | null
+  is_primary: boolean
 }
 
 interface AuthUser {
   id: number
   username: string
   person: AuthPerson | null
-  role: AuthRole | null
-  branch_id: number | null
+  roles: AuthRole[]
 }
 
 interface LoginResponse {
@@ -41,7 +42,13 @@ export function useAuth() {
   const token = useCookie<string | null>('auth_token', { default: () => null })
   const user = useCookie<AuthUser | null>('auth_user', { default: () => null })
 
-  const roleCode = computed(() => user.value?.role?.code ?? null)
+  function primaryRole(candidate: AuthUser | null) {
+    if (!candidate?.roles?.length) return null
+    return candidate.roles.find(role => role.is_primary) ?? candidate.roles[0]
+  }
+
+  const roleCode = computed(() => primaryRole(user.value)?.code ?? null)
+  const roleName = computed(() => primaryRole(user.value)?.name ?? null)
   const isLoggedIn = computed(() => Boolean(token.value))
 
   async function login(username: string, password: string) {
@@ -53,7 +60,7 @@ export function useAuth() {
     token.value = response.data.token
     user.value = response.data.user
 
-    return response.data.user.role?.code ?? null
+    return primaryRole(response.data.user)?.code ?? null
   }
 
   async function logout() {
@@ -76,5 +83,5 @@ export function useAuth() {
     return code && ROLE_ROUTES[code] ? ROLE_ROUTES[code] : '/login'
   }
 
-  return { token, user, roleCode, isLoggedIn, login, logout, roleHome }
+  return { token, user, roleCode, roleName, isLoggedIn, login, logout, roleHome }
 }

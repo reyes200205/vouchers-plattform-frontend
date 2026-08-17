@@ -12,7 +12,7 @@ interface GeneralManagerResponse {
     id: number
     username: string
     person: { id: number, first_name: string | null, last_name: string | null } | null
-    role: { code: string, name: string } | null
+    roles: { code: string, name: string, branch_id: number | null, is_primary: boolean }[]
   }
 }
 
