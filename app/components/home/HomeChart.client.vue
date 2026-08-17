@@ -1,50 +1,38 @@
 <script setup lang="ts">
-import { eachDayOfInterval, eachWeekOfInterval, eachMonthOfInterval, format } from 'date-fns'
+import { format } from 'date-fns'
 import { VisXYContainer, VisLine, VisAxis, VisArea, VisCrosshair, VisTooltip } from '@unovis/vue'
-import type { Period, Range } from '~/types'
+import type { MonthlyPoint } from '~/types'
 
 const cardRef = useTemplateRef<HTMLElement | null>('cardRef')
 
 const props = defineProps<{
-  period: Period
-  range: Range
+  points: MonthlyPoint[]
+  title: string
 }>()
 
 type DataRecord = {
-  date: Date
+  month: Date
   amount: number
 }
 
 const { width } = useElementSize(cardRef)
 
-const data = ref<DataRecord[]>([])
-
-watch([() => props.period, () => props.range], () => {
-  const dates = ({
-    daily: eachDayOfInterval,
-    weekly: eachWeekOfInterval,
-    monthly: eachMonthOfInterval
-  } as Record<Period, typeof eachDayOfInterval>)[props.period](props.range)
-
-  const min = 1000
-  const max = 10000
-
-  data.value = dates.map(date => ({ date, amount: Math.floor(Math.random() * (max - min + 1)) + min }))
-}, { immediate: true })
+const data = computed<DataRecord[]>(() => {
+  return (props.points || []).map(point => ({
+    month: new Date(`${point.month}-01T00:00:00`),
+    amount: point.amount
+  }))
+})
 
 const x = (_: DataRecord, i: number) => i
 const y = (d: DataRecord) => d.amount
 
 const total = computed(() => data.value.reduce((acc: number, { amount }) => acc + amount, 0))
 
-const formatNumber = new Intl.NumberFormat('en', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }).format
+const formatNumber = new Intl.NumberFormat('es-MX', { style: 'currency', currency: 'MXN', maximumFractionDigits: 0 }).format
 
 const formatDate = (date: Date): string => {
-  return ({
-    daily: format(date, 'd MMM'),
-    weekly: format(date, 'd MMM'),
-    monthly: format(date, 'MMM yyy')
-  })[props.period]
+  return format(date, 'MMM yyyy')
 }
 
 const xTicks = (i: number) => {
@@ -52,10 +40,10 @@ const xTicks = (i: number) => {
     return ''
   }
 
-  return formatDate(data.value[i].date)
+  return formatDate(data.value[i].month)
 }
 
-const template = (d: DataRecord) => `${formatDate(d.date)}: ${formatNumber(d.amount)}`
+const template = (d: DataRecord) => `${formatDate(d.month)}: ${formatNumber(d.amount)}`
 </script>
 
 <template>
@@ -63,7 +51,7 @@ const template = (d: DataRecord) => `${formatDate(d.date)}: ${formatNumber(d.amo
     <template #header>
       <div>
         <p class="text-xs text-muted uppercase mb-1.5">
-          Revenue
+          {{ title }}
         </p>
         <p class="text-3xl text-highlighted font-semibold">
           {{ formatNumber(total) }}
@@ -71,38 +59,43 @@ const template = (d: DataRecord) => `${formatDate(d.date)}: ${formatNumber(d.amo
       </div>
     </template>
 
-    <VisXYContainer
-      :data="data"
-      :padding="{ top: 40 }"
-      :margin="{ left: -5, right: -5 }"
-      class="h-96"
-      :width="width"
-    >
-      <VisLine
-        :x="x"
-        :y="y"
-        color="var(--ui-primary)"
-      />
-      <VisArea
-        :x="x"
-        :y="y"
-        color="var(--ui-primary)"
-        :opacity="0.1"
-      />
+    <ClientOnly>
+      <VisXYContainer
+        :data="data"
+        :padding="{ top: 40 }"
+        :margin="{ left: -5, right: -5 }"
+        class="h-96"
+        :width="width"
+      >
+        <VisLine
+          :x="x"
+          :y="y"
+          color="var(--ui-primary)"
+        />
+        <VisArea
+          :x="x"
+          :y="y"
+          color="var(--ui-primary)"
+          :opacity="0.1"
+        />
 
-      <VisAxis
-        type="x"
-        :x="x"
-        :tick-format="xTicks"
-      />
+        <VisAxis
+          type="x"
+          :x="x"
+          :tick-format="xTicks"
+        />
 
-      <VisCrosshair
-        color="var(--ui-primary)"
-        :template="template"
-      />
+        <VisCrosshair
+          color="var(--ui-primary)"
+          :template="template"
+        />
 
-      <VisTooltip />
-    </VisXYContainer>
+        <VisTooltip />
+      </VisXYContainer>
+      <template #fallback>
+        <div class="h-96" />
+      </template>
+    </ClientOnly>
   </UCard>
 </template>
 

@@ -13,6 +13,7 @@
   "dependencies": {
     "@iconify-json/lucide": "^1.2.122",
     "@iconify-json/simple-icons": "^1.2.93",
+    "@iconify/utils": "^3.1.4",
     "@internationalized/date": "^3.12.3",
     "@nuxt/ui": "^4.10.0",
     "@tanstack/table-core": "^8.21.3",

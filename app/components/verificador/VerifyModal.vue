@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import * as z from 'zod'
 import type { FormSubmitEvent } from '@nuxt/ui'
-import type { Application } from '~/types'
+import type { Application } from '~/composables/useApplications'
 
 const props = defineProps<{
   application: Application | null

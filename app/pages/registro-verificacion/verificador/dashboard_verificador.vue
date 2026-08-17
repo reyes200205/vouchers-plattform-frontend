@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import type { Application } from '~/types'
+import type { Application } from '~/composables/useApplications'
 
 const { user } = useAuth()
 const { listApplications } = useApplications()
@@ -7,7 +7,10 @@ const { listNotifications, markNotificationAsRead } = useNotifications()
 
 const { data: applications, status, refresh } = await useAsyncData<Application[]>(
   'verificador-applications',
-  () => listApplications({ status: 'EN_REVISION', per_page: 100 })
+  async () => {
+    const result = await listApplications({ status: 'EN_REVISION', per_page: 100 })
+    return result.data
+  }
 )
 
 const myApplications = computed(() => {
