@@ -35,7 +35,7 @@ export const ROLE_ROUTES: Record<string, string> = {
   cashier: '/general',
   distributor: '/distributor-portal',
   coordinator: '/registro-verificacion',
-  verifier: '/registro-verificacion'
+  verifier: '/registro-verificacion/verificador/dashboard_verificador'
 }
 
 export function useAuth() {
