@@ -32,12 +32,7 @@ const links = computed(() => {
     items.push({
       label: 'Panel Verificador',
       icon: 'i-lucide-layout-dashboard',
-      to: '/registro-verificacion',
-      onSelect: () => { open.value = false }
-    }, {
-      label: 'Verificaciones',
-      icon: 'i-lucide-shield-check',
-      to: '/registro-verificacion/verificaciones',
+      to: '/registro-verificacion/verificador/dashboard_verificador',
       onSelect: () => { open.value = false }
     })
   } else {
