@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import type { TableColumn } from '@nuxt/ui'
+import type { TableColumn, DropdownMenuItem } from '@nuxt/ui'
 import { upperFirst } from 'scule'
 import { getPaginationRowModel } from '@tanstack/table-core'
 import type { Row } from '@tanstack/table-core'
@@ -24,11 +24,34 @@ const { listBranches } = useBranches()
 
 const { data, status, refresh } = await useAsyncData<Branch[]>('branches', () => listBranches())
 
+const isEditOpen = ref(false)
+const selectedBranch = ref<Branch | null>(null)
+
+const { user } = useAuth()
+const canManage = computed(() => user.value?.permissions?.includes('branches.manage') ?? false)
+
 function getRowItems(row: Row<Branch>) {
-  return [
+  const items: DropdownMenuItem[] = [
     {
       type: 'label',
       label: 'Acciones'
+    }
+  ]
+
+  if (canManage.value) {
+    items.push({
+      label: 'Editar sucursal',
+      icon: 'i-lucide-pencil',
+      onSelect() {
+        selectedBranch.value = row.original
+        isEditOpen.value = true
+      }
+    })
+  }
+
+  items.push(
+    {
+      type: 'separator'
     },
     {
       label: 'Copiar ID de sucursal',
@@ -47,126 +70,142 @@ function getRowItems(row: Row<Branch>) {
     {
       label: 'Ver detalles de sucursal',
       icon: 'i-lucide-list'
-    },
-    {
-      type: 'separator'
-    },
-    {
-      label: 'Eliminar sucursal',
-      icon: 'i-lucide-trash',
-      color: 'error',
-      onSelect() {
-        toast.add({
-          title: 'Sucursal eliminada',
-          description: 'La sucursal ha sido eliminada con éxito.'
-        })
-      }
     }
-  ]
+  )
+
+  if (canManage.value) {
+    items.push(
+      {
+        type: 'separator'
+      },
+      {
+        label: 'Eliminar sucursal',
+        icon: 'i-lucide-trash',
+        color: 'error',
+        onSelect() {
+          toast.add({
+            title: 'Sucursal eliminada',
+            description: 'La sucursal ha sido eliminada con éxito.'
+          })
+        }
+      }
+    )
+  }
+
+  return items
 }
 
-const columns: TableColumn<Branch>[] = [
-  {
-    id: 'select',
-    header: ({ table }) =>
-      h(UCheckbox, {
-        'modelValue': table.getIsSomePageRowsSelected()
-          ? 'indeterminate'
-          : table.getIsAllPageRowsSelected(),
-        'onUpdate:modelValue': (value: boolean | 'indeterminate') =>
-          table.toggleAllPageRowsSelected(!!value),
-        'ariaLabel': 'Select all'
-      }),
-    cell: ({ row }) =>
-      h(UCheckbox, {
-        'modelValue': row.getIsSelected(),
-        'onUpdate:modelValue': (value: boolean | 'indeterminate') => row.toggleSelected(!!value),
-        'ariaLabel': 'Select row'
-      })
-  },
-  {
-    accessorKey: 'id',
-    header: 'ID'
-  },
-  {
-    accessorKey: 'name',
-    header: 'Nombre',
-    cell: ({ row }) => {
-      return h('div', { class: 'font-medium text-highlighted' }, row.original.name)
-    }
-  },
-  {
-    accessorKey: 'address',
-    header: 'Dirección'
-  },
-  {
-    accessorKey: 'code',
-    header: ({ column }) => {
-      const isSorted = column.getIsSorted()
+const columns = computed<TableColumn<Branch>[]>(() => {
+  const list: TableColumn<Branch>[] = []
 
-      return h(UButton, {
-        color: 'neutral',
-        variant: 'ghost',
-        label: 'Código',
-        icon: isSorted
-          ? isSorted === 'asc'
-            ? 'i-lucide-arrow-up-narrow-wide'
-            : 'i-lucide-arrow-down-wide-narrow'
-          : 'i-lucide-arrow-up-down',
-        class: '-mx-2.5',
-        onClick: () => column.toggleSorting(column.getIsSorted() === 'asc')
-      })
-    }
-  },
-  {
-    accessorKey: 'phone',
-    header: 'Teléfono'
-  },
-  {
-    accessorKey: 'manager',
-    header: 'Gerente',
-    cell: ({ row }) => {
-      return h('div', { class: 'text-sm font-normal text-dimmed' }, row.original.manager?.name || 'Sin asignar')
-    }
-  },
-  {
-    accessorKey: 'is_active',
-    header: 'Estado',
-    filterFn: 'equals',
-    cell: ({ row }) => {
-      const color = row.original.is_active ? ('success' as const) : ('error' as const)
-
-      return h(UBadge, { class: 'capitalize', variant: 'subtle', color }, () =>
-        row.original.is_active ? 'Activa' : 'Inactiva'
-      )
-    }
-  },
-  {
-    id: 'actions',
-    cell: ({ row }) => {
-      return h(
-        'div',
-        { class: 'text-right' },
-        h(
-          UDropdownMenu,
-          {
-            content: {
-              align: 'end'
-            },
-            items: getRowItems(row)
-          },
-          () =>
-            h(UButton, {
-              icon: 'i-lucide-ellipsis-vertical',
-              color: 'neutral',
-              variant: 'ghost',
-              class: 'ml-auto'
-            })
-        )
-      )
-    }
+  if (canManage.value) {
+    list.push({
+      id: 'select',
+      header: ({ table }) =>
+        h(UCheckbox, {
+          'modelValue': table.getIsSomePageRowsSelected()
+            ? 'indeterminate'
+            : table.getIsAllPageRowsSelected(),
+          'onUpdate:modelValue': (value: boolean | 'indeterminate') =>
+            table.toggleAllPageRowsSelected(!!value),
+          'ariaLabel': 'Select all'
+        }),
+      cell: ({ row }) =>
+        h(UCheckbox, {
+          'modelValue': row.getIsSelected(),
+          'onUpdate:modelValue': (value: boolean | 'indeterminate') => row.toggleSelected(!!value),
+          'ariaLabel': 'Select row'
+        })
+    })
   }
-]
+
+  list.push(
+    {
+      accessorKey: 'id',
+      header: 'ID'
+    },
+    {
+      accessorKey: 'name',
+      header: 'Nombre',
+      cell: ({ row }) => {
+        return h('div', { class: 'font-medium text-highlighted' }, row.original.name)
+      }
+    },
+    {
+      accessorKey: 'address',
+      header: 'Dirección'
+    },
+    {
+      accessorKey: 'code',
+      header: ({ column }) => {
+        const isSorted = column.getIsSorted()
+
+        return h(UButton, {
+          color: 'neutral',
+          variant: 'ghost',
+          label: 'Código',
+          icon: isSorted
+            ? isSorted === 'asc'
+              ? 'i-lucide-arrow-up-narrow-wide'
+              : 'i-lucide-arrow-down-wide-narrow'
+            : 'i-lucide-arrow-up-down',
+          class: '-mx-2.5',
+          onClick: () => column.toggleSorting(column.getIsSorted() === 'asc')
+        })
+      }
+    },
+    {
+      accessorKey: 'phone',
+      header: 'Teléfono'
+    },
+    {
+      accessorKey: 'manager',
+      header: 'Gerente',
+      cell: ({ row }) => {
+        return h('div', { class: 'text-sm font-normal text-dimmed' }, row.original.manager?.name || 'Sin asignar')
+      }
+    },
+    {
+      accessorKey: 'is_active',
+      header: 'Estado',
+      filterFn: 'equals',
+      cell: ({ row }) => {
+        const color = row.original.is_active ? ('success' as const) : ('error' as const)
+
+        return h(UBadge, { class: 'capitalize', variant: 'subtle', color }, () =>
+          row.original.is_active ? 'Activa' : 'Inactiva'
+        )
+      }
+    },
+    {
+      id: 'actions',
+      cell: ({ row }) => {
+        return h(
+          'div',
+          { class: 'text-right' },
+          h(
+            UDropdownMenu,
+            {
+              content: {
+                align: 'end'
+              },
+              items: getRowItems(row)
+            },
+            () =>
+              h(UButton, {
+                icon: 'i-lucide-ellipsis-vertical',
+                color: 'neutral',
+                variant: 'ghost',
+                class: 'ml-auto'
+              })
+          )
+        )
+      }
+    }
+  )
+
+  return list
+})
 
 const statusFilter = ref('all')
 
@@ -207,7 +246,7 @@ const pagination = ref({
         </template>
 
         <template #right>
-          <BranchesAddModal @created="refresh" />
+          <BranchesAddModal v-if="canManage" @created="refresh" />
         </template>
       </UDashboardNavbar>
     </template>
@@ -222,7 +261,7 @@ const pagination = ref({
         />
 
         <div class="flex flex-wrap items-center gap-1.5">
-          <BranchesDeleteModal :count="table?.tableApi?.getFilteredSelectedRowModel().rows.length">
+          <BranchesDeleteModal v-if="canManage" :count="table?.tableApi?.getFilteredSelectedRowModel().rows.length">
             <UButton
               v-if="table?.tableApi?.getFilteredSelectedRowModel().rows.length"
               label="Eliminar"
@@ -316,6 +355,11 @@ const pagination = ref({
           />
         </div>
       </div>
+      <BranchesEditModal
+        v-model:open="isEditOpen"
+        :branch="selectedBranch"
+        @updated="refresh"
+      />
     </template>
   </UDashboardPanel>
 </template>

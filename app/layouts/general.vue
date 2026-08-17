@@ -47,7 +47,7 @@ const links = computed(() => {
     })
   }
 
-  if (hasPermission('branches.view')) {
+  if (hasPermission('branches.manage')) {
     items.push({
       label: 'Sucursales',
       icon: 'i-lucide-store',

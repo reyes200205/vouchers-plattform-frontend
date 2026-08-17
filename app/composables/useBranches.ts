@@ -7,11 +7,19 @@ export interface AvailableManager {
 }
 
 interface CreateBranchPayload {
-  code: string
+  code?: string
   name: string
   address?: string
   phone?: string
   manager_user_id?: number
+}
+
+interface UpdateBranchPayload {
+  name?: string
+  address?: string
+  phone?: string
+  manager_user_id?: number
+  is_active?: boolean
 }
 
 interface BranchListResponse {
@@ -62,5 +70,15 @@ export function useBranches() {
     return response.data
   }
 
-  return { listBranches, listAvailableManagers, createBranch }
+  async function updateBranch(id: number, payload: UpdateBranchPayload) {
+    const response = await $fetch<BranchResponse>(`${config.public.apiBase}/branches/${id}`, {
+      method: 'PATCH',
+      headers: { Authorization: `Bearer ${token.value}` },
+      body: payload
+    })
+
+    return response.data
+  }
+
+  return { listBranches, listAvailableManagers, createBranch, updateBranch }
 }
