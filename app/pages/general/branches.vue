@@ -25,6 +25,7 @@ const { listBranches } = useBranches()
 const { data, status, refresh } = await useAsyncData<Branch[]>('branches', () => listBranches())
 
 const isEditOpen = ref(false)
+const isSettingsOpen = ref(false)
 const selectedBranch = ref<Branch | null>(null)
 
 const { user } = useAuth()
@@ -48,6 +49,15 @@ function getRowItems(row: Row<Branch>) {
       }
     })
   }
+
+  items.push({
+    label: 'Configuración',
+    icon: 'i-lucide-settings',
+    onSelect() {
+      selectedBranch.value = row.original
+      isSettingsOpen.value = true
+    }
+  })
 
   items.push(
     {
@@ -357,6 +367,12 @@ const pagination = ref({
       </div>
       <BranchesEditModal
         v-model:open="isEditOpen"
+        :branch="selectedBranch"
+        @updated="refresh"
+      />
+      <BranchesSettingsModal
+        v-if="selectedBranch"
+        v-model:open="isSettingsOpen"
         :branch="selectedBranch"
         @updated="refresh"
       />
