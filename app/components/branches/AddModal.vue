@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import * as z from 'zod'
 import type { FormSubmitEvent } from '@nuxt/ui'
+import type { AvailableManager } from '~/composables/useBranches'
 
 const emit = defineEmits<{ created: [] }>()
 
@@ -8,7 +9,8 @@ const schema = z.object({
   code: z.string().min(2, 'Too short'),
   name: z.string().min(2, 'Too short'),
   address: z.string().optional(),
-  phone: z.string().optional()
+  phone: z.string().optional(),
+  manager_user_id: z.any().optional()
 })
 const open = ref(false)
 
@@ -18,12 +20,29 @@ const state = reactive<Partial<Schema>>({
   code: '',
   name: '',
   address: '',
-  phone: ''
+  phone: '',
+  manager_user_id: undefined
 })
 
-const { createBranch } = useBranches()
+const { createBranch, listAvailableManagers } = useBranches()
 const toast = useToast()
 const submitting = ref(false)
+
+const managers = ref<AvailableManager[]>([])
+const managerItems = computed(() => {
+  return (managers.value || []).map(m => ({
+    label: `${m.name} (${m.username})`,
+    value: m.id.toString()
+  }))
+})
+
+onMounted(async () => {
+  try {
+    managers.value = await listAvailableManagers()
+  } catch (e) {
+    console.error('Error fetching available managers:', e)
+  }
+})
 
 async function onSubmit(event: FormSubmitEvent<Schema>) {
   submitting.value = true
@@ -33,7 +52,8 @@ async function onSubmit(event: FormSubmitEvent<Schema>) {
       code: event.data.code,
       name: event.data.name,
       address: event.data.address || undefined,
-      phone: event.data.phone || undefined
+      phone: event.data.phone || undefined,
+      manager_user_id: event.data.manager_user_id ? Number(event.data.manager_user_id) : undefined
     })
 
     toast.add({
@@ -46,6 +66,7 @@ async function onSubmit(event: FormSubmitEvent<Schema>) {
     state.name = ''
     state.address = ''
     state.phone = ''
+    state.manager_user_id = undefined
     open.value = false
     emit('created')
   } catch {
@@ -82,6 +103,14 @@ async function onSubmit(event: FormSubmitEvent<Schema>) {
         </UFormField>
         <UFormField label="Teléfono" placeholder="555-0101" name="phone">
           <UInput v-model="state.phone" class="w-full" />
+        </UFormField>
+        <UFormField label="Gerente" name="manager_user_id">
+          <USelect
+            v-model="state.manager_user_id"
+            :items="managerItems"
+            placeholder="Seleccionar gerente..."
+            class="w-full"
+          />
         </UFormField>
 
         <div class="flex justify-end gap-2">

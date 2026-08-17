@@ -1,10 +1,17 @@
 import type { Branch } from '~/types'
 
+export interface AvailableManager {
+  id: number
+  username: string
+  name: string
+}
+
 interface CreateBranchPayload {
   code: string
   name: string
   address?: string
   phone?: string
+  manager_user_id?: number
 }
 
 interface BranchListResponse {
@@ -19,6 +26,12 @@ interface BranchResponse {
   data: Branch
 }
 
+interface AvailableManagersResponse {
+  success: boolean
+  message: string
+  data: AvailableManager[]
+}
+
 export function useBranches() {
   const config = useRuntimeConfig()
   const { token } = useAuth()
@@ -31,6 +44,14 @@ export function useBranches() {
     return response.data.data
   }
 
+  async function listAvailableManagers() {
+    const response = await $fetch<AvailableManagersResponse>(`${config.public.apiBase}/branches/available-managers`, {
+      headers: { Authorization: `Bearer ${token.value}` }
+    })
+
+    return response.data
+  }
+
   async function createBranch(payload: CreateBranchPayload) {
     const response = await $fetch<BranchResponse>(`${config.public.apiBase}/branches`, {
       method: 'POST',
@@ -41,5 +62,5 @@ export function useBranches() {
     return response.data
   }
 
-  return { listBranches, createBranch }
+  return { listBranches, listAvailableManagers, createBranch }
 }

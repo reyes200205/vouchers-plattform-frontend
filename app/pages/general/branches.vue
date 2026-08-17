@@ -123,6 +123,13 @@ const columns: TableColumn<Branch>[] = [
     header: 'Teléfono'
   },
   {
+    accessorKey: 'manager',
+    header: 'Gerente',
+    cell: ({ row }) => {
+      return h('div', { class: 'text-sm font-normal text-dimmed' }, row.original.manager?.name || 'Sin asignar')
+    }
+  },
+  {
     accessorKey: 'is_active',
     header: 'Estado',
     filterFn: 'equals',

@@ -19,6 +19,11 @@ export interface Branch {
   address: string | null
   phone: string | null
   is_active: boolean
+  manager: {
+    id: number
+    username: string
+    name: string
+  } | null
 }
 
 export interface Mail {
