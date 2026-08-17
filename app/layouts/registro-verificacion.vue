@@ -1,7 +1,6 @@
 <script setup lang="ts">
-import type { NavigationMenuItem } from '@nuxt/ui'
+import type { CommandPaletteItem, NavigationMenuItem } from '@nuxt/ui'
 
-const route = useRoute()
 const open = ref(false)
 const { roleCode, roleName, logout } = useAuth()
 
@@ -62,7 +61,7 @@ const links = computed(() => {
 const groups = computed(() => [{
   id: 'links',
   label: 'Go to',
-  items: links.value.flat() as any
+  items: links.value.flat() as unknown as CommandPaletteItem[]
 }])
 </script>
 
