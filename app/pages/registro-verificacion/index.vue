@@ -65,7 +65,7 @@ const { isNotificationsSlideoverOpen } = useDashboard()
           <template #header>
             <div class="flex items-center justify-between">
               <h3 class="font-semibold text-base">Últimos Registros</h3>
-              <UButton label="Dar de alta nuevo" icon="i-lucide-user-plus" to="/register-distributors/new" />
+              <UButton label="Dar de alta nuevo" icon="i-lucide-user-plus" to="/registro-verificacion/new" />
             </div>
           </template>
           <div class="text-sm text-center py-8 text-dimmed">

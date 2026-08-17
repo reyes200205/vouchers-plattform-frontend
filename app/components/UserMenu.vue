@@ -11,18 +11,28 @@ const appConfig = useAppConfig()
 const colors = ['red', 'orange', 'amber', 'yellow', 'lime', 'green', 'emerald', 'teal', 'cyan', 'sky', 'blue', 'indigo', 'violet', 'purple', 'fuchsia', 'pink', 'rose']
 const neutrals = ['slate', 'gray', 'zinc', 'neutral', 'stone', 'taupe', 'mauve', 'mist', 'olive']
 
-const user = ref({
-  name: 'Benjamin Canac',
-  avatar: {
-    src: 'https://github.com/benjamincanac.png',
-    alt: 'Benjamin Canac'
+const { user: authUser, logout } = useAuth()
+
+const displayName = computed(() => {
+  if (authUser.value?.person) {
+    const p = authUser.value.person
+    return `${p.first_name ?? ''} ${p.last_name ?? ''}`.trim() || authUser.value.username
   }
+  return authUser.value?.username ?? 'Usuario'
 })
+
+const userDetails = computed(() => ({
+  name: displayName.value,
+  avatar: {
+    src: `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(displayName.value)}`,
+    alt: displayName.value
+  }
+}))
 
 const items = computed<DropdownMenuItem[][]>(() => ([[{
   type: 'label',
-  label: user.value.name,
-  avatar: user.value.avatar
+  label: userDetails.value.name,
+  avatar: userDetails.value.avatar
 }, {
   label: 'Profile',
   icon: 'i-lucide-user'
@@ -99,7 +109,11 @@ const items = computed<DropdownMenuItem[][]>(() => ([[{
   }]
 }], [{
   label: 'Log out',
-  icon: 'i-lucide-log-out'
+  icon: 'i-lucide-log-out',
+  onSelect: async () => {
+    await logout()
+    await navigateTo('/login')
+  }
 }]]))
 </script>
 
@@ -111,8 +125,8 @@ const items = computed<DropdownMenuItem[][]>(() => ([[{
   >
     <UButton
       v-bind="{
-        ...user,
-        label: collapsed ? undefined : user?.name,
+        ...userDetails,
+        label: collapsed ? undefined : userDetails?.name,
         trailingIcon: collapsed ? undefined : 'i-lucide-chevrons-up-down'
       }"
       color="neutral"

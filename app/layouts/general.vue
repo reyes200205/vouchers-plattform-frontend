@@ -6,73 +6,101 @@ const toast = useToast()
 
 const open = ref(false)
 
-const links = [[{
-  label: 'Home',
-  icon: 'i-lucide-house',
-  to: '/general',
-  onSelect: () => {
-    open.value = false
-  }
-}, {
-  label: 'Inbox',
-  icon: 'i-lucide-inbox',
-  to: '/general/inbox',
-  badge: '4',
-  onSelect: () => {
-    open.value = false
-  }
-}, {
-  label: 'Customers',
-  icon: 'i-lucide-users',
-  to: '/general/customers',
-  onSelect: () => {
-    open.value = false
-  }
-}, {
-  label: 'Branches',
-  icon: 'i-lucide-store',
-  to: '/general/branches',
-  onSelect: () => {
-    open.value = false
-  }
-}, {
-  label: 'Settings',
-  to: '/general/settings',
-  icon: 'i-lucide-settings',
-  defaultOpen: true,
-  type: 'trigger',
-  children: [{
-    label: 'General',
-    to: '/general/settings',
-    exact: true,
+const { user } = useAuth()
+
+const hasPermission = (permission: string) => {
+  return user.value?.permissions?.includes(permission) ?? false
+}
+
+const hasAnyPermission = (permissions: string[]) => {
+  return permissions.some(p => hasPermission(p))
+}
+
+const links = computed(() => {
+  const items: NavigationMenuItem[] = []
+
+  items.push({
+    label: 'Home',
+    icon: 'i-lucide-house',
+    to: '/general',
     onSelect: () => {
       open.value = false
     }
   }, {
-    label: 'Members',
-    to: '/general/settings/members',
+    label: 'Inbox',
+    icon: 'i-lucide-inbox',
+    to: '/general/inbox',
+    badge: '4',
     onSelect: () => {
       open.value = false
     }
-  }, {
-    label: 'Notifications',
-    to: '/general/settings/notifications',
-    onSelect: () => {
-      open.value = false
-    }
-  }, {
-    label: 'Security',
-    to: '/general/settings/security',
-    onSelect: () => {
-      open.value = false
-    }
-  }]
-}]] satisfies NavigationMenuItem[][]
+  })
+
+  if (hasPermission('customers.view')) {
+    items.push({
+      label: 'Clientes',
+      icon: 'i-lucide-users',
+      to: '/general/customers',
+      onSelect: () => {
+        open.value = false
+      }
+    })
+  }
+
+  if (hasPermission('branches.view')) {
+    items.push({
+      label: 'Sucursales',
+      icon: 'i-lucide-store',
+      to: '/general/branches',
+      onSelect: () => {
+        open.value = false
+      }
+    })
+  }
+
+  if (hasAnyPermission(['branch-settings.view', 'point-settings.view'])) {
+    items.push({
+      label: 'Configuración',
+      to: '/general/settings',
+      icon: 'i-lucide-settings',
+      defaultOpen: true,
+      type: 'trigger',
+      children: [{
+        label: 'General',
+        to: '/general/settings',
+        exact: true,
+        onSelect: () => {
+          open.value = false
+        }
+      }, {
+        label: 'Miembros',
+        to: '/general/settings/members',
+        onSelect: () => {
+          open.value = false
+        }
+      }, {
+        label: 'Notificaciones',
+        to: '/general/settings/notifications',
+        onSelect: () => {
+          open.value = false
+        }
+      }, {
+        label: 'Seguridad',
+        to: '/general/settings/security',
+        onSelect: () => {
+          open.value = false
+        }
+      }]
+    })
+  }
+
+  return [items] satisfies NavigationMenuItem[][]
+})
 
 const groups = computed(() => [{
   id: 'links',
   label: 'Go to',
-  items: links.flat()
+  items: links.value.flat() as any
 }, {
   id: 'code',
   label: 'Code',

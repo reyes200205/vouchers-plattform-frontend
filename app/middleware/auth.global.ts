@@ -1,11 +1,7 @@
 const PROTECTED_PREFIXES = [
-  '/admin',
   '/general',
   '/distributor-portal',
-  '/cajera',
-  '/verificador',
-  '/coordinador',
-  '/gerente-sucursal'
+  '/registro-verificacion'
 ]
 
 export default defineNuxtRouteMiddleware((to) => {

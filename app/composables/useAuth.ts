@@ -16,6 +16,7 @@ interface AuthUser {
   username: string
   person: AuthPerson | null
   roles: AuthRole[]
+  permissions: string[]
 }
 
 interface LoginResponse {
@@ -28,13 +29,13 @@ interface LoginResponse {
 }
 
 export const ROLE_ROUTES: Record<string, string> = {
-  administrator: '/admin',
+  administrator: '/general',
   general_manager: '/general',
-  branch_manager: '/gerente-sucursal',
-  coordinator: '/coordinador',
-  verifier: '/verificador',
-  cashier: '/cajera',
-  distributor: '/distributor-portal'
+  branch_manager: '/general',
+  cashier: '/general',
+  distributor: '/distributor-portal',
+  coordinator: '/registro-verificacion',
+  verifier: '/registro-verificacion'
 }
 
 export function useAuth() {
