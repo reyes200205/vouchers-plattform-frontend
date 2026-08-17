@@ -1,0 +1,815 @@
+import { an as useComponentProps, ah as useAppConfig, aw as useForwardProps, a6 as reactivePick, au as useFormField, ae as tv, b as Primitive, g as _sfc_main$2$1, aN as useVModel, av as useForwardExpose, l as createContext } from '../virtual/entry.mjs';
+import { u as useFormControl } from './useFormControl-CBsw7dZm.mjs';
+import { u as useForwardScopeId } from './useForwardScopeId-BtHsXtbt.mjs';
+import { V as VisuallyHiddenInput_default } from './VisuallyHiddenInput-Sg8ah3kl.mjs';
+import { _ as _sfc_main$2, L as Label_default } from './FormField-CsaqDVqZ.mjs';
+import { _ as _sfc_main$1 } from './PageCard-Dx1Tebq8.mjs';
+import { defineComponent, reactive, withCtx, unref, createVNode, openBlock, createBlock, Fragment, renderList, useSlots, useId, useAttrs, computed, mergeProps, createCommentVNode, renderSlot, createTextVNode, toDisplayString, toRefs, createElementBlock, withKeys, withModifiers, useSSRContext } from 'vue';
+import { ssrRenderList, ssrRenderComponent, ssrRenderClass, ssrRenderSlot, ssrInterpolate } from 'vue/server-renderer';
+import '../_/nitro.mjs';
+import 'node:http';
+import 'node:https';
+import 'node:events';
+import 'node:buffer';
+import 'node:fs';
+import 'node:url';
+import '@iconify/utils';
+import 'node:crypto';
+import 'consola';
+import 'node:path';
+import 'unhead/plugins';
+import 'unhead/utils';
+import '../routes/renderer.mjs';
+import 'unhead/server';
+import 'unhead/legacy';
+import 'nostics';
+import 'vue-bundle-renderer/runtime';
+import 'devalue';
+import '@iconify/utils/lib/css/icon';
+import 'tailwindcss/colors';
+
+//#region node_modules/.pnpm/reka-ui@2.10.1_vue@3.5.41_typescript@6.0.3_/node_modules/reka-ui/dist/Switch/SwitchRoot.js
+var [injectSwitchRootContext, provideSwitchRootContext] = /*#__PURE__*/ createContext("SwitchRoot");
+var SwitchRoot_default = /* @__PURE__ */ defineComponent({
+	inheritAttrs: false,
+	__name: "SwitchRoot",
+	props: {
+		defaultValue: {
+			type: null,
+			required: false
+		},
+		modelValue: {
+			type: null,
+			required: false,
+			default: void 0
+		},
+		disabled: {
+			type: Boolean,
+			required: false
+		},
+		id: {
+			type: String,
+			required: false
+		},
+		value: {
+			type: String,
+			required: false,
+			default: "on"
+		},
+		trueValue: {
+			type: null,
+			required: false,
+			default: () => true
+		},
+		falseValue: {
+			type: null,
+			required: false,
+			default: () => false
+		},
+		asChild: {
+			type: Boolean,
+			required: false
+		},
+		as: {
+			type: null,
+			required: false,
+			default: "button"
+		},
+		name: {
+			type: String,
+			required: false
+		},
+		required: {
+			type: Boolean,
+			required: false
+		}
+	},
+	emits: ["update:modelValue"],
+	setup(__props, { emit: __emit }) {
+		const props = __props;
+		const emit = __emit;
+		const { disabled } = toRefs(props);
+		const modelValue = useVModel(props, "modelValue", emit, {
+			defaultValue: props.defaultValue ?? props.falseValue,
+			passive: props.modelValue === void 0
+		});
+		const checked = computed(() => modelValue.value === props.trueValue);
+		function toggleCheck() {
+			if (disabled.value) return;
+			modelValue.value = checked.value ? props.falseValue : props.trueValue;
+		}
+		const { forwardRef, currentElement } = useForwardExpose();
+		const isFormControl = useFormControl(currentElement);
+		const scopeIdAttrs = useForwardScopeId();
+		const ariaLabel = computed(() => props.id && currentElement.value ? (void 0).querySelector(`[for="${props.id}"]`)?.innerText : void 0);
+		provideSwitchRootContext({
+			checked,
+			toggleCheck,
+			disabled
+		});
+		return (_ctx, _cache) => {
+			return openBlock(), createElementBlock(Fragment, null, [createVNode(unref(Primitive), mergeProps({
+				id: _ctx.id,
+				ref: unref(forwardRef),
+				role: "switch",
+				type: _ctx.as === "button" ? "button" : void 0,
+				value: _ctx.value,
+				"aria-label": _ctx.$attrs["aria-label"] || ariaLabel.value,
+				"aria-checked": checked.value,
+				"aria-required": _ctx.required,
+				"data-state": checked.value ? "checked" : "unchecked",
+				"data-disabled": unref(disabled) ? "" : void 0,
+				"as-child": _ctx.asChild,
+				as: _ctx.as,
+				disabled: unref(disabled)
+			}, {
+				...unref(scopeIdAttrs),
+				..._ctx.$attrs
+			}, {
+				onClick: toggleCheck,
+				onKeydown: withKeys(withModifiers(toggleCheck, ["prevent"]), ["enter"])
+			}), {
+				default: withCtx(() => [renderSlot(_ctx.$slots, "default", {
+					modelValue: unref(modelValue),
+					checked: checked.value
+				})]),
+				_: 3
+			}, 16, [
+				"id",
+				"type",
+				"value",
+				"aria-label",
+				"aria-checked",
+				"aria-required",
+				"data-state",
+				"data-disabled",
+				"as-child",
+				"as",
+				"disabled",
+				"onKeydown"
+			]), unref(isFormControl) && _ctx.name ? (openBlock(), createBlock(unref(VisuallyHiddenInput_default), mergeProps({
+				key: 0,
+				type: "checkbox",
+				name: _ctx.name,
+				disabled: unref(disabled),
+				required: _ctx.required,
+				value: _ctx.value,
+				checked: checked.value
+			}, unref(scopeIdAttrs)), null, 16, [
+				"name",
+				"disabled",
+				"required",
+				"value",
+				"checked"
+			])) : createCommentVNode("v-if", true)], 64);
+		};
+	}
+});
+//#endregion
+//#region node_modules/.pnpm/reka-ui@2.10.1_vue@3.5.41_typescript@6.0.3_/node_modules/reka-ui/dist/Switch/SwitchThumb.js
+var SwitchThumb_default = /* @__PURE__ */ defineComponent({
+	__name: "SwitchThumb",
+	props: {
+		asChild: {
+			type: Boolean,
+			required: false
+		},
+		as: {
+			type: null,
+			required: false,
+			default: "span"
+		}
+	},
+	setup(__props) {
+		const rootContext = injectSwitchRootContext();
+		useForwardExpose();
+		return (_ctx, _cache) => {
+			return openBlock(), createBlock(unref(Primitive), {
+				"data-state": unref(rootContext).checked.value ? "checked" : "unchecked",
+				"data-disabled": unref(rootContext).disabled.value ? "" : void 0,
+				"as-child": _ctx.asChild,
+				as: _ctx.as
+			}, {
+				default: withCtx(() => [renderSlot(_ctx.$slots, "default")]),
+				_: 3
+			}, 8, [
+				"data-state",
+				"data-disabled",
+				"as-child",
+				"as"
+			]);
+		};
+	}
+});
+//#endregion
+//#region virtual:nuxt:node_modules%2F.cache%2Fnuxt%2F.nuxt%2Fui%2Fswitch.ts
+var virtual_nuxt_node_modules_2F_cache_2Fnuxt_2F_nuxt_2Fui_2Fswitch_default = {
+	"slots": {
+		"root": "relative flex items-start",
+		"base": ["inline-flex items-center shrink-0 rounded-full border-2 border-transparent focus-visible:outline-3 data-[state=unchecked]:bg-accented", "transition-[background] duration-200"],
+		"container": "flex items-center",
+		"thumb": "group pointer-events-none rounded-full bg-default shadow-lg ring-0 transition-transform duration-200 data-[state=unchecked]:translate-x-0 data-[state=unchecked]:rtl:-translate-x-0 flex items-center justify-center",
+		"icon": ["absolute shrink-0 group-data-[state=unchecked]:text-dimmed opacity-0 size-10/12", "transition-[color,opacity] duration-200"],
+		"wrapper": "ms-2",
+		"label": "block font-medium text-default",
+		"description": "text-muted"
+	},
+	"variants": {
+		"color": {
+			"primary": {
+				"base": "data-[state=checked]:bg-primary outline-primary/25",
+				"icon": "group-data-[state=checked]:text-primary"
+			},
+			"secondary": {
+				"base": "data-[state=checked]:bg-secondary outline-secondary/25",
+				"icon": "group-data-[state=checked]:text-secondary"
+			},
+			"success": {
+				"base": "data-[state=checked]:bg-success outline-success/25",
+				"icon": "group-data-[state=checked]:text-success"
+			},
+			"info": {
+				"base": "data-[state=checked]:bg-info outline-info/25",
+				"icon": "group-data-[state=checked]:text-info"
+			},
+			"warning": {
+				"base": "data-[state=checked]:bg-warning outline-warning/25",
+				"icon": "group-data-[state=checked]:text-warning"
+			},
+			"error": {
+				"base": "data-[state=checked]:bg-error outline-error/25",
+				"icon": "group-data-[state=checked]:text-error"
+			},
+			"neutral": {
+				"base": "data-[state=checked]:bg-inverted outline-inverted/25",
+				"icon": "group-data-[state=checked]:text-highlighted"
+			}
+		},
+		"size": {
+			"xs": {
+				"base": "w-7",
+				"container": "h-4",
+				"thumb": "size-3 data-[state=checked]:translate-x-3 data-[state=checked]:rtl:-translate-x-3",
+				"wrapper": "text-xs"
+			},
+			"sm": {
+				"base": "w-8",
+				"container": "h-4",
+				"thumb": "size-3.5 data-[state=checked]:translate-x-3.5 data-[state=checked]:rtl:-translate-x-3.5",
+				"wrapper": "text-xs"
+			},
+			"md": {
+				"base": "w-9",
+				"container": "h-5",
+				"thumb": "size-4 data-[state=checked]:translate-x-4 data-[state=checked]:rtl:-translate-x-4",
+				"wrapper": "text-sm"
+			},
+			"lg": {
+				"base": "w-10",
+				"container": "h-5",
+				"thumb": "size-4.5 data-[state=checked]:translate-x-4.5 data-[state=checked]:rtl:-translate-x-4.5",
+				"wrapper": "text-sm"
+			},
+			"xl": {
+				"base": "w-11",
+				"container": "h-6",
+				"thumb": "size-5 data-[state=checked]:translate-x-5 data-[state=checked]:rtl:-translate-x-5",
+				"wrapper": "text-base"
+			}
+		},
+		"checked": { "true": { "icon": "group-data-[state=checked]:opacity-100" } },
+		"unchecked": { "true": { "icon": "group-data-[state=unchecked]:opacity-100" } },
+		"loading": { "true": { "icon": "animate-spin" } },
+		"highlight": { "true": "" },
+		"required": { "true": { "label": "after:content-['*'] after:ms-0.5 after:text-error" } },
+		"disabled": { "true": {
+			"root": "opacity-75",
+			"base": "cursor-not-allowed",
+			"label": "cursor-not-allowed",
+			"description": "cursor-not-allowed"
+		} }
+	},
+	"compoundVariants": [
+		{
+			"color": "primary",
+			"highlight": true,
+			"class": { "base": "ring ring-primary" }
+		},
+		{
+			"color": "secondary",
+			"highlight": true,
+			"class": { "base": "ring ring-secondary" }
+		},
+		{
+			"color": "success",
+			"highlight": true,
+			"class": { "base": "ring ring-success" }
+		},
+		{
+			"color": "info",
+			"highlight": true,
+			"class": { "base": "ring ring-info" }
+		},
+		{
+			"color": "warning",
+			"highlight": true,
+			"class": { "base": "ring ring-warning" }
+		},
+		{
+			"color": "error",
+			"highlight": true,
+			"class": { "base": "ring ring-error" }
+		},
+		{
+			"color": "neutral",
+			"highlight": true,
+			"class": { "base": "ring ring-inverted" }
+		}
+	],
+	"defaultVariants": {
+		"color": "primary",
+		"size": "md"
+	}
+};
+//#endregion
+//#region node_modules/.pnpm/@nuxt+ui@4.10.0_4f9d36d94af007356e774edcf25eb409/node_modules/@nuxt/ui/dist/runtime/components/Switch.vue
+var _sfc_main = /*@__PURE__*/ Object.assign({ inheritAttrs: false }, {
+	__name: "USwitch",
+	__ssrInlineRender: true,
+	props: {
+		as: {
+			type: null,
+			required: false
+		},
+		color: {
+			type: null,
+			required: false
+		},
+		size: {
+			type: null,
+			required: false
+		},
+		highlight: {
+			type: Boolean,
+			required: false
+		},
+		loading: {
+			type: Boolean,
+			required: false
+		},
+		loadingIcon: {
+			type: null,
+			required: false
+		},
+		checkedIcon: {
+			type: null,
+			required: false
+		},
+		uncheckedIcon: {
+			type: null,
+			required: false
+		},
+		label: {
+			type: String,
+			required: false
+		},
+		description: {
+			type: String,
+			required: false
+		},
+		class: {
+			type: null,
+			required: false
+		},
+		ui: {
+			type: Object,
+			required: false
+		},
+		disabled: {
+			type: Boolean,
+			required: false
+		},
+		id: {
+			type: String,
+			required: false
+		},
+		name: {
+			type: String,
+			required: false
+		},
+		required: {
+			type: Boolean,
+			required: false
+		},
+		value: {
+			type: String,
+			required: false
+		},
+		defaultValue: {
+			type: null,
+			required: false
+		},
+		modelValue: {
+			type: null,
+			required: false
+		},
+		trueValue: {
+			type: null,
+			required: false
+		},
+		falseValue: {
+			type: null,
+			required: false
+		}
+	},
+	emits: ["change", "update:modelValue"],
+	setup(__props, { emit: __emit }) {
+		const _props = __props;
+		const slots = useSlots();
+		const emits = __emit;
+		const props = useComponentProps("switch", _props);
+		const appConfig = useAppConfig();
+		const rootProps = useForwardProps(reactivePick(props, "required", "value", "defaultValue", "modelValue", "trueValue", "falseValue"), emits);
+		const { id: _id, emitFormChange, emitFormInput, size, color, highlight, name, disabled, ariaAttrs } = useFormField(_props);
+		const id = _id.value ?? useId();
+		const attrs = useAttrs();
+		const forwardedAttrs = computed(() => {
+			const { "data-state": _, ...rest } = attrs;
+			return rest;
+		});
+		const ui = computed(() => tv({
+			extend: virtual_nuxt_node_modules_2F_cache_2Fnuxt_2F_nuxt_2Fui_2Fswitch_default,
+			...appConfig.ui?.switch || {}
+		})({
+			size: size.value ?? props.size,
+			color: color.value ?? props.color,
+			highlight: highlight.value ?? props.highlight,
+			required: props.required,
+			loading: props.loading,
+			disabled: disabled.value || props.loading
+		}));
+		function onUpdate(value) {
+			const event = new Event("change", { target: { value } });
+			emits("change", event);
+			emitFormChange();
+			emitFormInput();
+		}
+		return (_ctx, _push, _parent, _attrs) => {
+			_push(ssrRenderComponent(unref(Primitive), mergeProps({
+				as: unref(props).as,
+				"data-slot": _ctx.$attrs["data-slot"] ?? "root",
+				class: ui.value.root({ class: [unref(props).ui?.root, unref(props).class] })
+			}, _attrs), {
+				default: withCtx((_, _push, _parent, _scopeId) => {
+					if (_push) {
+						_push(`<div data-slot="container" class="${ssrRenderClass(ui.value.container({ class: unref(props).ui?.container }))}"${_scopeId}>`);
+						_push(ssrRenderComponent(unref(SwitchRoot_default), mergeProps({ id: unref(id) }, {
+							...unref(rootProps),
+							...forwardedAttrs.value,
+							...unref(ariaAttrs)
+						}, {
+							name: unref(name),
+							disabled: unref(disabled) || unref(props).loading,
+							"data-slot": "base",
+							class: ui.value.base({ class: unref(props).ui?.base }),
+							"onUpdate:modelValue": onUpdate
+						}), {
+							default: withCtx((_, _push, _parent, _scopeId) => {
+								if (_push) _push(ssrRenderComponent(unref(SwitchThumb_default), {
+									"data-slot": "thumb",
+									class: ui.value.thumb({ class: unref(props).ui?.thumb })
+								}, {
+									default: withCtx((_, _push, _parent, _scopeId) => {
+										if (_push) if (unref(props).loading) _push(ssrRenderComponent(_sfc_main$2$1, {
+											name: unref(props).loadingIcon || unref(appConfig).ui.icons.loading,
+											"data-slot": "icon",
+											class: ui.value.icon({
+												class: unref(props).ui?.icon,
+												checked: true,
+												unchecked: true
+											})
+										}, null, _parent, _scopeId));
+										else {
+											_push(`<!--[-->`);
+											if (unref(props).checkedIcon) _push(ssrRenderComponent(_sfc_main$2$1, {
+												name: unref(props).checkedIcon,
+												"data-slot": "icon",
+												class: ui.value.icon({
+													class: unref(props).ui?.icon,
+													checked: true
+												})
+											}, null, _parent, _scopeId));
+											else _push(`<!---->`);
+											if (unref(props).uncheckedIcon) _push(ssrRenderComponent(_sfc_main$2$1, {
+												name: unref(props).uncheckedIcon,
+												"data-slot": "icon",
+												class: ui.value.icon({
+													class: unref(props).ui?.icon,
+													unchecked: true
+												})
+											}, null, _parent, _scopeId));
+											else _push(`<!---->`);
+											_push(`<!--]-->`);
+										}
+										else return [unref(props).loading ? (openBlock(), createBlock(_sfc_main$2$1, {
+											key: 0,
+											name: unref(props).loadingIcon || unref(appConfig).ui.icons.loading,
+											"data-slot": "icon",
+											class: ui.value.icon({
+												class: unref(props).ui?.icon,
+												checked: true,
+												unchecked: true
+											})
+										}, null, 8, ["name", "class"])) : (openBlock(), createBlock(Fragment, { key: 1 }, [unref(props).checkedIcon ? (openBlock(), createBlock(_sfc_main$2$1, {
+											key: 0,
+											name: unref(props).checkedIcon,
+											"data-slot": "icon",
+											class: ui.value.icon({
+												class: unref(props).ui?.icon,
+												checked: true
+											})
+										}, null, 8, ["name", "class"])) : createCommentVNode("", true), unref(props).uncheckedIcon ? (openBlock(), createBlock(_sfc_main$2$1, {
+											key: 1,
+											name: unref(props).uncheckedIcon,
+											"data-slot": "icon",
+											class: ui.value.icon({
+												class: unref(props).ui?.icon,
+												unchecked: true
+											})
+										}, null, 8, ["name", "class"])) : createCommentVNode("", true)], 64))];
+									}),
+									_: 1
+								}, _parent, _scopeId));
+								else return [createVNode(unref(SwitchThumb_default), {
+									"data-slot": "thumb",
+									class: ui.value.thumb({ class: unref(props).ui?.thumb })
+								}, {
+									default: withCtx(() => [unref(props).loading ? (openBlock(), createBlock(_sfc_main$2$1, {
+										key: 0,
+										name: unref(props).loadingIcon || unref(appConfig).ui.icons.loading,
+										"data-slot": "icon",
+										class: ui.value.icon({
+											class: unref(props).ui?.icon,
+											checked: true,
+											unchecked: true
+										})
+									}, null, 8, ["name", "class"])) : (openBlock(), createBlock(Fragment, { key: 1 }, [unref(props).checkedIcon ? (openBlock(), createBlock(_sfc_main$2$1, {
+										key: 0,
+										name: unref(props).checkedIcon,
+										"data-slot": "icon",
+										class: ui.value.icon({
+											class: unref(props).ui?.icon,
+											checked: true
+										})
+									}, null, 8, ["name", "class"])) : createCommentVNode("", true), unref(props).uncheckedIcon ? (openBlock(), createBlock(_sfc_main$2$1, {
+										key: 1,
+										name: unref(props).uncheckedIcon,
+										"data-slot": "icon",
+										class: ui.value.icon({
+											class: unref(props).ui?.icon,
+											unchecked: true
+										})
+									}, null, 8, ["name", "class"])) : createCommentVNode("", true)], 64))]),
+									_: 1
+								}, 8, ["class"])];
+							}),
+							_: 1
+						}, _parent, _scopeId));
+						_push(`</div>`);
+						if (unref(props).label || !!slots.label || unref(props).description || !!slots.description) {
+							_push(`<div data-slot="wrapper" class="${ssrRenderClass(ui.value.wrapper({ class: unref(props).ui?.wrapper }))}"${_scopeId}>`);
+							if (unref(props).label || !!slots.label) _push(ssrRenderComponent(unref(Label_default), {
+								for: unref(id),
+								"data-slot": "label",
+								class: ui.value.label({ class: unref(props).ui?.label })
+							}, {
+								default: withCtx((_, _push, _parent, _scopeId) => {
+									if (_push) ssrRenderSlot(_ctx.$slots, "label", { label: unref(props).label }, () => {
+										_push(`${ssrInterpolate(unref(props).label)}`);
+									}, _push, _parent, _scopeId);
+									else return [renderSlot(_ctx.$slots, "label", { label: unref(props).label }, () => [createTextVNode(toDisplayString(unref(props).label), 1)])];
+								}),
+								_: 3
+							}, _parent, _scopeId));
+							else _push(`<!---->`);
+							if (unref(props).description || !!slots.description) {
+								_push(`<p data-slot="description" class="${ssrRenderClass(ui.value.description({ class: unref(props).ui?.description }))}"${_scopeId}>`);
+								ssrRenderSlot(_ctx.$slots, "description", { description: unref(props).description }, () => {
+									_push(`${ssrInterpolate(unref(props).description)}`);
+								}, _push, _parent, _scopeId);
+								_push(`</p>`);
+							} else _push(`<!---->`);
+							_push(`</div>`);
+						} else _push(`<!---->`);
+					} else return [createVNode("div", {
+						"data-slot": "container",
+						class: ui.value.container({ class: unref(props).ui?.container })
+					}, [createVNode(unref(SwitchRoot_default), mergeProps({ id: unref(id) }, {
+						...unref(rootProps),
+						...forwardedAttrs.value,
+						...unref(ariaAttrs)
+					}, {
+						name: unref(name),
+						disabled: unref(disabled) || unref(props).loading,
+						"data-slot": "base",
+						class: ui.value.base({ class: unref(props).ui?.base }),
+						"onUpdate:modelValue": onUpdate
+					}), {
+						default: withCtx(() => [createVNode(unref(SwitchThumb_default), {
+							"data-slot": "thumb",
+							class: ui.value.thumb({ class: unref(props).ui?.thumb })
+						}, {
+							default: withCtx(() => [unref(props).loading ? (openBlock(), createBlock(_sfc_main$2$1, {
+								key: 0,
+								name: unref(props).loadingIcon || unref(appConfig).ui.icons.loading,
+								"data-slot": "icon",
+								class: ui.value.icon({
+									class: unref(props).ui?.icon,
+									checked: true,
+									unchecked: true
+								})
+							}, null, 8, ["name", "class"])) : (openBlock(), createBlock(Fragment, { key: 1 }, [unref(props).checkedIcon ? (openBlock(), createBlock(_sfc_main$2$1, {
+								key: 0,
+								name: unref(props).checkedIcon,
+								"data-slot": "icon",
+								class: ui.value.icon({
+									class: unref(props).ui?.icon,
+									checked: true
+								})
+							}, null, 8, ["name", "class"])) : createCommentVNode("", true), unref(props).uncheckedIcon ? (openBlock(), createBlock(_sfc_main$2$1, {
+								key: 1,
+								name: unref(props).uncheckedIcon,
+								"data-slot": "icon",
+								class: ui.value.icon({
+									class: unref(props).ui?.icon,
+									unchecked: true
+								})
+							}, null, 8, ["name", "class"])) : createCommentVNode("", true)], 64))]),
+							_: 1
+						}, 8, ["class"])]),
+						_: 1
+					}, 16, [
+						"id",
+						"name",
+						"disabled",
+						"class"
+					])], 2), unref(props).label || !!slots.label || unref(props).description || !!slots.description ? (openBlock(), createBlock("div", {
+						key: 0,
+						"data-slot": "wrapper",
+						class: ui.value.wrapper({ class: unref(props).ui?.wrapper })
+					}, [unref(props).label || !!slots.label ? (openBlock(), createBlock(unref(Label_default), {
+						key: 0,
+						for: unref(id),
+						"data-slot": "label",
+						class: ui.value.label({ class: unref(props).ui?.label })
+					}, {
+						default: withCtx(() => [renderSlot(_ctx.$slots, "label", { label: unref(props).label }, () => [createTextVNode(toDisplayString(unref(props).label), 1)])]),
+						_: 3
+					}, 8, ["for", "class"])) : createCommentVNode("", true), unref(props).description || !!slots.description ? (openBlock(), createBlock("p", {
+						key: 1,
+						"data-slot": "description",
+						class: ui.value.description({ class: unref(props).ui?.description })
+					}, [renderSlot(_ctx.$slots, "description", { description: unref(props).description }, () => [createTextVNode(toDisplayString(unref(props).description), 1)])], 2)) : createCommentVNode("", true)], 2)) : createCommentVNode("", true)];
+				}),
+				_: 3
+			}, _parent));
+		};
+	}
+});
+var _sfc_setup$1 = _sfc_main.setup;
+_sfc_main.setup = (props, ctx) => {
+	const ssrContext = useSSRContext();
+	(ssrContext.modules || (ssrContext.modules = /* @__PURE__ */ new Set())).add("../node_modules/.pnpm/@nuxt+ui@4.10.0_4f9d36d94af007356e774edcf25eb409/node_modules/@nuxt/ui/dist/runtime/components/Switch.vue");
+	return _sfc_setup$1 ? _sfc_setup$1(props, ctx) : void 0;
+};
+//#endregion
+//#region app/pages/general/settings/notifications.vue?vue&type=script&setup=true&lang.ts
+var notifications_vue_vue_type_script_setup_true_lang_default = /*@__PURE__*/ defineComponent({
+	__name: "notifications",
+	__ssrInlineRender: true,
+	setup(__props) {
+		const state = reactive({
+			email: true,
+			desktop: false,
+			product_updates: true,
+			weekly_digest: false,
+			important_updates: true
+		});
+		const sections = [{
+			title: "Notification channels",
+			description: "Where can we notify you?",
+			fields: [{
+				name: "email",
+				label: "Email",
+				description: "Receive a daily email digest."
+			}, {
+				name: "desktop",
+				label: "Desktop",
+				description: "Receive desktop notifications."
+			}]
+		}, {
+			title: "Account updates",
+			description: "Receive updates about Nuxt UI.",
+			fields: [
+				{
+					name: "weekly_digest",
+					label: "Weekly digest",
+					description: "Receive a weekly digest of news."
+				},
+				{
+					name: "product_updates",
+					label: "Product updates",
+					description: "Receive a monthly email with all new features and updates."
+				},
+				{
+					name: "important_updates",
+					label: "Important updates",
+					description: "Receive emails about important updates like security fixes, maintenance, etc."
+				}
+			]
+		}];
+		async function onChange() {
+			console.log(state);
+		}
+		return (_ctx, _push, _parent, _attrs) => {
+			const _component_UPageCard = _sfc_main$1;
+			const _component_UFormField = _sfc_main$2;
+			const _component_USwitch = _sfc_main;
+			_push(`<!--[-->`);
+			ssrRenderList(sections, (section, index) => {
+				_push(`<div>`);
+				_push(ssrRenderComponent(_component_UPageCard, {
+					title: section.title,
+					description: section.description,
+					variant: "naked",
+					class: "mb-4"
+				}, null, _parent));
+				_push(ssrRenderComponent(_component_UPageCard, {
+					variant: "subtle",
+					ui: { container: "divide-y divide-default" }
+				}, {
+					default: withCtx((_, _push, _parent, _scopeId) => {
+						if (_push) {
+							_push(`<!--[-->`);
+							ssrRenderList(section.fields, (field) => {
+								_push(ssrRenderComponent(_component_UFormField, {
+									key: field.name,
+									name: field.name,
+									label: field.label,
+									description: field.description,
+									class: "flex items-center justify-between not-last:pb-4 gap-2"
+								}, {
+									default: withCtx((_, _push, _parent, _scopeId) => {
+										if (_push) _push(ssrRenderComponent(_component_USwitch, {
+											modelValue: unref(state)[field.name],
+											"onUpdate:modelValue": [($event) => unref(state)[field.name] = $event, onChange]
+										}, null, _parent, _scopeId));
+										else return [createVNode(_component_USwitch, {
+											modelValue: unref(state)[field.name],
+											"onUpdate:modelValue": [($event) => unref(state)[field.name] = $event, onChange]
+										}, null, 8, ["modelValue", "onUpdate:modelValue"])];
+									}),
+									_: 2
+								}, _parent, _scopeId));
+							});
+							_push(`<!--]-->`);
+						} else return [(openBlock(true), createBlock(Fragment, null, renderList(section.fields, (field) => {
+							return openBlock(), createBlock(_component_UFormField, {
+								key: field.name,
+								name: field.name,
+								label: field.label,
+								description: field.description,
+								class: "flex items-center justify-between not-last:pb-4 gap-2"
+							}, {
+								default: withCtx(() => [createVNode(_component_USwitch, {
+									modelValue: unref(state)[field.name],
+									"onUpdate:modelValue": [($event) => unref(state)[field.name] = $event, onChange]
+								}, null, 8, ["modelValue", "onUpdate:modelValue"])]),
+								_: 2
+							}, 1032, [
+								"name",
+								"label",
+								"description"
+							]);
+						}), 128))];
+					}),
+					_: 2
+				}, _parent));
+				_push(`</div>`);
+			});
+			_push(`<!--]-->`);
+		};
+	}
+});
+//#endregion
+//#region app/pages/general/settings/notifications.vue
+var _sfc_setup = notifications_vue_vue_type_script_setup_true_lang_default.setup;
+notifications_vue_vue_type_script_setup_true_lang_default.setup = (props, ctx) => {
+	const ssrContext = useSSRContext();
+	(ssrContext.modules || (ssrContext.modules = /* @__PURE__ */ new Set())).add("pages/general/settings/notifications.vue");
+	return _sfc_setup ? _sfc_setup(props, ctx) : void 0;
+};
+var notifications_default = notifications_vue_vue_type_script_setup_true_lang_default;
+
+export { notifications_default as default };
+//# sourceMappingURL=notifications-DqmbFdQQ.mjs.map

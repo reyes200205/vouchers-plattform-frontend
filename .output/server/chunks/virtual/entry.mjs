@@ -3,6 +3,7 @@ import { c as createError, r as hasProtocol, v as joinURL, J as withQuery, B as 
 import { FlatMetaPlugin } from 'unhead/plugins';
 import { hasOwn, walkResolver } from 'unhead/utils';
 import { i as injectHead$1, V as VueResolver, h as headSymbol } from '../routes/renderer.mjs';
+import { getIconCSS } from '@iconify/utils/lib/css/icon';
 import { ssrRenderComponent, ssrRenderVNode, ssrRenderSlot, ssrRenderSuspense, ssrRenderClass, ssrInterpolate, ssrRenderList, ssrRenderStyle } from 'vue/server-renderer';
 import colors from 'tailwindcss/colors';
 
@@ -1939,26 +1940,26 @@ function getIconsTree(data, names) {
 	return resolved;
 }
 /** Default values for dimensions */
-var defaultIconDimensions$1 = Object.freeze({
+var defaultIconDimensions = Object.freeze({
 	left: 0,
 	top: 0,
 	width: 16,
 	height: 16
 });
 /** Default values for transformations */
-var defaultIconTransformations$1 = Object.freeze({
+var defaultIconTransformations = Object.freeze({
 	rotate: 0,
 	vFlip: false,
 	hFlip: false
 });
 /** Default values for all optional IconifyIcon properties */
-var defaultIconProps$1 = Object.freeze({
-	...defaultIconDimensions$1,
-	...defaultIconTransformations$1
+var defaultIconProps = Object.freeze({
+	...defaultIconDimensions,
+	...defaultIconTransformations
 });
 /** Default values for all properties used in ExtendedIconifyIcon */
-var defaultExtendedIconProps$1 = Object.freeze({
-	...defaultIconProps$1,
+var defaultExtendedIconProps = Object.freeze({
+	...defaultIconProps,
 	body: "",
 	hidden: false
 });
@@ -1980,8 +1981,8 @@ function mergeIconTransformations(obj1, obj2) {
 */
 function mergeIconData(parent, child) {
 	const result = mergeIconTransformations(parent, child);
-	for (const key in defaultExtendedIconProps$1) if (key in defaultIconTransformations$1) {
-		if (key in parent && !(key in result)) result[key] = defaultIconTransformations$1[key];
+	for (const key in defaultExtendedIconProps) if (key in defaultIconTransformations) {
+		if (key in parent && !(key in result)) result[key] = defaultIconTransformations[key];
 	} else if (key in child) result[key] = child[key];
 	else if (key in parent) result[key] = parent[key];
 	return result;
@@ -2029,7 +2030,7 @@ var optionalPropertyDefaults = {
 	provider: "",
 	aliases: {},
 	not_found: {},
-	...defaultIconDimensions$1
+	...defaultIconDimensions
 };
 /**
 * Check props
@@ -2052,13 +2053,13 @@ function quicklyValidateIconSet(obj) {
 	const icons = data.icons;
 	for (const name in icons) {
 		const icon = icons[name];
-		if (!name || typeof icon.body !== "string" || !checkOptionalProps(icon, defaultExtendedIconProps$1)) return null;
+		if (!name || typeof icon.body !== "string" || !checkOptionalProps(icon, defaultExtendedIconProps)) return null;
 	}
 	const aliases = data.aliases || Object.create(null);
 	for (const name in aliases) {
 		const icon = aliases[name];
 		const parent = icon.parent;
-		if (!name || typeof parent !== "string" || !icons[parent] && !aliases[parent] || !checkOptionalProps(icon, defaultExtendedIconProps$1)) return null;
+		if (!name || typeof parent !== "string" || !icons[parent] && !aliases[parent] || !checkOptionalProps(icon, defaultExtendedIconProps)) return null;
 	}
 	return data;
 }
@@ -2151,36 +2152,36 @@ function addIcon(name, data) {
 function getIcon(name) {
 	const result = getIconData(name);
 	return result ? {
-		...defaultIconProps$1,
+		...defaultIconProps,
 		...result
 	} : result;
 }
 /**
 * Default icon customisations values
 */
-var defaultIconSizeCustomisations$1 = Object.freeze({
+var defaultIconSizeCustomisations = Object.freeze({
 	width: null,
 	height: null
 });
-var defaultIconCustomisations$1 = Object.freeze({
-	...defaultIconSizeCustomisations$1,
-	...defaultIconTransformations$1
+var defaultIconCustomisations = Object.freeze({
+	...defaultIconSizeCustomisations,
+	...defaultIconTransformations
 });
 /**
 * Regular expressions for calculating dimensions
 */
-var unitsSplit$1 = /(-?[0-9.]*[0-9]+[0-9.]*)/g;
-var unitsTest$1 = /^-?[0-9.]*[0-9]+[0-9.]*$/g;
-function calculateSize$1(size, ratio, precision) {
+var unitsSplit = /(-?[0-9.]*[0-9]+[0-9.]*)/g;
+var unitsTest = /^-?[0-9.]*[0-9]+[0-9.]*$/g;
+function calculateSize(size, ratio, precision) {
 	if (ratio === 1) return size;
 	precision = precision || 100;
 	if (typeof size === "number") return Math.ceil(size * ratio * precision) / precision;
 	if (typeof size !== "string") return size;
-	const oldParts = size.split(unitsSplit$1);
+	const oldParts = size.split(unitsSplit);
 	if (oldParts === null || !oldParts.length) return size;
 	const newParts = [];
 	let code = oldParts.shift();
-	let isNumber = unitsTest$1.test(code);
+	let isNumber = unitsTest.test(code);
 	while (true) {
 		if (isNumber) {
 			const num = parseFloat(code);
@@ -2192,7 +2193,7 @@ function calculateSize$1(size, ratio, precision) {
 		isNumber = !isNumber;
 	}
 }
-function splitSVGDefs$1(content, tag = "defs") {
+function splitSVGDefs(content, tag = "defs") {
 	let defs = "";
 	const index = content.indexOf("<" + tag);
 	while (index >= 0) {
@@ -2212,20 +2213,20 @@ function splitSVGDefs$1(content, tag = "defs") {
 /**
 * Merge defs and content
 */
-function mergeDefsAndContent$1(defs, content) {
+function mergeDefsAndContent(defs, content) {
 	return defs ? "<defs>" + defs + "</defs>" + content : content;
 }
 /**
 * Wrap SVG content, without wrapping definitions
 */
-function wrapSVGContent$1(body, start, end) {
-	const split = splitSVGDefs$1(body);
-	return mergeDefsAndContent$1(split.defs, start + split.content + end);
+function wrapSVGContent(body, start, end) {
+	const split = splitSVGDefs(body);
+	return mergeDefsAndContent(split.defs, start + split.content + end);
 }
 /**
 * Check if value should be unset. Allows multiple keywords
 */
-var isUnsetKeyword$1 = (value) => value === "unset" || value === "undefined" || value === "none";
+var isUnsetKeyword = (value) => value === "unset" || value === "undefined" || value === "none";
 /**
 * Get SVG attributes and content from icon + customisations
 *
@@ -2236,13 +2237,13 @@ var isUnsetKeyword$1 = (value) => value === "unset" || value === "undefined" || 
 * Result should be converted to <svg> by platform specific parser.
 * Use replaceIDs to generate unique IDs for body.
 */
-function iconToSVG$1(icon, customisations) {
+function iconToSVG(icon, customisations) {
 	const fullIcon = {
-		...defaultIconProps$1,
+		...defaultIconProps,
 		...icon
 	};
 	const fullCustomisations = {
-		...defaultIconCustomisations$1,
+		...defaultIconCustomisations,
 		...customisations
 	};
 	const box = {
@@ -2295,7 +2296,7 @@ function iconToSVG$1(icon, customisations) {
 				box.height = tempValue;
 			}
 		}
-		if (transformations.length) body = wrapSVGContent$1(body, "<g transform=\"" + transformations.join(" ") + "\">", "</g>");
+		if (transformations.length) body = wrapSVGContent(body, "<g transform=\"" + transformations.join(" ") + "\">", "</g>");
 	});
 	const customisationsWidth = fullCustomisations.width;
 	const customisationsHeight = fullCustomisations.height;
@@ -2305,14 +2306,14 @@ function iconToSVG$1(icon, customisations) {
 	let height;
 	if (customisationsWidth === null) {
 		height = customisationsHeight === null ? "1em" : customisationsHeight === "auto" ? boxHeight : customisationsHeight;
-		width = calculateSize$1(height, boxWidth / boxHeight);
+		width = calculateSize(height, boxWidth / boxHeight);
 	} else {
 		width = customisationsWidth === "auto" ? boxWidth : customisationsWidth;
-		height = customisationsHeight === null ? calculateSize$1(width, boxHeight / boxWidth) : customisationsHeight === "auto" ? boxHeight : customisationsHeight;
+		height = customisationsHeight === null ? calculateSize(width, boxHeight / boxWidth) : customisationsHeight === "auto" ? boxHeight : customisationsHeight;
 	}
 	const attributes = {};
 	const setAttr = (prop, value) => {
-		if (!isUnsetKeyword$1(value)) attributes[prop] = value.toString();
+		if (!isUnsetKeyword(value)) attributes[prop] = value.toString();
 	};
 	setAttr("width", width);
 	setAttr("height", height);
@@ -3139,7 +3140,7 @@ var loadIcon$1 = (icon) => {
 				const data = getIconData(iconObj);
 				if (data) {
 					fulfill({
-						...defaultIconProps$1,
+						...defaultIconProps,
 						...data
 					});
 					return;
@@ -3163,7 +3164,7 @@ function mergeCustomisations(defaults, item) {
 	for (const key in item) {
 		const value = item[key];
 		const valueType = typeof value;
-		if (key in defaultIconSizeCustomisations$1) {
+		if (key in defaultIconSizeCustomisations) {
 			if (value === null || value && (valueType === "string" || valueType === "number")) result[key] = value;
 		} else if (valueType === typeof result[key]) result[key] = key === "rotate" ? value % 4 : value;
 	}
@@ -3215,7 +3216,7 @@ function rotateFromString(value, defaultValue = 0) {
 /**
 * Generate <svg>
 */
-function iconToHTML$1(body, attributes) {
+function iconToHTML(body, attributes) {
 	let renderAttribsHTML = body.indexOf("xlink:") === -1 ? "" : " xmlns:xlink=\"http://www.w3.org/1999/xlink\"";
 	for (const attr in attributes) renderAttribsHTML += " " + attr + "=\"" + attributes[attr] + "\"";
 	return "<svg xmlns=\"http://www.w3.org/2000/svg\"" + renderAttribsHTML + ">" + body + "</svg>";
@@ -3226,23 +3227,23 @@ function iconToHTML$1(body, attributes) {
 * Short alternative to encodeURIComponent() that encodes only stuff used in SVG, generating
 * smaller code.
 */
-function encodeSVGforURL$1(svg) {
+function encodeSVGforURL(svg) {
 	return svg.replace(/"/g, "'").replace(/%/g, "%25").replace(/#/g, "%23").replace(/</g, "%3C").replace(/>/g, "%3E").replace(/\s+/g, " ");
 }
 /**
 * Generate data: URL from SVG
 */
-function svgToData$1(svg) {
-	return "data:image/svg+xml," + encodeSVGforURL$1(svg);
+function svgToData(svg) {
+	return "data:image/svg+xml," + encodeSVGforURL(svg);
 }
 /**
 * Generate url() from SVG
 */
-function svgToURL$1(svg) {
-	return "url(\"" + svgToData$1(svg) + "\")";
+function svgToURL(svg) {
+	return "url(\"" + svgToData(svg) + "\")";
 }
 var defaultExtendedIconCustomisations = {
-	...defaultIconCustomisations$1,
+	...defaultIconCustomisations,
 	inline: false
 };
 /**
@@ -3338,7 +3339,7 @@ var render = (icon, props) => {
 			}
 		}
 	}
-	const item = iconToSVG$1(icon, customisations);
+	const item = iconToSVG(icon, customisations);
 	const renderAttribs = item.attributes;
 	if (customisations.inline) style.verticalAlign = "-0.125em";
 	if (mode === "svg") {
@@ -3352,14 +3353,14 @@ var render = (icon, props) => {
 	}
 	const { body, width, height } = icon;
 	const useMask = mode === "mask" || (mode === "bg" ? false : body.indexOf("currentColor") !== -1);
-	const html = iconToHTML$1(body, {
+	const html = iconToHTML(body, {
 		...renderAttribs,
 		width: width + "",
 		height: height + ""
 	});
 	componentProps.style = {
 		...style,
-		"--svg": svgToURL$1(html),
+		"--svg": svgToURL(html),
 		"width": fixSize(renderAttribs.width),
 		"height": fixSize(renderAttribs.height),
 		...commonProps,
@@ -3377,7 +3378,7 @@ setAPIModule("", fetchAPIModule);
 * Empty icon data, rendered when icon is not available
 */
 var emptyIcon = {
-	...defaultIconProps$1,
+	...defaultIconProps,
 	body: ""
 };
 /**
@@ -3449,7 +3450,7 @@ var Icon = defineComponent((props, { emit }) => {
 			class: icon.classes.join(" ")
 		};
 		return render({
-			...defaultIconProps$1,
+			...defaultIconProps,
 			...icon.data
 		}, newProps);
 	};
@@ -3487,389 +3488,6 @@ var _api = {
 	getFetch,
 	listAPIProviders
 };
-//#endregion
-//#region node_modules/.pnpm/@iconify+utils@3.1.3/node_modules/@iconify/utils/lib/icon/defaults.js
-/** Default values for dimensions */
-var defaultIconDimensions = Object.freeze({
-	left: 0,
-	top: 0,
-	width: 16,
-	height: 16
-});
-/** Default values for transformations */
-var defaultIconTransformations = Object.freeze({
-	rotate: 0,
-	vFlip: false,
-	hFlip: false
-});
-/** Default values for all optional IconifyIcon properties */
-var defaultIconProps = Object.freeze({
-	...defaultIconDimensions,
-	...defaultIconTransformations
-});
-Object.freeze({
-	...defaultIconProps,
-	body: "",
-	hidden: false
-});
-//#endregion
-//#region node_modules/.pnpm/@iconify+utils@3.1.3/node_modules/@iconify/utils/lib/icon/square.js
-/**
-* Make icon viewBox square
-*/
-function makeViewBoxSquare(viewBox) {
-	const [left, top, width, height] = viewBox;
-	if (width !== height) {
-		const max = Math.max(width, height);
-		return [
-			left - (max - width) / 2,
-			top - (max - height) / 2,
-			max,
-			max
-		];
-	}
-	return viewBox;
-}
-//#endregion
-//#region node_modules/.pnpm/@iconify+utils@3.1.3/node_modules/@iconify/utils/lib/svg/size.js
-/**
-* Regular expressions for calculating dimensions
-*/
-var unitsSplit = /(-?[0-9.]*[0-9]+[0-9.]*)/g;
-var unitsTest = /^-?[0-9.]*[0-9]+[0-9.]*$/g;
-function calculateSize(size, ratio, precision) {
-	if (ratio === 1) return size;
-	precision = precision || 100;
-	if (typeof size === "number") return Math.ceil(size * ratio * precision) / precision;
-	if (typeof size !== "string") return size;
-	const oldParts = size.split(unitsSplit);
-	if (oldParts === null || !oldParts.length) return size;
-	const newParts = [];
-	let code = oldParts.shift();
-	let isNumber = unitsTest.test(code);
-	while (true) {
-		if (isNumber) {
-			const num = parseFloat(code);
-			if (isNaN(num)) newParts.push(code);
-			else newParts.push(Math.ceil(num * ratio * precision) / precision);
-		} else newParts.push(code);
-		code = oldParts.shift();
-		if (code === void 0) return newParts.join("");
-		isNumber = !isNumber;
-	}
-}
-//#endregion
-//#region node_modules/.pnpm/@iconify+utils@3.1.3/node_modules/@iconify/utils/lib/customisations/defaults.js
-/**
-* Default icon customisations values
-*/
-var defaultIconSizeCustomisations = Object.freeze({
-	width: null,
-	height: null
-});
-var defaultIconCustomisations = Object.freeze({
-	...defaultIconSizeCustomisations,
-	...defaultIconTransformations
-});
-//#endregion
-//#region node_modules/.pnpm/@iconify+utils@3.1.3/node_modules/@iconify/utils/lib/svg/defs.js
-function splitSVGDefs(content, tag = "defs") {
-	let defs = "";
-	const index = content.indexOf("<" + tag);
-	while (index >= 0) {
-		const start = content.indexOf(">", index);
-		const end = content.indexOf("</" + tag);
-		if (start === -1 || end === -1) break;
-		const endEnd = content.indexOf(">", end);
-		if (endEnd === -1) break;
-		defs += content.slice(start + 1, end).trim();
-		content = content.slice(0, index).trim() + content.slice(endEnd + 1);
-	}
-	return {
-		defs,
-		content
-	};
-}
-/**
-* Merge defs and content
-*/
-function mergeDefsAndContent(defs, content) {
-	return defs ? "<defs>" + defs + "</defs>" + content : content;
-}
-/**
-* Wrap SVG content, without wrapping definitions
-*/
-function wrapSVGContent(body, start, end) {
-	const split = splitSVGDefs(body);
-	return mergeDefsAndContent(split.defs, start + split.content + end);
-}
-//#endregion
-//#region node_modules/.pnpm/@iconify+utils@3.1.3/node_modules/@iconify/utils/lib/svg/build.js
-/**
-* Check if value should be unset. Allows multiple keywords
-*/
-var isUnsetKeyword = (value) => value === "unset" || value === "undefined" || value === "none";
-/**
-* Get SVG attributes and content from icon + customisations
-*
-* Does not generate style to make it compatible with frameworks that use objects for style, such as React.
-* Instead, it generates 'inline' value. If true, rendering engine should add verticalAlign: -0.125em to icon.
-*
-* Customisations should be normalised by platform specific parser.
-* Result should be converted to <svg> by platform specific parser.
-* Use replaceIDs to generate unique IDs for body.
-*/
-function iconToSVG(icon, customisations) {
-	const fullIcon = {
-		...defaultIconProps,
-		...icon
-	};
-	const fullCustomisations = {
-		...defaultIconCustomisations,
-		...customisations
-	};
-	const box = {
-		left: fullIcon.left,
-		top: fullIcon.top,
-		width: fullIcon.width,
-		height: fullIcon.height
-	};
-	let body = fullIcon.body;
-	[fullIcon, fullCustomisations].forEach((props) => {
-		const transformations = [];
-		const hFlip = props.hFlip;
-		const vFlip = props.vFlip;
-		let rotation = props.rotate;
-		if (hFlip) if (vFlip) rotation += 2;
-		else {
-			transformations.push("translate(" + (box.width + box.left).toString() + " " + (0 - box.top).toString() + ")");
-			transformations.push("scale(-1 1)");
-			box.top = box.left = 0;
-		}
-		else if (vFlip) {
-			transformations.push("translate(" + (0 - box.left).toString() + " " + (box.height + box.top).toString() + ")");
-			transformations.push("scale(1 -1)");
-			box.top = box.left = 0;
-		}
-		let tempValue;
-		if (rotation < 0) rotation -= Math.floor(rotation / 4) * 4;
-		rotation = rotation % 4;
-		switch (rotation) {
-			case 1:
-				tempValue = box.height / 2 + box.top;
-				transformations.unshift("rotate(90 " + tempValue.toString() + " " + tempValue.toString() + ")");
-				break;
-			case 2:
-				transformations.unshift("rotate(180 " + (box.width / 2 + box.left).toString() + " " + (box.height / 2 + box.top).toString() + ")");
-				break;
-			case 3:
-				tempValue = box.width / 2 + box.left;
-				transformations.unshift("rotate(-90 " + tempValue.toString() + " " + tempValue.toString() + ")");
-		}
-		if (rotation % 2 === 1) {
-			if (box.left !== box.top) {
-				tempValue = box.left;
-				box.left = box.top;
-				box.top = tempValue;
-			}
-			if (box.width !== box.height) {
-				tempValue = box.width;
-				box.width = box.height;
-				box.height = tempValue;
-			}
-		}
-		if (transformations.length) body = wrapSVGContent(body, "<g transform=\"" + transformations.join(" ") + "\">", "</g>");
-	});
-	const customisationsWidth = fullCustomisations.width;
-	const customisationsHeight = fullCustomisations.height;
-	const boxWidth = box.width;
-	const boxHeight = box.height;
-	let width;
-	let height;
-	if (customisationsWidth === null) {
-		height = customisationsHeight === null ? "1em" : customisationsHeight === "auto" ? boxHeight : customisationsHeight;
-		width = calculateSize(height, boxWidth / boxHeight);
-	} else {
-		width = customisationsWidth === "auto" ? boxWidth : customisationsWidth;
-		height = customisationsHeight === null ? calculateSize(width, boxHeight / boxWidth) : customisationsHeight === "auto" ? boxHeight : customisationsHeight;
-	}
-	const attributes = {};
-	const setAttr = (prop, value) => {
-		if (!isUnsetKeyword(value)) attributes[prop] = value.toString();
-	};
-	setAttr("width", width);
-	setAttr("height", height);
-	const viewBox = [
-		box.left,
-		box.top,
-		boxWidth,
-		boxHeight
-	];
-	attributes.viewBox = viewBox.join(" ");
-	return {
-		attributes,
-		viewBox,
-		body
-	};
-}
-//#endregion
-//#region node_modules/.pnpm/@iconify+utils@3.1.3/node_modules/@iconify/utils/lib/svg/url.js
-/**
-* Encode SVG for use in url()
-*
-* Short alternative to encodeURIComponent() that encodes only stuff used in SVG, generating
-* smaller code.
-*/
-function encodeSVGforURL(svg) {
-	return svg.replace(/"/g, "'").replace(/%/g, "%25").replace(/#/g, "%23").replace(/</g, "%3C").replace(/>/g, "%3E").replace(/\s+/g, " ");
-}
-/**
-* Generate data: URL from SVG
-*/
-function svgToData(svg) {
-	return "data:image/svg+xml," + encodeSVGforURL(svg);
-}
-/**
-* Generate url() from SVG
-*/
-function svgToURL(svg) {
-	return "url(\"" + svgToData(svg) + "\")";
-}
-//#endregion
-//#region node_modules/.pnpm/@iconify+utils@3.1.3/node_modules/@iconify/utils/lib/svg/html.js
-/**
-* Generate <svg>
-*/
-function iconToHTML(body, attributes) {
-	let renderAttribsHTML = body.indexOf("xlink:") === -1 ? "" : " xmlns:xlink=\"http://www.w3.org/1999/xlink\"";
-	for (const attr in attributes) renderAttribsHTML += " " + attr + "=\"" + attributes[attr] + "\"";
-	return "<svg xmlns=\"http://www.w3.org/2000/svg\"" + renderAttribsHTML + ">" + body + "</svg>";
-}
-//#endregion
-//#region node_modules/.pnpm/@iconify+utils@3.1.3/node_modules/@iconify/utils/lib/css/common.js
-/**
-* Generates common CSS rules for multiple icons, rendered as background/mask
-*/
-function getCommonCSSRules(options) {
-	const result = {
-		display: "inline-block",
-		width: "1em",
-		height: "1em"
-	};
-	const varName = options.varName;
-	if (options.pseudoSelector) result["content"] = "''";
-	switch (options.mode) {
-		case "background":
-			if (varName) result["background-image"] = "var(--" + varName + ")";
-			result["background-repeat"] = "no-repeat";
-			result["background-size"] = "100% 100%";
-			break;
-		case "mask":
-			result["background-color"] = "currentColor";
-			if (varName) result["mask-image"] = result["-webkit-mask-image"] = "var(--" + varName + ")";
-			result["mask-repeat"] = result["-webkit-mask-repeat"] = "no-repeat";
-			result["mask-size"] = result["-webkit-mask-size"] = "100% 100%";
-	}
-	return result;
-}
-/**
-* Generate CSS rules for one icon, rendered as background/mask
-*
-* This function excludes common rules
-*/
-function generateItemCSSRules(icon, options) {
-	const result = {};
-	const varName = options.varName;
-	const buildResult = iconToSVG(icon);
-	let viewBox = buildResult.viewBox;
-	if (viewBox[2] !== viewBox[3]) if (options.forceSquare) viewBox = makeViewBoxSquare(viewBox);
-	else result["width"] = calculateSize("1em", viewBox[2] / viewBox[3]);
-	const url = svgToURL(iconToHTML(buildResult.body.replace(/currentColor/g, options.color || "black"), {
-		viewBox: `${viewBox[0]} ${viewBox[1]} ${viewBox[2]} ${viewBox[3]}`,
-		width: `${viewBox[2]}`,
-		height: `${viewBox[3]}`
-	}));
-	if (varName) result["--" + varName] = url;
-	else switch (options.mode) {
-		case "background":
-			result["background-image"] = url;
-			break;
-		case "mask":
-			result["mask-image"] = result["-webkit-mask-image"] = url;
-			break;
-	}
-	return result;
-}
-//#endregion
-//#region node_modules/.pnpm/@iconify+utils@3.1.3/node_modules/@iconify/utils/lib/css/format.js
-var format = {
-	selectorStart: {
-		compressed: "{",
-		compact: " {",
-		expanded: " {"
-	},
-	selectorEnd: {
-		compressed: "}",
-		compact: "; }\n",
-		expanded: ";\n}\n"
-	},
-	rule: {
-		compressed: "{key}:",
-		compact: " {key}: ",
-		expanded: "\n  {key}: "
-	}
-};
-/**
-* Format data
-*
-* Key is selector, value is list of rules
-*/
-function formatCSS(data, mode = "expanded") {
-	const results = [];
-	for (let i = 0; i < data.length; i++) {
-		const { selector, rules } = data[i];
-		let entry = (selector instanceof Array ? selector.join(mode === "compressed" ? "," : ", ") : selector) + format.selectorStart[mode];
-		let firstRule = true;
-		for (const key in rules) {
-			if (!firstRule) entry += ";";
-			entry += format.rule[mode].replace("{key}", key) + rules[key];
-			firstRule = false;
-		}
-		entry += format.selectorEnd[mode];
-		results.push(entry);
-	}
-	return results.join(mode === "compressed" ? "" : "\n");
-}
-//#endregion
-//#region node_modules/.pnpm/@iconify+utils@3.1.3/node_modules/@iconify/utils/lib/css/icon.js
-/**
-* Get CSS for icon, rendered as background or mask
-*/
-function getIconCSS(icon, options = {}) {
-	const body = options.customise ? options.customise(icon.body) : icon.body;
-	const mode = options.mode || (options.color || !body.includes("currentColor") ? "background" : "mask");
-	let varName = options.varName;
-	if (varName === void 0 && mode === "mask") varName = "svg";
-	const newOptions = {
-		...options,
-		mode,
-		varName
-	};
-	if (mode === "background") delete newOptions.varName;
-	const rules = {
-		...options.rules,
-		...getCommonCSSRules(newOptions),
-		...generateItemCSSRules({
-			...defaultIconProps,
-			...icon,
-			body
-		}, newOptions)
-	};
-	return formatCSS([{
-		selector: options.iconSelector || ".icon",
-		rules
-	}], newOptions.format);
-}
 //#endregion
 //#region virtual:nuxt:node_modules%2F.cache%2Fnuxt%2F.nuxt%2Fnuxt-icon-client-bundle.mjs
 var _initialized = false;
@@ -4464,7 +4082,7 @@ var components_default = defineComponent({
 	}
 });
 
-const componentsDQkMekWD = /*#__PURE__*/Object.freeze(/*#__PURE__*/Object.defineProperty({
+const componentsC_1oA3Vs = /*#__PURE__*/Object.freeze(/*#__PURE__*/Object.defineProperty({
   __proto__: null,
   A: normalizeBase,
   B: assign,
@@ -13407,54 +13025,54 @@ var virtual_nuxt_node_modules_2F_cache_2Fnuxt_2F_nuxt_2Froutes_default = [
 	{
 		name: "general-branches",
 		path: "/general/branches",
-		component: () => import('../build/branches-B1QIRPad.mjs')
+		component: () => import('../build/branches-CUfqw4bA.mjs')
 	},
 	{
 		name: "general-customers",
 		path: "/general/customers",
-		component: () => import('../build/customers-CnZjsnXF.mjs')
+		component: () => import('../build/customers-Bzvxg-Cs.mjs')
 	},
 	{
 		name: "general-inbox",
 		path: "/general/inbox",
-		component: () => import('../build/inbox-D17i96sw.mjs')
+		component: () => import('../build/inbox-nooWp-x9.mjs')
 	},
 	{
 		name: void 0,
 		path: "/general/settings",
-		component: () => import('../build/settings-17Dw63s3.mjs'),
+		component: () => import('../build/settings-OkCRl3IC.mjs'),
 		children: [
 			{
 				name: "general-settings-members",
 				path: "members",
-				component: () => import('../build/members-a7HPNxVi.mjs')
+				component: () => import('../build/members-C3HEtTpY.mjs')
 			},
 			{
 				name: "general-settings-notifications",
 				path: "notifications",
-				component: () => import('../build/notifications-DzZ7nXiO.mjs')
+				component: () => import('../build/notifications-DqmbFdQQ.mjs')
 			},
 			{
 				name: "general-settings-security",
 				path: "security",
-				component: () => import('../build/security-BZNe1mZY.mjs')
+				component: () => import('../build/security-r16BVMLf.mjs')
 			},
 			{
 				name: "general-settings",
 				path: "",
-				component: () => import('../build/settings-BBq-urDg.mjs')
+				component: () => import('../build/settings-xl8fi4Ld.mjs')
 			}
 		]
 	},
 	{
 		name: "distributor-portal",
 		path: "/distributor-portal",
-		component: () => import('../build/distributor-portal-tgtC-NGx.mjs')
+		component: () => import('../build/distributor-portal-BzIGNxpz.mjs')
 	},
 	{
 		name: "general",
 		path: "/general",
-		component: () => import('../build/general-BIVVI3n-.mjs')
+		component: () => import('../build/general-Bg6o8pD8.mjs')
 	},
 	{
 		name: "login",
@@ -13464,7 +13082,7 @@ var virtual_nuxt_node_modules_2F_cache_2Fnuxt_2F_nuxt_2Froutes_default = [
 	{
 		name: "registro-verificacion",
 		path: "/registro-verificacion",
-		component: () => import('../build/registro-verificacion-CwW-q-po.mjs')
+		component: () => import('../build/registro-verificacion-D2IqqZrC.mjs')
 	},
 	{
 		name: "index",
@@ -13728,7 +13346,7 @@ var plugin_default = defineNuxtPlugin({
 });
 //#endregion
 //#region virtual:nuxt:node_modules%2F.cache%2Fnuxt%2F.nuxt%2Fcomponents.plugin.mjs
-var lazyGlobalComponents = [["Icon", defineAsyncComponent(() => Promise.resolve().then(function () { return componentsDQkMekWD; }).then((n) => n.n).then((r) => r["default"] || r.default || r))]];
+var lazyGlobalComponents = [["Icon", defineAsyncComponent(() => Promise.resolve().then(function () { return componentsC_1oA3Vs; }).then((n) => n.n).then((r) => r["default"] || r.default || r))]];
 var virtual_nuxt_node_modules_2F_cache_2Fnuxt_2F_nuxt_2Fcomponents_plugin_default = defineNuxtPlugin({
 	name: "nuxt:global-components",
 	setup(nuxtApp) {
@@ -17917,9 +17535,9 @@ function resolveLayoutName(route, name) {
 //#region virtual:nuxt:node_modules%2F.cache%2Fnuxt%2F.nuxt%2Flayouts.mjs
 var virtual_nuxt_node_modules_2F_cache_2Fnuxt_2F_nuxt_2Flayouts_default = {
 	default: defineAsyncComponent(() => import('../build/default-BA_2QT4E.mjs').then((m) => m.default || m)),
-	"distributor-portal": defineAsyncComponent(() => import('../build/distributor-portal-BVMTaL9O.mjs').then((m) => m.default || m)),
-	general: defineAsyncComponent(() => import('../build/general-CJsWHrDX.mjs').then((m) => m.default || m)),
-	"registro-verificacion": defineAsyncComponent(() => import('../build/registro-verificacion-C9h6fatM.mjs').then((m) => m.default || m))
+	"distributor-portal": defineAsyncComponent(() => import('../build/distributor-portal-nxgvyrZw.mjs').then((m) => m.default || m)),
+	general: defineAsyncComponent(() => import('../build/general-BGGm0K2V.mjs').then((m) => m.default || m)),
+	"registro-verificacion": defineAsyncComponent(() => import('../build/registro-verificacion-qEwzvYHv.mjs').then((m) => m.default || m))
 };
 //#endregion
 //#region node_modules/.pnpm/nuxt@4.5.2_@babel+plugin-sy_3e15249cd7c1540f4c07c4c9f2fb9b7b/node_modules/nuxt/dist/app/components/nuxt-layout.js

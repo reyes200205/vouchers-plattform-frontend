@@ -22,6 +22,7 @@ import 'unhead/legacy';
 import 'nostics';
 import 'vue-bundle-renderer/runtime';
 import 'devalue';
+import '@iconify/utils/lib/css/icon';
 import 'tailwindcss/colors';
 
 //#region app/pages/login/index.vue?vue&type=script&setup=true&lang.ts
