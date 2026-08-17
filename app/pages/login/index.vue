@@ -393,12 +393,12 @@ const handleSubmit = async () => {
   box-sizing: border-box;
 
   display: flex;
-  align-items: center;
+  align-items: stretch;
   justify-content: center;
 
   background: var(--background);
 
-  padding: clamp(12px, 3vw, 32px);
+  padding: 0;
 
   overflow-x: hidden;
 }
@@ -412,24 +412,23 @@ const handleSubmit = async () => {
 
 /* =========================================================
    CONTENEDOR PRINCIPAL
-========================================================= */
+ ========================================================= */
 
 .login-container {
-  width: min(1200px, 100%);
+  width: 100%;
+  max-width: 100%;
 
-  min-height: min(680px, calc(100dvh - 48px));
+  min-height: 100vh;
+  min-height: 100dvh;
 
   display: grid;
   grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
 
   background: white;
 
-  border-radius: clamp(20px, 3vw, 30px);
+  border-radius: 0;
 
   overflow: hidden;
-
-  box-shadow:
-    0 25px 60px rgba(13, 39, 71, 0.12);
 }
 
 
@@ -654,6 +653,7 @@ const handleSubmit = async () => {
   min-width: 0;
 
   display: flex;
+  flex-direction: column;
   align-items: center;
   justify-content: center;
 
@@ -1035,11 +1035,12 @@ const handleSubmit = async () => {
 @media (max-width: 1024px) {
 
   .login-page {
-    padding: 20px;
+    padding: 0;
   }
 
   .login-container {
-    min-height: 620px;
+    min-height: 100vh;
+    min-height: 100dvh;
   }
 
   .brand-panel {
@@ -1067,17 +1068,18 @@ const handleSubmit = async () => {
 @media (max-width: 820px) {
 
   .login-page {
-    padding: 16px;
+    padding: 0;
   }
 
   .login-container {
     grid-template-columns: 1fr;
 
-    width: min(650px, 100%);
+    width: 100%;
 
-    min-height: auto;
+    min-height: 100vh;
+    min-height: 100dvh;
 
-    border-radius: 24px;
+    border-radius: 0;
   }
 
   .brand-panel {
@@ -1085,7 +1087,8 @@ const handleSubmit = async () => {
   }
 
   .form-panel {
-    min-height: 650px;
+    min-height: 100vh;
+    min-height: 100dvh;
 
     padding: 45px clamp(24px, 7vw, 60px);
   }
@@ -1146,19 +1149,20 @@ const handleSubmit = async () => {
 @media (max-width: 600px) {
 
   .login-page {
-    align-items: flex-start;
+    align-items: center;
 
-    padding: 12px;
+    padding: 0;
   }
 
   .login-container {
     width: 100%;
 
-    border-radius: 20px;
+    border-radius: 0;
   }
 
   .form-panel {
-    min-height: calc(100dvh - 24px);
+    min-height: 100vh;
+    min-height: 100dvh;
 
     padding: 32px clamp(18px, 6vw, 32px);
   }
@@ -1194,15 +1198,16 @@ const handleSubmit = async () => {
 @media (max-width: 400px) {
 
   .login-page {
-    padding: 8px;
+    padding: 0;
   }
 
   .login-container {
-    border-radius: 17px;
+    border-radius: 0;
   }
 
   .form-panel {
-    min-height: calc(100dvh - 16px);
+    min-height: 100vh;
+    min-height: 100dvh;
 
     padding: 25px 17px;
   }
@@ -1312,9 +1317,9 @@ const handleSubmit = async () => {
 @media (max-height: 650px) and (orientation: landscape) {
 
   .login-page {
-    align-items: flex-start;
+    align-items: center;
 
-    padding: 10px;
+    padding: 0;
   }
 
   .login-container {
