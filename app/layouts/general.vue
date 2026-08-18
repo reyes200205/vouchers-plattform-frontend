@@ -162,7 +162,12 @@ onMounted(async () => {
       :ui="{ footer: 'lg:border-t lg:border-default' }"
     >
       <template #header="{ collapsed }">
-        <TeamsMenu :collapsed="collapsed" />
+        <div class="flex items-center gap-2.5 px-2.5 py-1.5">
+          <div class="flex items-center justify-center size-7 rounded-lg bg-primary/10 border border-primary/20 text-primary shrink-0">
+            <UIcon name="i-lucide-ticket" class="size-4" />
+          </div>
+          <span v-if="!collapsed" class="font-bold text-sm text-strong truncate">Mis Vales</span>
+        </div>
       </template>
 
       <template #default="{ collapsed }">

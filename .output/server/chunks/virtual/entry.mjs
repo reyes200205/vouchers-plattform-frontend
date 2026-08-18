@@ -17389,7 +17389,7 @@ function resolveLayoutName(route, name) {
 var virtual_nuxt_node_modules_2F_cache_2Fnuxt_2F_nuxt_2Flayouts_default = {
 	default: defineAsyncComponent(() => import('../build/default-BA_2QT4E.mjs').then((m) => m.default || m)),
 	"distributor-portal": defineAsyncComponent(() => import('../build/distributor-portal-CEQtaQKW.mjs').then((m) => m.default || m)),
-	general: defineAsyncComponent(() => import('../build/general-BPtpozMs.mjs').then((m) => m.default || m)),
+	general: defineAsyncComponent(() => import('../build/general-jadtw61z.mjs').then((m) => m.default || m)),
 	"registro-verificacion": defineAsyncComponent(() => import('../build/registro-verificacion-BJmQiXOO.mjs').then((m) => m.default || m))
 };
 //#endregion
@@ -17616,8 +17616,8 @@ var useColorMode = () => {
 };
 //#endregion
 //#region app/app.vue?vue&type=script&setup=true&lang.ts
-var title = "Nuxt Dashboard Template";
-var description = "A professional dashboard template built with Nuxt UI, featuring multiple pages, data visualization, and comprehensive management capabilities for creating powerful admin interfaces.";
+var title = "Mis Vales - Plataforma de Administración";
+var description = "Plataforma para la gestión, administración y validación de vales digitales.";
 var app_vue_vue_type_script_setup_true_lang_default = /*@__PURE__*/ defineComponent({
 	__name: "app",
 	__ssrInlineRender: true,

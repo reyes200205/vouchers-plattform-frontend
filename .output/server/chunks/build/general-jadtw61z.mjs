@@ -1,9 +1,8 @@
-import { aG as useRoute, aL as useToast, ai as useAuth, h as _sfc_main$7 } from '../virtual/entry.mjs';
+import { aG as useRoute, aL as useToast, ai as useAuth, g as _sfc_main$2$1 } from '../virtual/entry.mjs';
 import { c as _sfc_main$5, b as _sfc_main$3, U as UserMenu_default, a as _sfc_main$2, _ as _sfc_main$1, N as NotificationsSlideover_default } from './NotificationsSlideover-D3WJoG15.mjs';
-import { _ as _sfc_main$4 } from './DropdownMenu-DlLchN8a.mjs';
 import { _ as _sfc_main } from './NavigationMenu-MW6KcwVY.mjs';
 import { u as useInbox } from './useInbox-DtuZcK1c.mjs';
-import { defineComponent, ref, computed, mergeProps, withCtx, isRef, unref, createVNode, renderSlot, useSSRContext } from 'vue';
+import { defineComponent, ref, computed, mergeProps, withCtx, isRef, unref, createVNode, openBlock, createBlock, createCommentVNode, renderSlot, useSSRContext } from 'vue';
 import { ssrRenderComponent, ssrRenderSlot } from 'vue/server-renderer';
 import '../_/nitro.mjs';
 import 'node:http';
@@ -29,121 +28,26 @@ import 'tailwindcss/colors';
 import './fetch-ToU_qul8.mjs';
 import './PopperArrow-DMsSsDHm.mjs';
 import './useComposing-D1bdBmsI.mjs';
+import './DropdownMenu-DlLchN8a.mjs';
+import './namespaced-Hkd_Rrez.mjs';
+import './utils-C-SN97Al.mjs';
 import './useTypeahead-JOpfisYr.mjs';
-import './useFormControl-BySKHRcT.mjs';
 import './Kbd-CHYMLSD7.mjs';
+import './RovingFocusGroup-Dji7OupF.mjs';
+import './Input-3L6phQUN.mjs';
+import './useFormControl-BySKHRcT.mjs';
 import './useKbd-rvMsbidG.mjs';
 import './Modal-blGtq3y5.mjs';
-import './utils-C-SN97Al.mjs';
 import './overlay-BtFRc-iG.mjs';
 import './VisuallyHiddenInput-DOPBYbfB.mjs';
-import './RovingFocusGroup-Dji7OupF.mjs';
 import './esm-CcArdB_U.mjs';
 import './Tooltip-C_1kPD8x.mjs';
 import './DashboardSidebarToggle-BxKXl3gw.mjs';
 import './Slideover-w8Wvorju.mjs';
 import './Badge-B12zNpDE.mjs';
-import './Input-3L6phQUN.mjs';
 import './useDashboard-D4HEKIwL.mjs';
-import './namespaced-Hkd_Rrez.mjs';
 import './isValueEqualOrExist-BW-U-ShA.mjs';
 
-//#region app/components/TeamsMenu.vue?vue&type=script&setup=true&lang.ts
-var TeamsMenu_vue_vue_type_script_setup_true_lang_default = /*@__PURE__*/ defineComponent({
-	__name: "TeamsMenu",
-	__ssrInlineRender: true,
-	props: { collapsed: { type: Boolean } },
-	setup(__props) {
-		const teams = ref([
-			{
-				label: "Nuxt",
-				avatar: {
-					src: "https://github.com/nuxt.png",
-					alt: "Nuxt"
-				}
-			},
-			{
-				label: "NuxtHub",
-				avatar: {
-					src: "https://github.com/nuxt-hub.png",
-					alt: "NuxtHub"
-				}
-			},
-			{
-				label: "NuxtLabs",
-				avatar: {
-					src: "https://github.com/nuxtlabs.png",
-					alt: "NuxtLabs"
-				}
-			}
-		]);
-		const selectedTeam = ref(teams.value[0]);
-		const items = computed(() => {
-			return [teams.value.map((team) => ({
-				...team,
-				onSelect() {
-					selectedTeam.value = team;
-				}
-			})), [{
-				label: "Create team",
-				icon: "i-lucide-circle-plus"
-			}, {
-				label: "Manage teams",
-				icon: "i-lucide-cog"
-			}]];
-		});
-		return (_ctx, _push, _parent, _attrs) => {
-			const _component_UDropdownMenu = _sfc_main$4;
-			const _component_UButton = _sfc_main$7;
-			_push(ssrRenderComponent(_component_UDropdownMenu, mergeProps({
-				items: unref(items),
-				content: {
-					align: "center",
-					collisionPadding: 12
-				},
-				ui: { content: __props.collapsed ? "w-40" : "w-(--reka-dropdown-menu-trigger-width)" }
-			}, _attrs), {
-				default: withCtx((_, _push, _parent, _scopeId) => {
-					if (_push) _push(ssrRenderComponent(_component_UButton, mergeProps({
-						...unref(selectedTeam),
-						label: __props.collapsed ? void 0 : unref(selectedTeam)?.label,
-						trailingIcon: __props.collapsed ? void 0 : "i-lucide-chevrons-up-down"
-					}, {
-						color: "neutral",
-						variant: "ghost",
-						block: "",
-						square: __props.collapsed,
-						class: ["data-[state=open]:bg-elevated", [!__props.collapsed && "py-2"]],
-						ui: { trailingIcon: "text-dimmed" }
-					}), null, _parent, _scopeId));
-					else return [createVNode(_component_UButton, mergeProps({
-						...unref(selectedTeam),
-						label: __props.collapsed ? void 0 : unref(selectedTeam)?.label,
-						trailingIcon: __props.collapsed ? void 0 : "i-lucide-chevrons-up-down"
-					}, {
-						color: "neutral",
-						variant: "ghost",
-						block: "",
-						square: __props.collapsed,
-						class: ["data-[state=open]:bg-elevated", [!__props.collapsed && "py-2"]],
-						ui: { trailingIcon: "text-dimmed" }
-					}), null, 16, ["square", "class"])];
-				}),
-				_: 1
-			}, _parent));
-		};
-	}
-});
-//#endregion
-//#region app/components/TeamsMenu.vue
-var _sfc_setup$1 = TeamsMenu_vue_vue_type_script_setup_true_lang_default.setup;
-TeamsMenu_vue_vue_type_script_setup_true_lang_default.setup = (props, ctx) => {
-	const ssrContext = useSSRContext();
-	(ssrContext.modules || (ssrContext.modules = /* @__PURE__ */ new Set())).add("components/TeamsMenu.vue");
-	return _sfc_setup$1 ? _sfc_setup$1(props, ctx) : void 0;
-};
-var TeamsMenu_default = Object.assign(TeamsMenu_vue_vue_type_script_setup_true_lang_default, { __name: "TeamsMenu" });
-//#endregion
 //#region app/layouts/general.vue?vue&type=script&setup=true&lang.ts
 var general_vue_vue_type_script_setup_true_lang_default = /*@__PURE__*/ defineComponent({
 	__name: "general",
@@ -253,7 +157,7 @@ var general_vue_vue_type_script_setup_true_lang_default = /*@__PURE__*/ defineCo
 		return (_ctx, _push, _parent, _attrs) => {
 			const _component_UDashboardGroup = _sfc_main$5;
 			const _component_UDashboardSidebar = _sfc_main$3;
-			const _component_TeamsMenu = TeamsMenu_default;
+			const _component_UIcon = _sfc_main$2$1;
 			const _component_UDashboardSearchButton = _sfc_main$2;
 			const _component_UNavigationMenu = _sfc_main;
 			const _component_UserMenu = UserMenu_default;
@@ -272,8 +176,23 @@ var general_vue_vue_type_script_setup_true_lang_default = /*@__PURE__*/ defineCo
 							ui: { footer: "lg:border-t lg:border-default" }
 						}, {
 							header: withCtx(({ collapsed }, _push, _parent, _scopeId) => {
-								if (_push) _push(ssrRenderComponent(_component_TeamsMenu, { collapsed }, null, _parent, _scopeId));
-								else return [createVNode(_component_TeamsMenu, { collapsed }, null, 8, ["collapsed"])];
+								if (_push) {
+									_push(`<div class="flex items-center gap-2.5 px-2.5 py-1.5"${_scopeId}><div class="flex items-center justify-center size-7 rounded-lg bg-primary/10 border border-primary/20 text-primary shrink-0"${_scopeId}>`);
+									_push(ssrRenderComponent(_component_UIcon, {
+										name: "i-lucide-ticket",
+										class: "size-4"
+									}, null, _parent, _scopeId));
+									_push(`</div>`);
+									if (!collapsed) _push(`<span class="font-bold text-sm text-strong truncate"${_scopeId}>Mis Vales</span>`);
+									else _push(`<!---->`);
+									_push(`</div>`);
+								} else return [createVNode("div", { class: "flex items-center gap-2.5 px-2.5 py-1.5" }, [createVNode("div", { class: "flex items-center justify-center size-7 rounded-lg bg-primary/10 border border-primary/20 text-primary shrink-0" }, [createVNode(_component_UIcon, {
+									name: "i-lucide-ticket",
+									class: "size-4"
+								})]), !collapsed ? (openBlock(), createBlock("span", {
+									key: 0,
+									class: "font-bold text-sm text-strong truncate"
+								}, "Mis Vales")) : createCommentVNode("", true)])];
 							}),
 							default: withCtx(({ collapsed }, _push, _parent, _scopeId) => {
 								if (_push) {
@@ -318,7 +237,13 @@ var general_vue_vue_type_script_setup_true_lang_default = /*@__PURE__*/ defineCo
 							class: "bg-elevated/25",
 							ui: { footer: "lg:border-t lg:border-default" }
 						}, {
-							header: withCtx(({ collapsed }) => [createVNode(_component_TeamsMenu, { collapsed }, null, 8, ["collapsed"])]),
+							header: withCtx(({ collapsed }) => [createVNode("div", { class: "flex items-center gap-2.5 px-2.5 py-1.5" }, [createVNode("div", { class: "flex items-center justify-center size-7 rounded-lg bg-primary/10 border border-primary/20 text-primary shrink-0" }, [createVNode(_component_UIcon, {
+								name: "i-lucide-ticket",
+								class: "size-4"
+							})]), !collapsed ? (openBlock(), createBlock("span", {
+								key: 0,
+								class: "font-bold text-sm text-strong truncate"
+							}, "Mis Vales")) : createCommentVNode("", true)])]),
 							default: withCtx(({ collapsed }) => [createVNode(_component_UDashboardSearchButton, {
 								collapsed,
 								class: "bg-transparent ring-default"
@@ -353,4 +278,4 @@ general_vue_vue_type_script_setup_true_lang_default.setup = (props, ctx) => {
 var general_default = general_vue_vue_type_script_setup_true_lang_default;
 
 export { general_default as default };
-//# sourceMappingURL=general-BPtpozMs.mjs.map
+//# sourceMappingURL=general-jadtw61z.mjs.map
