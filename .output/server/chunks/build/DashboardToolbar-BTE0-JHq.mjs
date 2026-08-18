@@ -1,4 +1,4 @@
-import { al as useComponentProps, ag as useAppConfig, ad as tv, b as Primitive } from '../virtual/entry.mjs';
+import { am as useComponentProps, ag as useAppConfig, ad as tv, b as Primitive } from '../virtual/entry.mjs';
 import { computed, unref, mergeProps, withCtx, renderSlot, createVNode, useSSRContext } from 'vue';
 import { ssrRenderComponent, ssrRenderSlot, ssrRenderClass } from 'vue/server-renderer';
 

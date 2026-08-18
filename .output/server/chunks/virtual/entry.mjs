@@ -10969,6 +10969,175 @@ var stateDiagnostics = /* #__PURE__ */ defineProdDiagnostics({
 	reporters: prodReporters
 });
 
+function endIndex(str, min, len) {
+	const index = str.indexOf(";", min);
+	return index === -1 ? len : index;
+}
+function eqIndex(str, min, max) {
+	const index = str.indexOf("=", min);
+	return index < max ? index : -1;
+}
+function valueSlice(str, min, max) {
+	if (min === max) return "";
+	let start = min;
+	let end = max;
+	do {
+		const code = str.charCodeAt(start);
+		if (code !== 32 && code !== 9) break;
+	} while (++start < end);
+	while (end > start) {
+		const code = str.charCodeAt(end - 1);
+		if (code !== 32 && code !== 9) break;
+		end--;
+	}
+	return str.slice(start, end);
+}
+const NullObject = /* @__PURE__ */ (() => {
+	const C = function() {};
+	C.prototype = Object.create(null);
+	return C;
+})();
+function parse(str, options) {
+	const obj = new NullObject();
+	const len = str.length;
+	if (len < 2) return obj;
+	const dec = options?.decode || decode;
+	const allowMultiple = options?.allowMultiple || false;
+	let index = 0;
+	do {
+		const eqIdx = eqIndex(str, index, len);
+		if (eqIdx === -1) break;
+		const endIdx = endIndex(str, index, len);
+		if (eqIdx > endIdx) {
+			index = str.lastIndexOf(";", eqIdx - 1) + 1;
+			continue;
+		}
+		const key = valueSlice(str, index, eqIdx);
+		if (options?.filter && !options.filter(key)) {
+			index = endIdx + 1;
+			continue;
+		}
+		const val = dec(valueSlice(str, eqIdx + 1, endIdx));
+		if (allowMultiple) {
+			const existing = obj[key];
+			if (existing === void 0) obj[key] = val;
+			else if (Array.isArray(existing)) existing.push(val);
+			else obj[key] = [existing, val];
+		} else if (obj[key] === void 0) obj[key] = val;
+		index = endIdx + 1;
+	} while (index < len);
+	return obj;
+}
+function decode(str) {
+	if (!str.includes("%")) return str;
+	try {
+		return decodeURIComponent(str);
+	} catch {
+		return str;
+	}
+}
+
+//#region node_modules/.pnpm/nuxt@4.5.2_@babel+plugin-sy_3e15249cd7c1540f4c07c4c9f2fb9b7b/node_modules/nuxt/dist/app/composables/cookie.js
+function parseCookieValue(value) {
+	if (value === "undefined") return;
+	try {
+		const parsed = JSON.parse(value);
+		if (typeof parsed === "number" && String(parsed) !== value) return value;
+		return parsed;
+	} catch {
+		return value;
+	}
+}
+var CookieDefaults = {
+	path: "/",
+	watch: true,
+	decode: (val) => val ? parseCookieValue(decodeURIComponent(val)) : val,
+	encode: (val) => {
+		if (typeof val !== "string" || val === "undefined") return encodeURIComponent(JSON.stringify(val));
+		try {
+			if (typeof JSON.parse(val) !== "string") return encodeURIComponent(JSON.stringify(val));
+		} catch {}
+		return encodeURIComponent(val);
+	},
+	refresh: false
+};
+function useCookie(name, _opts) {
+	const opts = {
+		...CookieDefaults,
+		..._opts
+	};
+	opts.filter ??= (key) => key === name;
+	const cookies = readRawCookies(opts) || {};
+	let delay;
+	if (opts.maxAge !== void 0) delay = opts.maxAge * 1e3;
+	else if (opts.expires) delay = opts.expires.getTime() - Date.now();
+	const cookie = cookieServerRef(name, klona(delay !== void 0 && delay <= 0 ? void 0 : cookies[name] ?? opts.default?.()));
+	{
+		const nuxtApp = useNuxtApp();
+		const writeFinalCookieValue = () => {
+			const valueIsSame = isEqual$2(cookie.value, cookies[name]);
+			if (opts.readonly || valueIsSame && !opts.refresh) return;
+			nuxtApp._cookiesChanged ||= {};
+			if (valueIsSame && opts.refresh && !nuxtApp._cookiesChanged[name]) return;
+			nuxtApp._cookies ||= {};
+			if (name in nuxtApp._cookies) {
+				if (isEqual$2(cookie.value, nuxtApp._cookies[name])) return;
+			}
+			nuxtApp._cookies[name] = cookie.value;
+			const encoded = cookie.value === null || cookie.value === void 0 ? void 0 : opts.encode(cookie.value);
+			writeServerCookie(useRequestEvent(nuxtApp), name, encoded, opts);
+		};
+		const unhook = nuxtApp.hooks.hookOnce("app:rendered", writeFinalCookieValue);
+		nuxtApp.hooks.hookOnce("app:error", () => {
+			unhook();
+			return writeFinalCookieValue();
+		});
+	}
+	return cookie;
+}
+function readRawCookies(opts = {}) {
+	return parse(getRequestHeader(useRequestEvent(), "cookie") || "", opts);
+}
+var identityEncode = (val) => val;
+function toSerializeOptions(opts) {
+	const { encode: _encode, decode: _decode, ...rest } = opts;
+	return {
+		...rest,
+		encode: identityEncode
+	};
+}
+function writeServerCookie(event, name, value, opts = {}) {
+	if (event) {
+		const serializeOpts = toSerializeOptions(opts);
+		if (value !== void 0) return setCookie(event, name, value, serializeOpts);
+		if (getCookie(event, name) !== void 0) return deleteCookie(event, name, serializeOpts);
+	}
+}
+/**
+* Custom ref that tracks explicit cookie writes on the server.
+*
+* This is required for the `refresh` option to ensure the cookie is
+* re-written on SSR even when the value remains unchanged.
+*/
+function cookieServerRef(name, value) {
+	const internalRef = ref(value);
+	const nuxtApp = useNuxtApp();
+	return customRef((track, trigger) => {
+		return {
+			get() {
+				track();
+				return internalRef.value;
+			},
+			set(newValue) {
+				nuxtApp._cookiesChanged ||= {};
+				nuxtApp._cookiesChanged[name] = true;
+				internalRef.value = newValue;
+				trigger();
+			}
+		};
+	});
+}
+
 //#region node_modules/.pnpm/nuxt@4.5.2_@babel+plugin-sy_3e15249cd7c1540f4c07c4c9f2fb9b7b/node_modules/nuxt/dist/app/composables/state.js
 var useStateKeyPrefix = "$s";
 function useState(...args) {
@@ -11404,74 +11573,6 @@ function usePortal(portal) {
 		to: to.value,
 		disabled: disabled.value
 	}));
-}
-
-function endIndex(str, min, len) {
-	const index = str.indexOf(";", min);
-	return index === -1 ? len : index;
-}
-function eqIndex(str, min, max) {
-	const index = str.indexOf("=", min);
-	return index < max ? index : -1;
-}
-function valueSlice(str, min, max) {
-	if (min === max) return "";
-	let start = min;
-	let end = max;
-	do {
-		const code = str.charCodeAt(start);
-		if (code !== 32 && code !== 9) break;
-	} while (++start < end);
-	while (end > start) {
-		const code = str.charCodeAt(end - 1);
-		if (code !== 32 && code !== 9) break;
-		end--;
-	}
-	return str.slice(start, end);
-}
-const NullObject = /* @__PURE__ */ (() => {
-	const C = function() {};
-	C.prototype = Object.create(null);
-	return C;
-})();
-function parse(str, options) {
-	const obj = new NullObject();
-	const len = str.length;
-	if (len < 2) return obj;
-	const dec = options?.decode || decode;
-	const allowMultiple = options?.allowMultiple || false;
-	let index = 0;
-	do {
-		const eqIdx = eqIndex(str, index, len);
-		if (eqIdx === -1) break;
-		const endIdx = endIndex(str, index, len);
-		if (eqIdx > endIdx) {
-			index = str.lastIndexOf(";", eqIdx - 1) + 1;
-			continue;
-		}
-		const key = valueSlice(str, index, eqIdx);
-		if (options?.filter && !options.filter(key)) {
-			index = endIdx + 1;
-			continue;
-		}
-		const val = dec(valueSlice(str, eqIdx + 1, endIdx));
-		if (allowMultiple) {
-			const existing = obj[key];
-			if (existing === void 0) obj[key] = val;
-			else if (Array.isArray(existing)) existing.push(val);
-			else obj[key] = [existing, val];
-		} else if (obj[key] === void 0) obj[key] = val;
-		index = endIdx + 1;
-	} while (index < len);
-	return obj;
-}
-function decode(str) {
-	if (!str.includes("%")) return str;
-	try {
-		return decodeURIComponent(str);
-	} catch {
-		return str;
-	}
 }
 
 //#region virtual:nuxt:node_modules%2F.cache%2Fnuxt%2F.nuxt%2Fglobal-polyfills.mjs
@@ -12666,107 +12767,6 @@ var middleware$1 = defineNuxtRouteMiddleware(async (to) => {
 	});
 });
 //#endregion
-//#region node_modules/.pnpm/nuxt@4.5.2_@babel+plugin-sy_3e15249cd7c1540f4c07c4c9f2fb9b7b/node_modules/nuxt/dist/app/composables/cookie.js
-function parseCookieValue(value) {
-	if (value === "undefined") return;
-	try {
-		const parsed = JSON.parse(value);
-		if (typeof parsed === "number" && String(parsed) !== value) return value;
-		return parsed;
-	} catch {
-		return value;
-	}
-}
-var CookieDefaults = {
-	path: "/",
-	watch: true,
-	decode: (val) => val ? parseCookieValue(decodeURIComponent(val)) : val,
-	encode: (val) => {
-		if (typeof val !== "string" || val === "undefined") return encodeURIComponent(JSON.stringify(val));
-		try {
-			if (typeof JSON.parse(val) !== "string") return encodeURIComponent(JSON.stringify(val));
-		} catch {}
-		return encodeURIComponent(val);
-	},
-	refresh: false
-};
-function useCookie(name, _opts) {
-	const opts = {
-		...CookieDefaults,
-		..._opts
-	};
-	opts.filter ??= (key) => key === name;
-	const cookies = readRawCookies(opts) || {};
-	let delay;
-	if (opts.maxAge !== void 0) delay = opts.maxAge * 1e3;
-	else if (opts.expires) delay = opts.expires.getTime() - Date.now();
-	const cookie = cookieServerRef(name, klona(delay !== void 0 && delay <= 0 ? void 0 : cookies[name] ?? opts.default?.()));
-	{
-		const nuxtApp = useNuxtApp();
-		const writeFinalCookieValue = () => {
-			const valueIsSame = isEqual$2(cookie.value, cookies[name]);
-			if (opts.readonly || valueIsSame && !opts.refresh) return;
-			nuxtApp._cookiesChanged ||= {};
-			if (valueIsSame && opts.refresh && !nuxtApp._cookiesChanged[name]) return;
-			nuxtApp._cookies ||= {};
-			if (name in nuxtApp._cookies) {
-				if (isEqual$2(cookie.value, nuxtApp._cookies[name])) return;
-			}
-			nuxtApp._cookies[name] = cookie.value;
-			const encoded = cookie.value === null || cookie.value === void 0 ? void 0 : opts.encode(cookie.value);
-			writeServerCookie(useRequestEvent(nuxtApp), name, encoded, opts);
-		};
-		const unhook = nuxtApp.hooks.hookOnce("app:rendered", writeFinalCookieValue);
-		nuxtApp.hooks.hookOnce("app:error", () => {
-			unhook();
-			return writeFinalCookieValue();
-		});
-	}
-	return cookie;
-}
-function readRawCookies(opts = {}) {
-	return parse(getRequestHeader(useRequestEvent(), "cookie") || "", opts);
-}
-var identityEncode = (val) => val;
-function toSerializeOptions(opts) {
-	const { encode: _encode, decode: _decode, ...rest } = opts;
-	return {
-		...rest,
-		encode: identityEncode
-	};
-}
-function writeServerCookie(event, name, value, opts = {}) {
-	if (event) {
-		const serializeOpts = toSerializeOptions(opts);
-		if (value !== void 0) return setCookie(event, name, value, serializeOpts);
-		if (getCookie(event, name) !== void 0) return deleteCookie(event, name, serializeOpts);
-	}
-}
-/**
-* Custom ref that tracks explicit cookie writes on the server.
-*
-* This is required for the `refresh` option to ensure the cookie is
-* re-written on SSR even when the value remains unchanged.
-*/
-function cookieServerRef(name, value) {
-	const internalRef = ref(value);
-	const nuxtApp = useNuxtApp();
-	return customRef((track, trigger) => {
-		return {
-			get() {
-				track();
-				return internalRef.value;
-			},
-			set(newValue) {
-				nuxtApp._cookiesChanged ||= {};
-				nuxtApp._cookiesChanged[name] = true;
-				internalRef.value = newValue;
-				trigger();
-			}
-		};
-	});
-}
-//#endregion
 //#region app/middleware/auth.global.ts
 var PROTECTED_PREFIXES = [
 	"/general",
@@ -12863,79 +12863,79 @@ var virtual_nuxt_node_modules_2F_cache_2Fnuxt_2F_nuxt_2Froutes_default = [
 	{
 		name: "registro-verificacion-verificador-dashboard_verificador",
 		path: "/registro-verificacion/verificador/dashboard_verificador",
-		component: () => import('../build/dashboard_verificador-B3WOJx_h.mjs')
+		component: () => import('../build/dashboard_verificador-D4746Oy9.mjs')
 	},
 	{
 		name: "general-branches",
 		path: "/general/branches",
-		component: () => import('../build/branches-ClkBdS64.mjs')
+		component: () => import('../build/branches-BiDI-JiR.mjs')
 	},
 	{
 		name: "general-customers",
 		path: "/general/customers",
-		component: () => import('../build/customers-Cb_pA9B7.mjs')
+		component: () => import('../build/customers-CXInvOTK.mjs')
 	},
 	{
 		name: "general-inbox",
 		path: "/general/inbox",
-		component: () => import('../build/inbox-YV_Fcim9.mjs')
+		component: () => import('../build/inbox-Czc8uMTK.mjs')
 	},
 	{
 		name: void 0,
 		path: "/general/settings",
-		component: () => import('../build/settings-Bv38GEHB.mjs'),
+		component: () => import('../build/settings-BfSoW-GO.mjs'),
 		children: [
 			{
 				name: "general-settings-members",
 				path: "members",
-				component: () => import('../build/members-BdaWCg9v.mjs')
+				component: () => import('../build/members-ChEI8UR9.mjs')
 			},
 			{
 				name: "general-settings-notifications",
 				path: "notifications",
-				component: () => import('../build/notifications-Cw_sIgu9.mjs')
+				component: () => import('../build/notifications-CNUuJalC.mjs')
 			},
 			{
 				name: "general-settings-security",
 				path: "security",
-				component: () => import('../build/security-BQqaJCd4.mjs')
+				component: () => import('../build/security-D4QXZYOs.mjs')
 			},
 			{
 				name: "general-settings",
 				path: "",
-				component: () => import('../build/settings-CyBNSKM8.mjs')
+				component: () => import('../build/settings-Cl_IlDnl.mjs')
 			}
 		]
 	},
 	{
 		name: "registro-verificacion-list",
 		path: "/registro-verificacion/list",
-		component: () => import('../build/list-D1zsgJpS.mjs')
+		component: () => import('../build/list-Dj8jOsR4.mjs')
 	},
 	{
 		name: "registro-verificacion-new",
 		path: "/registro-verificacion/new",
-		component: () => import('../build/new-9gR9egso.mjs')
+		component: () => import('../build/new-BnqAn916.mjs')
 	},
 	{
 		name: "distributor-portal",
 		path: "/distributor-portal",
-		component: () => import('../build/distributor-portal-CIiw4nL5.mjs')
+		component: () => import('../build/distributor-portal-Cltr6S1r.mjs')
 	},
 	{
 		name: "general",
 		path: "/general",
-		component: () => import('../build/general-dEkdY9Ci.mjs')
+		component: () => import('../build/general-BvxPAS-a.mjs')
 	},
 	{
 		name: "login",
 		path: "/login",
-		component: () => import('../build/login-BVMK9G7P.mjs')
+		component: () => import('../build/login-rpmbnwyX.mjs')
 	},
 	{
 		name: "registro-verificacion",
 		path: "/registro-verificacion",
-		component: () => import('../build/registro-verificacion-CcsIKEiM.mjs')
+		component: () => import('../build/registro-verificacion-PTGPjIBl.mjs')
 	},
 	{
 		name: "index",
@@ -17388,9 +17388,9 @@ function resolveLayoutName(route, name) {
 //#region virtual:nuxt:node_modules%2F.cache%2Fnuxt%2F.nuxt%2Flayouts.mjs
 var virtual_nuxt_node_modules_2F_cache_2Fnuxt_2F_nuxt_2Flayouts_default = {
 	default: defineAsyncComponent(() => import('../build/default-BA_2QT4E.mjs').then((m) => m.default || m)),
-	"distributor-portal": defineAsyncComponent(() => import('../build/distributor-portal-hUHirAtb.mjs').then((m) => m.default || m)),
-	general: defineAsyncComponent(() => import('../build/general-CGmXXbyu.mjs').then((m) => m.default || m)),
-	"registro-verificacion": defineAsyncComponent(() => import('../build/registro-verificacion-DfnKjM1G.mjs').then((m) => m.default || m))
+	"distributor-portal": defineAsyncComponent(() => import('../build/distributor-portal-CiCxfRZD.mjs').then((m) => m.default || m)),
+	general: defineAsyncComponent(() => import('../build/general-a0ZZ3IM1.mjs').then((m) => m.default || m)),
+	"registro-verificacion": defineAsyncComponent(() => import('../build/registro-verificacion-D-GSSMrl.mjs').then((m) => m.default || m))
 };
 //#endregion
 //#region node_modules/.pnpm/nuxt@4.5.2_@babel+plugin-sy_3e15249cd7c1540f4c07c4c9f2fb9b7b/node_modules/nuxt/dist/app/components/nuxt-layout.js
@@ -17853,6 +17853,64 @@ _sfc_main$1.setup = (props, ctx) => {
 	return _sfc_setup$2 ? _sfc_setup$2(props, ctx) : void 0;
 };
 //#endregion
+//#region app/composables/useAuth.ts
+var ROLE_ROUTES = {
+	administrator: "/general",
+	general_manager: "/general",
+	branch_manager: "/general",
+	cashier: "/general",
+	distributor: "/distributor-portal",
+	coordinator: "/registro-verificacion",
+	verifier: "/registro-verificacion/verificador/dashboard_verificador"
+};
+function useAuth() {
+	const config = useRuntimeConfig();
+	const token = useCookie("auth_token", { default: () => null });
+	const user = useCookie("auth_user", { default: () => null });
+	function primaryRole(candidate) {
+		if (!candidate?.roles?.length) return null;
+		return candidate.roles.find((role) => role.is_primary) ?? candidate.roles[0];
+	}
+	const roleCode = computed(() => primaryRole(user.value)?.code ?? null);
+	const roleName = computed(() => primaryRole(user.value)?.name ?? null);
+	const isLoggedIn = computed(() => Boolean(token.value));
+	async function login(username, password) {
+		const response = await $fetch$2(`${config.public.apiBase}/auth/login`, {
+			method: "POST",
+			body: {
+				username,
+				password
+			}
+		});
+		token.value = response.data.token;
+		user.value = response.data.user;
+		return primaryRole(response.data.user)?.code ?? null;
+	}
+	async function logout() {
+		if (token.value) try {
+			await $fetch$2(`${config.public.apiBase}/auth/logout`, {
+				method: "POST",
+				headers: { Authorization: `Bearer ${token.value}` }
+			});
+		} catch {}
+		token.value = null;
+		user.value = null;
+	}
+	function roleHome(code) {
+		return code && ROLE_ROUTES[code] ? ROLE_ROUTES[code] : "/login";
+	}
+	return {
+		token,
+		user,
+		roleCode,
+		roleName,
+		isLoggedIn,
+		login,
+		logout,
+		roleHome
+	};
+}
+//#endregion
 //#region app/error.vue?vue&type=script&setup=true&lang.ts
 var error_vue_vue_type_script_setup_true_lang_default = /*@__PURE__*/ defineComponent({
 	__name: "error",
@@ -17864,13 +17922,23 @@ var error_vue_vue_type_script_setup_true_lang_default = /*@__PURE__*/ defineComp
 			description: "We are sorry but this page could not be found."
 		});
 		useHead$1({ htmlAttrs: { lang: "en" } });
+		const { roleCode, roleHome } = useAuth();
+		const redirectPath = computed(() => {
+			return roleHome(roleCode.value);
+		});
 		return (_ctx, _push, _parent, _attrs) => {
 			const _component_UApp = App_default;
 			const _component_UError = _sfc_main$1;
 			_push(ssrRenderComponent(_component_UApp, _attrs, {
 				default: withCtx((_, _push, _parent, _scopeId) => {
-					if (_push) _push(ssrRenderComponent(_component_UError, { error: __props.error }, null, _parent, _scopeId));
-					else return [createVNode(_component_UError, { error: __props.error }, null, 8, ["error"])];
+					if (_push) _push(ssrRenderComponent(_component_UError, {
+						error: __props.error,
+						redirect: redirectPath.value
+					}, null, _parent, _scopeId));
+					else return [createVNode(_component_UError, {
+						error: __props.error,
+						redirect: redirectPath.value
+					}, null, 8, ["error", "redirect"])];
 				}),
 				_: 1
 			}, _parent));
@@ -17966,5 +18034,5 @@ const entry = /*#__PURE__*/Object.freeze(/*#__PURE__*/Object.defineProperty({
   default: entry_default
 }, Symbol.toStringTag, { value: 'Module' }));
 
-export { $fetch$2 as $, AUTOFOCUS_ON_MOUNT as A, formLoadingInjectionKey as B, formOptionsInjectionKey as C, formStateInjectionKey as D, EVENT_OPTIONS as E, FieldGroupReset as F, formatTimeAgo as G, get as H, getActiveElement as I, getDisplayValue as J, getSlotChildrenText as K, getTabbableCandidates as L, getTabbableEdges as M, NuxtLink as N, injectConfigProviderContext as O, Presence_default as P, injectTooltipProviderContext as Q, inputIdInjectionKey as R, isArrayOfArray as S, Teleport_default as T, isNullish as U, VisuallyHidden_default as V, looseToNumber as W, navigateTo as X, omit as Y, onKeyStroke as Z, __commonJSMin as _, AUTOFOCUS_ON_UNMOUNT as a, page_default as a0, pausableFilter as a1, pickLinkProps as a2, reactiveComputed as a3, reactiveOmit as a4, reactivePick as a5, refAutoReset as a6, refDebounced as a7, refThrottled as a8, syncRef as a9, useParentElement as aA, usePortal as aB, usePrimitiveElement as aC, useRequestFetch as aD, useResizeObserver as aE, useRoute$1 as aF, useRouter as aG, useRuntimeConfig as aH, useStorage as aI, useTimeoutFn as aJ, useToast as aK, useVModel as aL, transformUI as aa, tryOnBeforeUnmount as ab, tryOnScopeDispose as ac, tv as ad, unrefElement as ae, useActiveElement as af, useAppConfig as ag, useAsyncData as ah, useCollection as ai, useColorMode as aj, useComponentIcons as ak, useComponentProps as al, useCookie as am, useDebounceFn as an, useEmitAsProps as ao, useEventBus as ap, useEventListener as aq, useFieldGroup as ar, useFormField as as, useForwardExpose as at, useForwardProps as au, useForwardProps$1 as av, useLocale as aw, useMounted as ax, useMouseInElement as ay, useNuxtApp as az, Primitive as b, __exportAll as c, __reExport as d, _sfc_main$a as e, _sfc_main$1$1 as f, _sfc_main$2$1 as g, _sfc_main$7 as h, _sfc_main$8 as i, _sfc_main$9 as j, createContext as k, createEventHook as l, createGlobalState as m, createRef as n, createReusableTemplate as o, createSharedComposable as p, dataDiagnostics as q, defineKeyedFunctionFactory as r, entry as s, fetchDefaults as t, focus as u, focusFirst as v, formBusInjectionKey as w, formErrorsInjectionKey as x, formFieldInjectionKey as y, formInputsInjectionKey as z };
+export { $fetch$2 as $, AUTOFOCUS_ON_MOUNT as A, formLoadingInjectionKey as B, formOptionsInjectionKey as C, formStateInjectionKey as D, EVENT_OPTIONS as E, FieldGroupReset as F, formatTimeAgo as G, get as H, getActiveElement as I, getDisplayValue as J, getSlotChildrenText as K, getTabbableCandidates as L, getTabbableEdges as M, NuxtLink as N, injectConfigProviderContext as O, Presence_default as P, injectTooltipProviderContext as Q, inputIdInjectionKey as R, isArrayOfArray as S, Teleport_default as T, isNullish as U, VisuallyHidden_default as V, looseToNumber as W, navigateTo as X, omit as Y, onKeyStroke as Z, __commonJSMin as _, AUTOFOCUS_ON_UNMOUNT as a, page_default as a0, pausableFilter as a1, pickLinkProps as a2, reactiveComputed as a3, reactiveOmit as a4, reactivePick as a5, refAutoReset as a6, refDebounced as a7, refThrottled as a8, syncRef as a9, useNuxtApp as aA, useParentElement as aB, usePortal as aC, usePrimitiveElement as aD, useRequestFetch as aE, useResizeObserver as aF, useRoute$1 as aG, useRouter as aH, useRuntimeConfig as aI, useStorage as aJ, useTimeoutFn as aK, useToast as aL, useVModel as aM, transformUI as aa, tryOnBeforeUnmount as ab, tryOnScopeDispose as ac, tv as ad, unrefElement as ae, useActiveElement as af, useAppConfig as ag, useAsyncData as ah, useAuth as ai, useCollection as aj, useColorMode as ak, useComponentIcons as al, useComponentProps as am, useCookie as an, useDebounceFn as ao, useEmitAsProps as ap, useEventBus as aq, useEventListener as ar, useFieldGroup as as, useFormField as at, useForwardExpose as au, useForwardProps as av, useForwardProps$1 as aw, useLocale as ax, useMounted as ay, useMouseInElement as az, Primitive as b, __exportAll as c, __reExport as d, _sfc_main$a as e, _sfc_main$1$1 as f, _sfc_main$2$1 as g, _sfc_main$7 as h, _sfc_main$8 as i, _sfc_main$9 as j, createContext as k, createEventHook as l, createGlobalState as m, createRef as n, createReusableTemplate as o, createSharedComposable as p, dataDiagnostics as q, defineKeyedFunctionFactory as r, entry as s, fetchDefaults as t, focus as u, focusFirst as v, formBusInjectionKey as w, formErrorsInjectionKey as x, formFieldInjectionKey as y, formInputsInjectionKey as z };
 //# sourceMappingURL=entry.mjs.map

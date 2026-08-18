@@ -1,4 +1,4 @@
-import { r as defineKeyedFunctionFactory, q as dataDiagnostics, t as fetchDefaults, ah as useAsyncData, aD as useRequestFetch, $ as $fetch$2, _ as __commonJSMin } from '../virtual/entry.mjs';
+import { r as defineKeyedFunctionFactory, q as dataDiagnostics, t as fetchDefaults, ah as useAsyncData, aE as useRequestFetch, $ as $fetch$2, _ as __commonJSMin } from '../virtual/entry.mjs';
 import { computed, toValue, reactive } from 'vue';
 
 //#region src/index.ts

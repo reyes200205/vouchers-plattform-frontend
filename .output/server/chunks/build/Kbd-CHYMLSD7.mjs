@@ -1,4 +1,4 @@
-import { al as useComponentProps, ag as useAppConfig, ad as tv, b as Primitive, p as createSharedComposable, a6 as refAutoReset, ac as tryOnScopeDispose, l as createEventHook } from '../virtual/entry.mjs';
+import { am as useComponentProps, ag as useAppConfig, ad as tv, b as Primitive, p as createSharedComposable, a6 as refAutoReset, ac as tryOnScopeDispose, l as createEventHook } from '../virtual/entry.mjs';
 import { computed, unref, mergeProps, withCtx, renderSlot, createTextVNode, toDisplayString, reactive, ref, watchEffect, useSSRContext } from 'vue';
 import { ssrRenderComponent, ssrRenderSlot, ssrInterpolate } from 'vue/server-renderer';
 

@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import type { NuxtError } from '#app'
+import { computed } from 'vue'
 
 defineProps<{
   error: NuxtError
@@ -15,10 +16,16 @@ useHead({
     lang: 'en'
   }
 })
+
+const { roleCode, roleHome } = useAuth()
+
+const redirectPath = computed(() => {
+  return roleHome(roleCode.value)
+})
 </script>
 
 <template>
   <UApp>
-    <UError :error="error" />
+    <UError :error="error" :redirect="redirectPath" />
   </UApp>
 </template>
