@@ -82,9 +82,23 @@ export function useAuth() {
     user.value = null
   }
 
+  async function fetchMe() {
+    if (!token.value) return null
+    try {
+      const response = await $fetch<{ success: boolean, data: AuthUser }>(`${config.public.apiBase}/auth/me`, {
+        headers: { Authorization: `Bearer ${token.value}` }
+      })
+      user.value = response.data
+      return response.data
+    } catch (e) {
+      console.error('Failed to fetch user profile', e)
+      return null
+    }
+  }
+
   function roleHome(code: string | null) {
     return code && ROLE_ROUTES[code] ? ROLE_ROUTES[code] : '/login'
   }
 
-  return { token, user, roleCode, roleName, isLoggedIn, login, logout, roleHome }
+  return { token, user, roleCode, roleName, isLoggedIn, login, logout, roleHome, fetchMe }
 }

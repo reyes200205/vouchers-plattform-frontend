@@ -1,4 +1,4 @@
-import { am as useComponentProps, aA as useNuxtApp, ag as useAppConfig, ad as tv, b as Primitive, aG as useRoute, ax as useLocale, o as createReusableTemplate, av as useForwardProps, a4 as reactiveOmit, h as _sfc_main$7$1, aa as transformUI, ak as useColorMode, a5 as reactivePick, Y as omit, aC as usePortal, F as FieldGroupReset, V as VisuallyHidden_default, ai as useAuth, X as navigateTo, i as _sfc_main$8$1, g as _sfc_main$2$1, a7 as refDebounced, a8 as refThrottled, e as _sfc_main$d, a2 as pickLinkProps, H as get$1, f as _sfc_main$1$2, j as _sfc_main$9$1, N as NuxtLink, G as formatTimeAgo, aj as useCollection, au as useForwardExpose, aD as usePrimitiveElement, aM as useVModel, a6 as refAutoReset, aB as useParentElement, I as getActiveElement, k as createContext, l as createEventHook } from '../virtual/entry.mjs';
+import { am as useComponentProps, aA as useNuxtApp, ag as useAppConfig, ad as tv, b as Primitive, aG as useRoute, ax as useLocale, o as createReusableTemplate, av as useForwardProps, a4 as reactiveOmit, h as _sfc_main$7$1, aa as transformUI, ak as useColorMode, a5 as reactivePick, Y as omit, aC as usePortal, F as FieldGroupReset, V as VisuallyHidden_default, ai as useAuth, X as navigateTo, g as _sfc_main$2$1, i as _sfc_main$8$1, a7 as refDebounced, a8 as refThrottled, e as _sfc_main$d, a2 as pickLinkProps, H as get$1, f as _sfc_main$1$2, j as _sfc_main$9$1, N as NuxtLink, G as formatTimeAgo, aj as useCollection, au as useForwardExpose, aD as usePrimitiveElement, aM as useVModel, a6 as refAutoReset, aB as useParentElement, I as getActiveElement, k as createContext, l as createEventHook } from '../virtual/entry.mjs';
 import { u as useFetch } from './fetch-ToU_qul8.mjs';
 import { e as useForwardPropsEmits, f as useId$1, u as useDirection, h as handleAndDispatchCustomEvent } from './PopperArrow-DMsSsDHm.mjs';
 import { u as useComposing } from './useComposing-D1bdBmsI.mjs';
@@ -3307,8 +3307,9 @@ var UserMenu_vue_vue_type_script_setup_true_lang_default = /*@__PURE__*/ defineC
 			"mist",
 			"olive"
 		];
-		const { user: authUser, logout } = useAuth();
+		const { user: authUser, logout, fetchMe } = useAuth();
 		const isProfileOpen = ref(false);
+		const isProfileLoading = ref(false);
 		const displayName = computed(() => {
 			if (authUser.value?.person) {
 				const p = authUser.value.person;
@@ -3323,16 +3324,26 @@ var UserMenu_vue_vue_type_script_setup_true_lang_default = /*@__PURE__*/ defineC
 				alt: displayName.value
 			}
 		}));
-		const primaryRole = computed(() => {
-			if (!authUser.value?.roles?.length) return null;
-			return authUser.value.roles.find((role) => role.is_primary) ?? authUser.value.roles[0];
-		});
-		const branchName = computed(() => {
-			return primaryRole.value?.branch_name ?? "Global (Sin Sucursal)";
+		const branchNames = computed(() => {
+			if (!authUser.value?.roles?.length) return "Global (Sin Sucursal)";
+			const names = authUser.value.roles.map((role) => role.branch_name).filter((name) => Boolean(name));
+			const uniqueNames = [...new Set(names)];
+			if (uniqueNames.length === 0) return "Global (Sin Sucursal)";
+			return uniqueNames.join(", ");
 		});
 		const roleNameDisplay = computed(() => {
-			return primaryRole.value?.name ?? "N/A";
+			if (!authUser.value?.roles?.length) return "N/A";
+			const names = authUser.value.roles.map((role) => role.name);
+			return [...new Set(names)].join(", ");
 		});
+		const openProfile = async () => {
+			isProfileOpen.value = true;
+			if (fetchMe) {
+				isProfileLoading.value = true;
+				await fetchMe();
+				isProfileLoading.value = false;
+			}
+		};
 		const items = computed(() => [
 			[{
 				type: "label",
@@ -3341,9 +3352,7 @@ var UserMenu_vue_vue_type_script_setup_true_lang_default = /*@__PURE__*/ defineC
 			}, {
 				label: "Profile",
 				icon: "i-lucide-user",
-				onSelect: () => {
-					isProfileOpen.value = true;
-				}
+				onSelect: openProfile
 			}],
 			[{
 				label: "Theme",
@@ -3425,8 +3434,8 @@ var UserMenu_vue_vue_type_script_setup_true_lang_default = /*@__PURE__*/ defineC
 			const _component_UDropdownMenu = _sfc_main$b;
 			const _component_UButton = _sfc_main$7$1;
 			const _component_UModal = _sfc_main$6;
-			const _component_UAvatar = _sfc_main$8$1;
 			const _component_UIcon = _sfc_main$2$1;
+			const _component_UAvatar = _sfc_main$8$1;
 			const _component_UBadge = _sfc_main$c;
 			_push(`<!--[-->`);
 			_push(ssrRenderComponent(_component_UDropdownMenu, {
@@ -3485,8 +3494,15 @@ var UserMenu_vue_vue_type_script_setup_true_lang_default = /*@__PURE__*/ defineC
 				description: "Información detallada de tu cuenta"
 			}, {
 				body: withCtx((_, _push, _parent, _scopeId) => {
-					if (_push) {
-						_push(`<div class="flex flex-col items-center gap-4 py-4"${_scopeId}>`);
+					if (_push) if (unref(isProfileLoading) && !unref(authUser)?.person?.email) {
+						_push(`<div class="flex flex-col items-center justify-center py-12 gap-3"${_scopeId}>`);
+						_push(ssrRenderComponent(_component_UIcon, {
+							name: "i-lucide-loader-2",
+							class: "animate-spin size-8 text-primary"
+						}, null, _parent, _scopeId));
+						_push(`<p class="text-sm text-dimmed"${_scopeId}>Cargando perfil...</p></div>`);
+					} else {
+						_push(`<div${_scopeId}><div class="flex flex-col items-center gap-4 py-4"${_scopeId}>`);
 						_push(ssrRenderComponent(_component_UAvatar, {
 							src: `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(unref(displayName))}`,
 							alt: unref(displayName),
@@ -3520,15 +3536,22 @@ var UserMenu_vue_vue_type_script_setup_true_lang_default = /*@__PURE__*/ defineC
 							name: "i-lucide-store",
 							class: "text-dimmed size-4"
 						}, null, _parent, _scopeId));
-						_push(`<span class="text-sm font-medium text-strong"${_scopeId}>Sucursal</span></div><span class="text-sm text-dimmed"${_scopeId}>${ssrInterpolate(unref(branchName))}</span></div></div><div class="flex justify-end gap-2 mt-6"${_scopeId}>`);
+						_push(`<span class="text-sm font-medium text-strong"${_scopeId}>Sucursal</span></div><span class="text-sm text-dimmed"${_scopeId}>${ssrInterpolate(unref(branchNames))}</span></div></div><div class="flex justify-end gap-2 mt-6"${_scopeId}>`);
 						_push(ssrRenderComponent(_component_UButton, {
 							label: "Cerrar",
 							color: "neutral",
 							variant: "subtle",
 							onClick: ($event) => isProfileOpen.value = false
 						}, null, _parent, _scopeId));
-						_push(`</div>`);
-					} else return [
+						_push(`</div></div>`);
+					}
+					else return [unref(isProfileLoading) && !unref(authUser)?.person?.email ? (openBlock(), createBlock("div", {
+						key: 0,
+						class: "flex flex-col items-center justify-center py-12 gap-3"
+					}, [createVNode(_component_UIcon, {
+						name: "i-lucide-loader-2",
+						class: "animate-spin size-8 text-primary"
+					}), createVNode("p", { class: "text-sm text-dimmed" }, "Cargando perfil...")])) : (openBlock(), createBlock("div", { key: 1 }, [
 						createVNode("div", { class: "flex flex-col items-center gap-4 py-4" }, [createVNode(_component_UAvatar, {
 							src: `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(unref(displayName))}`,
 							alt: unref(displayName),
@@ -3554,7 +3577,7 @@ var UserMenu_vue_vue_type_script_setup_true_lang_default = /*@__PURE__*/ defineC
 							createVNode("div", { class: "flex items-center justify-between p-3 rounded-lg bg-muted/30 border border-border/50" }, [createVNode("div", { class: "flex items-center gap-2" }, [createVNode(_component_UIcon, {
 								name: "i-lucide-store",
 								class: "text-dimmed size-4"
-							}), createVNode("span", { class: "text-sm font-medium text-strong" }, "Sucursal")]), createVNode("span", { class: "text-sm text-dimmed" }, toDisplayString(unref(branchName)), 1)])
+							}), createVNode("span", { class: "text-sm font-medium text-strong" }, "Sucursal")]), createVNode("span", { class: "text-sm text-dimmed" }, toDisplayString(unref(branchNames)), 1)])
 						]),
 						createVNode("div", { class: "flex justify-end gap-2 mt-6" }, [createVNode(_component_UButton, {
 							label: "Cerrar",
@@ -3562,7 +3585,7 @@ var UserMenu_vue_vue_type_script_setup_true_lang_default = /*@__PURE__*/ defineC
 							variant: "subtle",
 							onClick: ($event) => isProfileOpen.value = false
 						}, null, 8, ["onClick"])])
-					];
+					]))];
 				}),
 				_: 1
 			}, _parent));
@@ -7507,4 +7530,4 @@ NotificationsSlideover_vue_vue_type_script_setup_true_lang_default.setup = (prop
 var NotificationsSlideover_default = Object.assign(NotificationsSlideover_vue_vue_type_script_setup_true_lang_default, { __name: "NotificationsSlideover" });
 
 export { NotificationsSlideover_default as N, UserMenu_default as U, _sfc_main as _, _sfc_main$2 as a, _sfc_main$3 as b, _sfc_main$5 as c };
-//# sourceMappingURL=NotificationsSlideover-wD0Zi3wU.mjs.map
+//# sourceMappingURL=NotificationsSlideover-D3WJoG15.mjs.map

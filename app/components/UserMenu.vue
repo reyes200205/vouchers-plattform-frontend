@@ -11,9 +11,10 @@ const appConfig = useAppConfig()
 const colors = ['red', 'orange', 'amber', 'yellow', 'lime', 'green', 'emerald', 'teal', 'cyan', 'sky', 'blue', 'indigo', 'violet', 'purple', 'fuchsia', 'pink', 'rose']
 const neutrals = ['slate', 'gray', 'zinc', 'neutral', 'stone', 'taupe', 'mauve', 'mist', 'olive']
 
-const { user: authUser, logout } = useAuth()
+const { user: authUser, logout, fetchMe } = useAuth()
 
 const isProfileOpen = ref(false)
+const isProfileLoading = ref(false)
 
 const displayName = computed(() => {
   if (authUser.value?.person) {
@@ -31,18 +32,39 @@ const userDetails = computed(() => ({
   }
 }))
 
-const primaryRole = computed(() => {
-  if (!authUser.value?.roles?.length) return null
-  return authUser.value.roles.find(role => role.is_primary) ?? authUser.value.roles[0]
-})
-
-const branchName = computed(() => {
-  return primaryRole.value?.branch_name ?? 'Global (Sin Sucursal)'
+const branchNames = computed(() => {
+  if (!authUser.value?.roles?.length) return 'Global (Sin Sucursal)'
+  
+  const names = authUser.value.roles
+    .map(role => role.branch_name)
+    .filter((name): name is string => Boolean(name))
+  
+  const uniqueNames = [...new Set(names)]
+  
+  if (uniqueNames.length === 0) {
+    return 'Global (Sin Sucursal)'
+  }
+  
+  return uniqueNames.join(', ')
 })
 
 const roleNameDisplay = computed(() => {
-  return primaryRole.value?.name ?? 'N/A'
+  if (!authUser.value?.roles?.length) return 'N/A'
+  
+  const names = authUser.value.roles.map(role => role.name)
+  const uniqueNames = [...new Set(names)]
+  
+  return uniqueNames.join(', ')
 })
+
+const openProfile = async () => {
+  isProfileOpen.value = true
+  if (fetchMe) {
+    isProfileLoading.value = true
+    await fetchMe()
+    isProfileLoading.value = false
+  }
+}
 
 const items = computed<DropdownMenuItem[][]>(() => ([[{
   type: 'label',
@@ -51,9 +73,7 @@ const items = computed<DropdownMenuItem[][]>(() => ([[{
 }, {
   label: 'Profile',
   icon: 'i-lucide-user',
-  onSelect: () => {
-    isProfileOpen.value = true
-  }
+  onSelect: openProfile
 }], [{
   label: 'Theme',
   icon: 'i-lucide-palette',
@@ -176,54 +196,60 @@ const items = computed<DropdownMenuItem[][]>(() => ([[{
     description="Información detallada de tu cuenta"
   >
     <template #body>
-      <div class="flex flex-col items-center gap-4 py-4">
-        <UAvatar
-          :src="`https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(displayName)}`"
-          :alt="displayName"
-          size="xl"
-          class="ring-2 ring-primary-500 shadow-md"
-        />
-        <div class="text-center">
-          <h3 class="text-lg font-semibold text-strong">{{ displayName }}</h3>
-          <p class="text-sm text-dimmed">@{{ authUser?.username }}</p>
-        </div>
+      <div v-if="isProfileLoading && !authUser?.person?.email" class="flex flex-col items-center justify-center py-12 gap-3">
+        <UIcon name="i-lucide-loader-2" class="animate-spin size-8 text-primary" />
+        <p class="text-sm text-dimmed">Cargando perfil...</p>
       </div>
-
-      <div class="space-y-3 mt-2">
-        <div class="flex items-center justify-between p-3 rounded-lg bg-muted/30 border border-border/50">
-          <div class="flex items-center gap-2">
-            <UIcon name="i-lucide-mail" class="text-dimmed size-4" />
-            <span class="text-sm font-medium text-strong">Correo</span>
+      <div v-else>
+        <div class="flex flex-col items-center gap-4 py-4">
+          <UAvatar
+            :src="`https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(displayName)}`"
+            :alt="displayName"
+            size="xl"
+            class="ring-2 ring-primary-500 shadow-md"
+          />
+          <div class="text-center">
+            <h3 class="text-lg font-semibold text-strong">{{ displayName }}</h3>
+            <p class="text-sm text-dimmed">@{{ authUser?.username }}</p>
           </div>
-          <span class="text-sm text-dimmed">{{ authUser?.person?.email ?? 'No registrado' }}</span>
         </div>
 
-        <div class="flex items-center justify-between p-3 rounded-lg bg-muted/30 border border-border/50">
-          <div class="flex items-center gap-2">
-            <UIcon name="i-lucide-shield" class="text-dimmed size-4" />
-            <span class="text-sm font-medium text-strong">Rol</span>
+        <div class="space-y-3 mt-2">
+          <div class="flex items-center justify-between p-3 rounded-lg bg-muted/30 border border-border/50">
+            <div class="flex items-center gap-2">
+              <UIcon name="i-lucide-mail" class="text-dimmed size-4" />
+              <span class="text-sm font-medium text-strong">Correo</span>
+            </div>
+            <span class="text-sm text-dimmed">{{ authUser?.person?.email ?? 'No registrado' }}</span>
           </div>
-          <UBadge color="primary" variant="subtle" size="sm">
-            {{ roleNameDisplay }}
-          </UBadge>
+
+          <div class="flex items-center justify-between p-3 rounded-lg bg-muted/30 border border-border/50">
+            <div class="flex items-center gap-2">
+              <UIcon name="i-lucide-shield" class="text-dimmed size-4" />
+              <span class="text-sm font-medium text-strong">Rol</span>
+            </div>
+            <UBadge color="primary" variant="subtle" size="sm">
+              {{ roleNameDisplay }}
+            </UBadge>
+          </div>
+
+          <div class="flex items-center justify-between p-3 rounded-lg bg-muted/30 border border-border/50">
+            <div class="flex items-center gap-2">
+              <UIcon name="i-lucide-store" class="text-dimmed size-4" />
+              <span class="text-sm font-medium text-strong">Sucursal</span>
+            </div>
+            <span class="text-sm text-dimmed">{{ branchNames }}</span>
+          </div>
         </div>
 
-        <div class="flex items-center justify-between p-3 rounded-lg bg-muted/30 border border-border/50">
-          <div class="flex items-center gap-2">
-            <UIcon name="i-lucide-store" class="text-dimmed size-4" />
-            <span class="text-sm font-medium text-strong">Sucursal</span>
-          </div>
-          <span class="text-sm text-dimmed">{{ branchName }}</span>
+        <div class="flex justify-end gap-2 mt-6">
+          <UButton
+            label="Cerrar"
+            color="neutral"
+            variant="subtle"
+            @click="isProfileOpen = false"
+          />
         </div>
-      </div>
-
-      <div class="flex justify-end gap-2 mt-6">
-        <UButton
-          label="Cerrar"
-          color="neutral"
-          variant="subtle"
-          @click="isProfileOpen = false"
-        />
       </div>
     </template>
   </UModal>

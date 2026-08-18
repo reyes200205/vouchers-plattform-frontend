@@ -1,8 +1,8 @@
-import { g as _sfc_main$2$1 } from '../virtual/entry.mjs';
-import { c as _sfc_main$5, b as _sfc_main$3, U as UserMenu_default, a as _sfc_main$2, _ as _sfc_main$1, N as NotificationsSlideover_default } from './NotificationsSlideover-wD0Zi3wU.mjs';
+import { ai as useAuth, X as navigateTo, g as _sfc_main$2$1 } from '../virtual/entry.mjs';
+import { c as _sfc_main$5, b as _sfc_main$3, U as UserMenu_default, a as _sfc_main$2, _ as _sfc_main$1, N as NotificationsSlideover_default } from './NotificationsSlideover-D3WJoG15.mjs';
 import { _ as _sfc_main } from './NavigationMenu-MW6KcwVY.mjs';
-import { defineComponent, ref, computed, mergeProps, withCtx, isRef, unref, createVNode, openBlock, createBlock, createCommentVNode, renderSlot, useSSRContext } from 'vue';
-import { ssrRenderComponent, ssrRenderSlot } from 'vue/server-renderer';
+import { defineComponent, ref, computed, mergeProps, withCtx, isRef, unref, createVNode, openBlock, createBlock, toDisplayString, createCommentVNode, renderSlot, useSSRContext } from 'vue';
+import { ssrRenderComponent, ssrInterpolate, ssrRenderSlot } from 'vue/server-renderer';
 import '../_/nitro.mjs';
 import 'node:http';
 import 'node:https';
@@ -47,54 +47,68 @@ import './Badge-B12zNpDE.mjs';
 import './useDashboard-D4HEKIwL.mjs';
 import './isValueEqualOrExist-BW-U-ShA.mjs';
 
-//#region app/layouts/distributor-portal.vue?vue&type=script&setup=true&lang.ts
-var distributor_portal_vue_vue_type_script_setup_true_lang_default = /*@__PURE__*/ defineComponent({
-	__name: "distributor-portal",
+//#region app/layouts/registro-verificacion.vue?vue&type=script&setup=true&lang.ts
+var registro_verificacion_vue_vue_type_script_setup_true_lang_default = /*@__PURE__*/ defineComponent({
+	__name: "registro-verificacion",
 	__ssrInlineRender: true,
 	setup(__props) {
 		const open = ref(false);
-		const links = [[
-			{
-				label: "Portal Distribuidor",
+		const { roleCode, roleName, logout } = useAuth();
+		const links = computed(() => {
+			const isCoordinator = roleCode.value === "coordinator";
+			const isVerifier = roleCode.value === "verifier";
+			const items = [];
+			if (isCoordinator) items.push({
+				label: "Panel Coordinador",
 				icon: "i-lucide-layout-dashboard",
-				to: "/distributor-portal",
+				to: "/registro-verificacion",
 				onSelect: () => {
 					open.value = false;
 				}
-			},
-			{
-				label: "Mis Pedidos",
-				icon: "i-lucide-shopping-bag",
-				to: "/distributor-portal/orders",
+			}, {
+				label: "Alta Distribuidor",
+				icon: "i-lucide-user-plus",
+				to: "/registro-verificacion/new",
 				onSelect: () => {
 					open.value = false;
 				}
-			},
-			{
-				label: "Catálogo",
-				icon: "i-lucide-book-open",
-				to: "/distributor-portal/products",
-				onSelect: () => {
-					open.value = false;
-				}
-			},
-			{
-				label: "Mis Clientes",
+			}, {
+				label: "Distribuidores",
 				icon: "i-lucide-users",
-				to: "/distributor-portal/clients",
+				to: "/registro-verificacion/list",
 				onSelect: () => {
 					open.value = false;
 				}
-			}
-		], [{
-			label: "Volver a General",
-			icon: "i-lucide-arrow-left",
-			to: "/"
-		}]];
+			});
+			else if (isVerifier) items.push({
+				label: "Panel Verificador",
+				icon: "i-lucide-layout-dashboard",
+				to: "/registro-verificacion/verificador/dashboard_verificador",
+				onSelect: () => {
+					open.value = false;
+				}
+			});
+			else items.push({
+				label: "Panel Control",
+				icon: "i-lucide-layout-dashboard",
+				to: "/registro-verificacion",
+				onSelect: () => {
+					open.value = false;
+				}
+			});
+			return [items, [{
+				label: "Cerrar Sesión",
+				icon: "i-lucide-log-out",
+				onSelect: async () => {
+					await logout();
+					await navigateTo("/login");
+				}
+			}]];
+		});
 		const groups = computed(() => [{
 			id: "links",
 			label: "Go to",
-			items: links.flat()
+			items: links.value.flat()
 		}]);
 		return (_ctx, _push, _parent, _attrs) => {
 			const _component_UDashboardGroup = _sfc_main$5;
@@ -109,7 +123,7 @@ var distributor_portal_vue_vue_type_script_setup_true_lang_default = /*@__PURE__
 				default: withCtx((_, _push, _parent, _scopeId) => {
 					if (_push) {
 						_push(ssrRenderComponent(_component_UDashboardSidebar, {
-							id: "distributor-portal",
+							id: "register-distributors",
 							open: unref(open),
 							"onUpdate:open": ($event) => isRef(open) ? open.value = $event : null,
 							collapsible: "",
@@ -121,19 +135,19 @@ var distributor_portal_vue_vue_type_script_setup_true_lang_default = /*@__PURE__
 								if (_push) {
 									_push(`<div class="flex items-center gap-2 px-3 py-2"${_scopeId}>`);
 									_push(ssrRenderComponent(_component_UIcon, {
-										name: "i-lucide-store",
+										name: "i-lucide-shield-check",
 										class: "size-6 text-primary"
 									}, null, _parent, _scopeId));
-									if (!collapsed) _push(`<span class="font-semibold text-sm"${_scopeId}>Distribuidor</span>`);
+									if (!collapsed) _push(`<span class="font-semibold text-sm"${_scopeId}>${ssrInterpolate(unref(roleName) ?? "Registro y Verificación")}</span>`);
 									else _push(`<!---->`);
 									_push(`</div>`);
 								} else return [createVNode("div", { class: "flex items-center gap-2 px-3 py-2" }, [createVNode(_component_UIcon, {
-									name: "i-lucide-store",
+									name: "i-lucide-shield-check",
 									class: "size-6 text-primary"
 								}), !collapsed ? (openBlock(), createBlock("span", {
 									key: 0,
 									class: "font-semibold text-sm"
-								}, "Distribuidor")) : createCommentVNode("", true)])];
+								}, toDisplayString(unref(roleName) ?? "Registro y Verificación"), 1)) : createCommentVNode("", true)])];
 							}),
 							default: withCtx(({ collapsed }, _push, _parent, _scopeId) => {
 								if (_push) {
@@ -143,14 +157,14 @@ var distributor_portal_vue_vue_type_script_setup_true_lang_default = /*@__PURE__
 									}, null, _parent, _scopeId));
 									_push(ssrRenderComponent(_component_UNavigationMenu, {
 										collapsed,
-										items: links[0],
+										items: unref(links)[0],
 										orientation: "vertical",
 										tooltip: "",
 										popover: ""
 									}, null, _parent, _scopeId));
 									_push(ssrRenderComponent(_component_UNavigationMenu, {
 										collapsed,
-										items: links[1],
+										items: unref(links)[1],
 										orientation: "vertical",
 										tooltip: "",
 										class: "mt-auto"
@@ -162,14 +176,14 @@ var distributor_portal_vue_vue_type_script_setup_true_lang_default = /*@__PURE__
 									}, null, 8, ["collapsed"]),
 									createVNode(_component_UNavigationMenu, {
 										collapsed,
-										items: links[0],
+										items: unref(links)[0],
 										orientation: "vertical",
 										tooltip: "",
 										popover: ""
 									}, null, 8, ["collapsed", "items"]),
 									createVNode(_component_UNavigationMenu, {
 										collapsed,
-										items: links[1],
+										items: unref(links)[1],
 										orientation: "vertical",
 										tooltip: "",
 										class: "mt-auto"
@@ -187,7 +201,7 @@ var distributor_portal_vue_vue_type_script_setup_true_lang_default = /*@__PURE__
 						_push(ssrRenderComponent(_component_NotificationsSlideover, null, null, _parent, _scopeId));
 					} else return [
 						createVNode(_component_UDashboardSidebar, {
-							id: "distributor-portal",
+							id: "register-distributors",
 							open: unref(open),
 							"onUpdate:open": ($event) => isRef(open) ? open.value = $event : null,
 							collapsible: "",
@@ -196,12 +210,12 @@ var distributor_portal_vue_vue_type_script_setup_true_lang_default = /*@__PURE__
 							ui: { footer: "lg:border-t lg:border-default" }
 						}, {
 							header: withCtx(({ collapsed }) => [createVNode("div", { class: "flex items-center gap-2 px-3 py-2" }, [createVNode(_component_UIcon, {
-								name: "i-lucide-store",
+								name: "i-lucide-shield-check",
 								class: "size-6 text-primary"
 							}), !collapsed ? (openBlock(), createBlock("span", {
 								key: 0,
 								class: "font-semibold text-sm"
-							}, "Distribuidor")) : createCommentVNode("", true)])]),
+							}, toDisplayString(unref(roleName) ?? "Registro y Verificación"), 1)) : createCommentVNode("", true)])]),
 							default: withCtx(({ collapsed }) => [
 								createVNode(_component_UDashboardSearchButton, {
 									collapsed,
@@ -209,14 +223,14 @@ var distributor_portal_vue_vue_type_script_setup_true_lang_default = /*@__PURE__
 								}, null, 8, ["collapsed"]),
 								createVNode(_component_UNavigationMenu, {
 									collapsed,
-									items: links[0],
+									items: unref(links)[0],
 									orientation: "vertical",
 									tooltip: "",
 									popover: ""
 								}, null, 8, ["collapsed", "items"]),
 								createVNode(_component_UNavigationMenu, {
 									collapsed,
-									items: links[1],
+									items: unref(links)[1],
 									orientation: "vertical",
 									tooltip: "",
 									class: "mt-auto"
@@ -236,14 +250,14 @@ var distributor_portal_vue_vue_type_script_setup_true_lang_default = /*@__PURE__
 	}
 });
 //#endregion
-//#region app/layouts/distributor-portal.vue
-var _sfc_setup = distributor_portal_vue_vue_type_script_setup_true_lang_default.setup;
-distributor_portal_vue_vue_type_script_setup_true_lang_default.setup = (props, ctx) => {
+//#region app/layouts/registro-verificacion.vue
+var _sfc_setup = registro_verificacion_vue_vue_type_script_setup_true_lang_default.setup;
+registro_verificacion_vue_vue_type_script_setup_true_lang_default.setup = (props, ctx) => {
 	const ssrContext = useSSRContext();
-	(ssrContext.modules || (ssrContext.modules = /* @__PURE__ */ new Set())).add("layouts/distributor-portal.vue");
+	(ssrContext.modules || (ssrContext.modules = /* @__PURE__ */ new Set())).add("layouts/registro-verificacion.vue");
 	return _sfc_setup ? _sfc_setup(props, ctx) : void 0;
 };
-var distributor_portal_default = distributor_portal_vue_vue_type_script_setup_true_lang_default;
+var registro_verificacion_default = registro_verificacion_vue_vue_type_script_setup_true_lang_default;
 
-export { distributor_portal_default as default };
-//# sourceMappingURL=distributor-portal-vtQ-JeUK.mjs.map
+export { registro_verificacion_default as default };
+//# sourceMappingURL=registro-verificacion-BJmQiXOO.mjs.map
