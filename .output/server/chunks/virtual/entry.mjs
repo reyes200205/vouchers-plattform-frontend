@@ -17388,9 +17388,9 @@ function resolveLayoutName(route, name) {
 //#region virtual:nuxt:node_modules%2F.cache%2Fnuxt%2F.nuxt%2Flayouts.mjs
 var virtual_nuxt_node_modules_2F_cache_2Fnuxt_2F_nuxt_2Flayouts_default = {
 	default: defineAsyncComponent(() => import('../build/default-BA_2QT4E.mjs').then((m) => m.default || m)),
-	"distributor-portal": defineAsyncComponent(() => import('../build/distributor-portal-CiCxfRZD.mjs').then((m) => m.default || m)),
-	general: defineAsyncComponent(() => import('../build/general-a0ZZ3IM1.mjs').then((m) => m.default || m)),
-	"registro-verificacion": defineAsyncComponent(() => import('../build/registro-verificacion-D-GSSMrl.mjs').then((m) => m.default || m))
+	"distributor-portal": defineAsyncComponent(() => import('../build/distributor-portal-vtQ-JeUK.mjs').then((m) => m.default || m)),
+	general: defineAsyncComponent(() => import('../build/general-CXTBCw_k.mjs').then((m) => m.default || m)),
+	"registro-verificacion": defineAsyncComponent(() => import('../build/registro-verificacion-D0enOVBP.mjs').then((m) => m.default || m))
 };
 //#endregion
 //#region node_modules/.pnpm/nuxt@4.5.2_@babel+plugin-sy_3e15249cd7c1540f4c07c4c9f2fb9b7b/node_modules/nuxt/dist/app/components/nuxt-layout.js

@@ -2,12 +2,14 @@ interface AuthPerson {
   id: number
   first_name: string | null
   last_name: string | null
+  email: string | null
 }
 
 interface AuthRole {
   code: string
   name: string
   branch_id: number | null
+  branch_name: string | null
   is_primary: boolean
 }
 

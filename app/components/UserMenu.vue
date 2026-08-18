@@ -13,6 +13,8 @@ const neutrals = ['slate', 'gray', 'zinc', 'neutral', 'stone', 'taupe', 'mauve',
 
 const { user: authUser, logout } = useAuth()
 
+const isProfileOpen = ref(false)
+
 const displayName = computed(() => {
   if (authUser.value?.person) {
     const p = authUser.value.person
@@ -29,13 +31,29 @@ const userDetails = computed(() => ({
   }
 }))
 
+const primaryRole = computed(() => {
+  if (!authUser.value?.roles?.length) return null
+  return authUser.value.roles.find(role => role.is_primary) ?? authUser.value.roles[0]
+})
+
+const branchName = computed(() => {
+  return primaryRole.value?.branch_name ?? 'Global (Sin Sucursal)'
+})
+
+const roleNameDisplay = computed(() => {
+  return primaryRole.value?.name ?? 'N/A'
+})
+
 const items = computed<DropdownMenuItem[][]>(() => ([[{
   type: 'label',
   label: userDetails.value.name,
   avatar: userDetails.value.avatar
 }, {
   label: 'Profile',
-  icon: 'i-lucide-user'
+  icon: 'i-lucide-user',
+  onSelect: () => {
+    isProfileOpen.value = true
+  }
 }], [{
   label: 'Theme',
   icon: 'i-lucide-palette',
@@ -151,4 +169,62 @@ const items = computed<DropdownMenuItem[][]>(() => ([[{
       </div>
     </template>
   </UDropdownMenu>
+
+  <UModal
+    v-model:open="isProfileOpen"
+    title="Mi Perfil"
+    description="Información detallada de tu cuenta"
+  >
+    <template #body>
+      <div class="flex flex-col items-center gap-4 py-4">
+        <UAvatar
+          :src="`https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(displayName)}`"
+          :alt="displayName"
+          size="xl"
+          class="ring-2 ring-primary-500 shadow-md"
+        />
+        <div class="text-center">
+          <h3 class="text-lg font-semibold text-strong">{{ displayName }}</h3>
+          <p class="text-sm text-dimmed">@{{ authUser?.username }}</p>
+        </div>
+      </div>
+
+      <div class="space-y-3 mt-2">
+        <div class="flex items-center justify-between p-3 rounded-lg bg-muted/30 border border-border/50">
+          <div class="flex items-center gap-2">
+            <UIcon name="i-lucide-mail" class="text-dimmed size-4" />
+            <span class="text-sm font-medium text-strong">Correo</span>
+          </div>
+          <span class="text-sm text-dimmed">{{ authUser?.person?.email ?? 'No registrado' }}</span>
+        </div>
+
+        <div class="flex items-center justify-between p-3 rounded-lg bg-muted/30 border border-border/50">
+          <div class="flex items-center gap-2">
+            <UIcon name="i-lucide-shield" class="text-dimmed size-4" />
+            <span class="text-sm font-medium text-strong">Rol</span>
+          </div>
+          <UBadge color="primary" variant="subtle" size="sm">
+            {{ roleNameDisplay }}
+          </UBadge>
+        </div>
+
+        <div class="flex items-center justify-between p-3 rounded-lg bg-muted/30 border border-border/50">
+          <div class="flex items-center gap-2">
+            <UIcon name="i-lucide-store" class="text-dimmed size-4" />
+            <span class="text-sm font-medium text-strong">Sucursal</span>
+          </div>
+          <span class="text-sm text-dimmed">{{ branchName }}</span>
+        </div>
+      </div>
+
+      <div class="flex justify-end gap-2 mt-6">
+        <UButton
+          label="Cerrar"
+          color="neutral"
+          variant="subtle"
+          @click="isProfileOpen = false"
+        />
+      </div>
+    </template>
+  </UModal>
 </template>

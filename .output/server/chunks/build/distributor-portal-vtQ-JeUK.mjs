@@ -1,5 +1,5 @@
 import { g as _sfc_main$2$1 } from '../virtual/entry.mjs';
-import { c as _sfc_main$5, b as _sfc_main$3, U as UserMenu_default, a as _sfc_main$2, _ as _sfc_main$1, N as NotificationsSlideover_default } from './NotificationsSlideover-CbkOOHkA.mjs';
+import { c as _sfc_main$5, b as _sfc_main$3, U as UserMenu_default, a as _sfc_main$2, _ as _sfc_main$1, N as NotificationsSlideover_default } from './NotificationsSlideover-wD0Zi3wU.mjs';
 import { _ as _sfc_main } from './NavigationMenu-MW6KcwVY.mjs';
 import { defineComponent, ref, computed, mergeProps, withCtx, isRef, unref, createVNode, openBlock, createBlock, createCommentVNode, renderSlot, useSSRContext } from 'vue';
 import { ssrRenderComponent, ssrRenderSlot } from 'vue/server-renderer';
@@ -43,9 +43,9 @@ import './esm-CcArdB_U.mjs';
 import './Tooltip-C_1kPD8x.mjs';
 import './DashboardSidebarToggle-BxKXl3gw.mjs';
 import './Slideover-w8Wvorju.mjs';
+import './Badge-B12zNpDE.mjs';
 import './useDashboard-D4HEKIwL.mjs';
 import './isValueEqualOrExist-BW-U-ShA.mjs';
-import './Badge-B12zNpDE.mjs';
 
 //#region app/layouts/distributor-portal.vue?vue&type=script&setup=true&lang.ts
 var distributor_portal_vue_vue_type_script_setup_true_lang_default = /*@__PURE__*/ defineComponent({
@@ -246,4 +246,4 @@ distributor_portal_vue_vue_type_script_setup_true_lang_default.setup = (props, c
 var distributor_portal_default = distributor_portal_vue_vue_type_script_setup_true_lang_default;
 
 export { distributor_portal_default as default };
-//# sourceMappingURL=distributor-portal-CiCxfRZD.mjs.map
+//# sourceMappingURL=distributor-portal-vtQ-JeUK.mjs.map

@@ -1,5 +1,5 @@
 import { ai as useAuth, X as navigateTo, g as _sfc_main$2$1 } from '../virtual/entry.mjs';
-import { c as _sfc_main$5, b as _sfc_main$3, U as UserMenu_default, a as _sfc_main$2, _ as _sfc_main$1, N as NotificationsSlideover_default } from './NotificationsSlideover-CbkOOHkA.mjs';
+import { c as _sfc_main$5, b as _sfc_main$3, U as UserMenu_default, a as _sfc_main$2, _ as _sfc_main$1, N as NotificationsSlideover_default } from './NotificationsSlideover-wD0Zi3wU.mjs';
 import { _ as _sfc_main } from './NavigationMenu-MW6KcwVY.mjs';
 import { defineComponent, ref, computed, mergeProps, withCtx, isRef, unref, createVNode, openBlock, createBlock, toDisplayString, createCommentVNode, renderSlot, useSSRContext } from 'vue';
 import { ssrRenderComponent, ssrInterpolate, ssrRenderSlot } from 'vue/server-renderer';
@@ -43,9 +43,9 @@ import './esm-CcArdB_U.mjs';
 import './Tooltip-C_1kPD8x.mjs';
 import './DashboardSidebarToggle-BxKXl3gw.mjs';
 import './Slideover-w8Wvorju.mjs';
+import './Badge-B12zNpDE.mjs';
 import './useDashboard-D4HEKIwL.mjs';
 import './isValueEqualOrExist-BW-U-ShA.mjs';
-import './Badge-B12zNpDE.mjs';
 
 //#region app/layouts/registro-verificacion.vue?vue&type=script&setup=true&lang.ts
 var registro_verificacion_vue_vue_type_script_setup_true_lang_default = /*@__PURE__*/ defineComponent({
@@ -260,4 +260,4 @@ registro_verificacion_vue_vue_type_script_setup_true_lang_default.setup = (props
 var registro_verificacion_default = registro_verificacion_vue_vue_type_script_setup_true_lang_default;
 
 export { registro_verificacion_default as default };
-//# sourceMappingURL=registro-verificacion-D-GSSMrl.mjs.map
+//# sourceMappingURL=registro-verificacion-D0enOVBP.mjs.map
