@@ -2,12 +2,14 @@ interface AuthPerson {
   id: number
   first_name: string | null
   last_name: string | null
+  email: string | null
 }
 
 interface AuthRole {
   code: string
   name: string
   branch_id: number | null
+  branch_name: string | null
   is_primary: boolean
 }
 
@@ -35,7 +37,7 @@ export const ROLE_ROUTES: Record<string, string> = {
   cashier: '/general',
   distributor: '/distributor-portal',
   coordinator: '/registro-verificacion',
-  verifier: '/registro-verificacion'
+  verifier: '/registro-verificacion/verificador/dashboard_verificador'
 }
 
 export function useAuth() {
@@ -80,9 +82,23 @@ export function useAuth() {
     user.value = null
   }
 
+  async function fetchMe() {
+    if (!token.value) return null
+    try {
+      const response = await $fetch<{ success: boolean, data: AuthUser }>(`${config.public.apiBase}/auth/me`, {
+        headers: { Authorization: `Bearer ${token.value}` }
+      })
+      user.value = response.data
+      return response.data
+    } catch (e) {
+      console.error('Failed to fetch user profile', e)
+      return null
+    }
+  }
+
   function roleHome(code: string | null) {
     return code && ROLE_ROUTES[code] ? ROLE_ROUTES[code] : '/login'
   }
 
-  return { token, user, roleCode, roleName, isLoggedIn, login, logout, roleHome }
+  return { token, user, roleCode, roleName, isLoggedIn, login, logout, roleHome, fetchMe }
 }

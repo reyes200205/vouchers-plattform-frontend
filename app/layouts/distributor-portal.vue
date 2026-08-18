@@ -1,8 +1,9 @@
 <script setup lang="ts">
 import type { NavigationMenuItem } from '@nuxt/ui'
 
-const route = useRoute()
 const open = ref(false)
+const config = useRuntimeConfig()
+const version = config.public.version
 
 const links = [[{
   label: 'Portal Distribuidor',
@@ -56,9 +57,14 @@ const groups = computed(() => [{
       :ui="{ footer: 'lg:border-t lg:border-default' }"
     >
       <template #header="{ collapsed }">
-        <div class="flex items-center gap-2 px-3 py-2">
-          <UIcon name="i-lucide-store" class="size-6 text-primary" />
-          <span v-if="!collapsed" class="font-semibold text-sm">Distribuidor</span>
+        <div class="flex items-center gap-2.5 px-2.5 py-1.5">
+          <div class="flex items-center justify-center size-7 rounded-lg bg-primary/10 border border-primary/20 text-primary shrink-0">
+            <UIcon name="i-lucide-ticket" class="size-4" />
+          </div>
+          <div v-if="!collapsed" class="flex flex-col min-w-0">
+            <span class="font-bold text-sm text-strong truncate leading-none">Mis Vales</span>
+            <span class="text-[10px] text-dimmed mt-0.5 leading-none">v{{ version }} • Distribuidor</span>
+          </div>
         </div>
       </template>
 

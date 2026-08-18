@@ -111,6 +111,24 @@ export interface Notification {
   date: string
 }
 
+// Los tipos de Application/ApplicationStatus/etc. viven en ~/composables/useApplications
+// (junto con el composable que los produce) para evitar tener dos fuentes de verdad.
+
+export interface AppNotificationData {
+  type: string
+  application_id?: number
+  branch_id?: number
+  message: string
+}
+
+export interface AppNotification {
+  id: string
+  type: string
+  data: AppNotificationData
+  read_at: string | null
+  created_at: string
+}
+
 export type Period = 'daily' | 'weekly' | 'monthly'
 
 export interface Range {
