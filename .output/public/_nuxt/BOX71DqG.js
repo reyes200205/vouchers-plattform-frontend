@@ -1,0 +1,1 @@
+import{En as e,g as t}from"./Dd8x-jxf.js";import{F as n}from"./Yt_cn-BB.js";function r(r){return t(()=>!e(r)||!!n(r)?.closest(`form`))}export{r as t};
