@@ -14,7 +14,7 @@ const cliente = ref({
   calificacion: 'Sin Calificaciones'
 })
 
-// Estado de configuración
+// Estado de configuración del vale
 const monto = ref(1000)
 const disponible = ref(18000)
 const quincenasOpciones = [8, 10, 12, 14, 16]
@@ -24,15 +24,20 @@ const seguroMonto = 18
 // Estado del Modal
 const showModal = ref(false)
 
+// Incremento / Decremento de monto
 const decrementarMonto = () => {
-  if (monto.value > 500) monto.value -= 500
+  if (monto.value > 500) {
+    monto.value -= 500
+  }
 }
 
 const incrementarMonto = () => {
-  if (monto.value + 500 <= disponible.value) monto.value += 500
+  if (monto.value + 500 <= disponible.value) {
+    monto.value += 500
+  }
 }
 
-// Cálculos
+// Cálculos dinámicos
 const totalAPagar = computed(() => {
   const tasaInteres = 0.544
   return Math.round(monto.value * (1 + tasaInteres))
@@ -42,7 +47,8 @@ const pagoQuincenal = computed(() => {
   return Math.round(totalAPagar.value / quincenasSeleccionadas.value)
 })
 
-const procesarVale = () => {
+// Abrir el modal en lugar de navegar
+const continuar = () => {
   showModal.value = true
 }
 
@@ -62,14 +68,14 @@ const volver = () => {
 
       <!-- NAVBAR AZUL -->
       <header class="top-navbar">
-        <button class="back-btn" @click="volver">←</button>
+        <button type="button" class="back-btn" @click="volver">←</button>
         <h1 class="nav-title">Configurar vale</h1>
       </header>
 
       <div class="content-body">
 
         <!-- TARJETA CLIENTE SELECCIONADO -->
-       <div class="client-card" @click="navigateTo('/distributor-portal/vales')">
+        <div class="client-card" @click="navigateTo('/distributor-portal/vales')">
           <div class="avatar-circle">
             <span class="avatar-icon">👤</span>
           </div>
@@ -87,6 +93,7 @@ const volver = () => {
 
           <div class="monto-selector">
             <button
+              type="button"
               class="btn-monto btn-minus"
               :disabled="monto <= 500"
               @click="decrementarMonto"
@@ -95,6 +102,7 @@ const volver = () => {
             </button>
             <span class="monto-display">${{ monto.toLocaleString('es-MX') }}</span>
             <button
+              type="button"
               class="btn-monto btn-plus"
               :disabled="monto >= disponible"
               @click="incrementarMonto"
@@ -115,6 +123,7 @@ const volver = () => {
             <button
               v-for="opcion in quincenasOpciones"
               :key="opcion"
+              type="button"
               class="quincena-pill"
               :class="{ active: quincenasSeleccionadas === opcion }"
               @click="quincenasSeleccionadas = opcion"
@@ -149,24 +158,22 @@ const volver = () => {
         </div>
 
         <!-- BOTÓN CONTINUAR -->
-        <button class="submit-btn" @click="procesarVale">
+        <button type="button" class="submit-btn" @click.prevent="continuar">
           Continuar
         </button>
 
       </div>
 
-      <!-- MODAL ANIMADO DE CONFIRMACIÓN -->
+      <!-- MODAL DE CONFIRMACIÓN -->
       <Transition name="modal-fade">
         <div v-if="showModal" class="modal-overlay">
           <div class="modal-card">
             
-            <!-- ANIMACIÓN DEL CHECK -->
             <div class="success-checkmark">
               <div class="check-icon">
                 <span class="icon-line line-tip"></span>
                 <span class="icon-line line-long"></span>
                 <div class="icon-circle"></div>
-                <div class="icon-fix"></div>
               </div>
             </div>
 
@@ -187,7 +194,7 @@ const volver = () => {
               </div>
             </div>
 
-            <button class="modal-btn" @click="finalizarYVolver">
+            <button type="button" class="modal-btn" @click="finalizarYVolver">
               Volver al inicio
             </button>
           </div>
@@ -454,6 +461,7 @@ const volver = () => {
   font-weight: 800;
 }
 
+/* BOTÓN PRINCIPAL */
 .submit-btn {
   width: 100%;
   background-color: #002366;
@@ -467,7 +475,11 @@ const volver = () => {
   margin-top: 8px;
 }
 
-/* MODAL Y ANIMACIÓN */
+.submit-btn:active {
+  opacity: 0.9;
+}
+
+/* MODAL Y ANIMACIONES */
 .modal-overlay {
   position: fixed;
   top: 0;
@@ -541,10 +553,10 @@ const volver = () => {
   cursor: pointer;
 }
 
-/* ANIMACIÓN DEL CHECK */
+/* ANIMACIÓN CHECKMARK */
 .success-checkmark {
   width: 80px;
-  height: 115px;
+  height: 80px;
   margin: 0 auto;
 }
 
@@ -553,25 +565,8 @@ const volver = () => {
   height: 80px;
   position: relative;
   border-radius: 50%;
-  box-sizing: content-box;
+  box-sizing: border-box;
   border: 4px solid #84cc16;
-}
-
-.check-icon::before {
-  top: 3px;
-  left: -2px;
-  width: 30px;
-  transform-origin: 100% 50%;
-  border-radius: 100px 0 0 100px;
-}
-
-.check-icon::after {
-  top: 0;
-  left: 30px;
-  width: 60px;
-  transform-origin: 0 50%;
-  border-radius: 0 100px 100px 0;
-  animation: rotate-circle 4.25s ease-in;
 }
 
 .icon-line {
@@ -584,11 +579,10 @@ const volver = () => {
 }
 
 .line-tip {
-  top: 46px;
+  top: 44px;
   left: 14px;
   width: 25px;
   transform: rotate(45deg);
-  animation: icon-line-tip 0.75s;
 }
 
 .line-long {
@@ -596,7 +590,6 @@ const volver = () => {
   right: 8px;
   width: 47px;
   transform: rotate(-45deg);
-  animation: icon-line-long 0.75s;
 }
 
 .icon-circle {
@@ -607,11 +600,11 @@ const volver = () => {
   height: 80px;
   border-radius: 50%;
   position: absolute;
-  box-sizing: content-box;
+  box-sizing: border-box;
   border: 4px solid rgba(132, 204, 22, 0.2);
 }
 
-/* TRANSICIÓN VUE */
+/* TRANSICIONES */
 .modal-fade-enter-active,
 .modal-fade-leave-active {
   transition: opacity 0.3s ease;
@@ -620,21 +613,5 @@ const volver = () => {
 .modal-fade-enter-from,
 .modal-fade-leave-to {
   opacity: 0;
-}
-
-/* KEYFRAMES */
-@keyframes icon-line-tip {
-  0% { width: 0; left: 1px; top: 19px; }
-  54% { width: 0; left: 1px; top: 19px; }
-  70% { width: 50px; left: -8px; top: 37px; }
-  84% { width: 17px; left: 21px; top: 48px; }
-  100% { width: 25px; left: 14px; top: 46px; }
-}
-
-@keyframes icon-line-long {
-  0% { width: 0; right: 46px; top: 54px; }
-  65% { width: 0; right: 46px; top: 54px; }
-  84% { width: 55px; right: 0px; top: 35px; }
-  100% { width: 47px; right: 8px; top: 38px; }
 }
 </style>
