@@ -5,9 +5,9 @@ import type { Application } from '~/composables/useApplications'
 
 const UBadge = resolveComponent('UBadge')
 
-const { isNotificationsSlideoverOpen } = useDashboard()
 const { user, roleCode } = useAuth()
 const { listApplications } = useApplications()
+const { listNotifications, markNotificationAsRead } = useNotifications()
 
 const isCoordinator = computed(() => roleCode.value === 'coordinator')
 const isVerifier = computed(() => roleCode.value === 'verifier')
@@ -40,6 +40,28 @@ const pendingFieldVisit = computed(() =>
 )
 
 const recentApplications = computed(() => list.value.slice(0, 5))
+
+const isNotificationsOpen = ref(false)
+
+const { data: notifications, status: notificationsStatus, refresh: refreshNotifications } = await useAsyncData(
+  'coordinador-notifications',
+  () => listNotifications({ per_page: 20 }),
+  { default: () => [] }
+)
+
+const unreadCount = computed(() => (notifications.value ?? []).filter(n => !n.read_at).length)
+
+async function markAsRead(id: string) {
+  const notification = (notifications.value ?? []).find(item => item.id === id)
+  if (!notification || notification.read_at) return
+
+  try {
+    await markNotificationAsRead(id)
+    await refreshNotifications()
+  } catch (e) {
+    console.error(e)
+  }
+}
 
 const columns: TableColumn<Application>[] = [
   { accessorKey: 'id', header: 'ID' },
@@ -88,14 +110,14 @@ const columns: TableColumn<Application>[] = [
             to="/registro-verificacion/new"
           />
 
-          <UTooltip text="Notifications" :shortcuts="['N']">
+          <UTooltip text="Notificaciones">
             <UButton
               color="neutral"
               variant="ghost"
               square
-              @click="isNotificationsSlideoverOpen = true"
+              @click="isNotificationsOpen = true"
             >
-              <UChip color="error" inset>
+              <UChip color="error" :show="unreadCount > 0" inset>
                 <UIcon name="i-lucide-bell" class="size-5 shrink-0" />
               </UChip>
             </UButton>
@@ -210,4 +232,11 @@ const columns: TableColumn<Application>[] = [
       </div>
     </template>
   </UDashboardPanel>
+
+  <VerificadorNotificationsSlideover
+    v-model:open="isNotificationsOpen"
+    :notifications="notifications ?? []"
+    :loading="notificationsStatus === 'pending'"
+    @read="markAsRead"
+  />
 </template>

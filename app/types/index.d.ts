@@ -73,6 +73,7 @@ export interface AppNotificationData {
   type: string
   application_id?: number
   branch_id?: number
+  result?: 'VERIFICADA' | 'RECHAZADA'
   message: string
 }
 
