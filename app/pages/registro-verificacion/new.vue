@@ -1,32 +1,22 @@
 <script setup lang="ts">
 import * as z from 'zod'
 import type { FormSubmitEvent } from '@nuxt/ui'
-import type { Branch } from '~/types'
 
 const { roleCode, user } = useAuth()
 const isCoordinator = computed(() => roleCode.value === 'coordinator')
 
-const { listBranches } = useBranches()
 const { createApplication } = useApplications()
 const toast = useToast()
 const router = useRouter()
 
-const { data: branches } = await useAsyncData<Branch[]>('registro-verificacion-branches', () => listBranches(), {
-  default: () => []
-})
-
-const coordinatorBranchId = computed(() => {
-  const role = user.value?.roles?.find(r => r.code === 'coordinator')
-  return role?.branch_id ?? null
-})
-
-const branchItems = computed(() => (branches.value ?? []).map(b => ({
-  label: `${b.name} (${b.code})`,
-  value: b.id
-})))
+// El coordinador solo pertenece a una sucursal: las solicitudes que registra
+// siempre son de esa sucursal, no puede elegir otra.
+const coordinatorRole = computed(() => user.value?.roles?.find(r => r.code === 'coordinator') ?? null)
+const coordinatorBranchId = computed(() => coordinatorRole.value?.branch_id ?? null)
+const coordinatorBranchName = computed(() => coordinatorRole.value?.branch_name ?? null)
 
 const schema = z.object({
-  branch_id: z.number({ error: 'Selecciona una sucursal' }),
+  branch_id: z.number({ error: 'Tu usuario no tiene una sucursal asignada' }),
   first_name: z.string().min(2, 'Muy corto'),
   middle_name: z.string().optional(),
   last_name: z.string().min(2, 'Muy corto'),
@@ -45,9 +35,21 @@ const schema = z.object({
   state: z.string().optional(),
   postal_code: z.string().optional(),
   notes: z.string().optional(),
-  requested_credit_limit: z.number().optional(),
-  housing_type: z.string().optional(),
-  housing_years: z.number().optional()
+  requested_credit_limit: z.number({ error: 'Captura el límite de crédito solicitado' })
+    .min(1000, 'El límite de crédito solicitado debe ser de al menos $1,000'),
+  // Datos adicionales para la distribuidora
+  applicant_age: z.number({ error: 'Captura la edad del solicitante' })
+    .min(18, 'El solicitante debe ser mayor de edad (18 años o más)'),
+  occupation_type: z.string().optional(),
+  occupation_place: z.string().optional(),
+  occupation_position: z.string().optional(),
+  occupation_phone: z.string().optional(),
+  occupation_years: z.number().optional(),
+  housing_ownership_type: z.string().optional(),
+  housing_dimensions: z.string().optional(),
+  housing_years: z.number().optional(),
+  work_reference_name: z.string().optional(),
+  work_reference_phone: z.string().optional()
 })
 
 type Schema = z.output<typeof schema>
@@ -73,47 +75,61 @@ const state = reactive<Partial<Schema>>({
   postal_code: '',
   notes: '',
   requested_credit_limit: undefined,
-  housing_type: undefined,
-  housing_years: undefined
+  applicant_age: undefined,
+  occupation_type: undefined,
+  occupation_place: '',
+  occupation_position: '',
+  occupation_phone: '',
+  occupation_years: undefined,
+  housing_ownership_type: undefined,
+  housing_dimensions: '',
+  housing_years: undefined,
+  work_reference_name: '',
+  work_reference_phone: ''
 })
 
-interface FamilyReference {
+// Familiares y cónyuge del solicitante
+interface FamilyMember {
   name: string
   relationship: string
   phone: string
+  age: number | undefined
 }
 
-const familyReferences = ref<FamilyReference[]>([{ name: '', relationship: '', phone: '' }])
+const familyMembers = ref<FamilyMember[]>([{ name: '', relationship: '', phone: '', age: undefined }])
 
-function addFamilyReference() {
-  familyReferences.value.push({ name: '', relationship: '', phone: '' })
+function addFamilyMember() {
+  familyMembers.value.push({ name: '', relationship: '', phone: '', age: undefined })
 }
 
-function removeFamilyReference(index: number) {
-  familyReferences.value.splice(index, 1)
+function removeFamilyMember(index: number) {
+  familyMembers.value.splice(index, 1)
 }
 
-interface ExternalAffiliation {
-  organization: string
-  membershipType: string
+// Vehículos del solicitante (si tiene)
+interface Vehicle {
+  brand: string
+  model: string
+  year: string
+  plates: string
 }
 
-const externalAffiliations = ref<ExternalAffiliation[]>([{ organization: '', membershipType: '' }])
+const vehicles = ref<Vehicle[]>([])
 
-function addExternalAffiliation() {
-  externalAffiliations.value.push({ organization: '', membershipType: '' })
+function addVehicle() {
+  vehicles.value.push({ brand: '', model: '', year: '', plates: '' })
 }
 
-function removeExternalAffiliation(index: number) {
-  externalAffiliations.value.splice(index, 1)
+function removeVehicle(index: number) {
+  vehicles.value.splice(index, 1)
 }
 
+// La fotografía de fachada la toma el verificador durante la visita de campo
+// (ver components/verificador/VerifyModal.vue), no se captura en el alta.
 const documentFields = [
-  { key: 'facade', label: 'Fotografía de fachada' },
   { key: 'id_front', label: 'INE (frontal)' },
   { key: 'id_back', label: 'INE (reverso)' },
-  { key: 'proof_of_address', label: 'Comprobante de domicilio' },
-  { key: 'credit_bureau_report', label: 'Reporte de buró de crédito' }
+  { key: 'proof_of_address', label: 'Comprobante de domicilio' }
 ]
 
 const submitting = ref(false)
@@ -147,20 +163,34 @@ async function onSubmit(event: FormSubmitEvent<Schema>) {
         notes: data.notes || undefined
       },
       family_data: {
-        references: familyReferences.value.filter(r => r.name || r.relationship || r.phone),
+        members: familyMembers.value
+          .filter(m => m.name || m.relationship || m.phone || m.age)
+          .map(m => ({ name: m.name || null, relationship: m.relationship || null, phone: m.phone || null, age: m.age ?? null })),
+        applicant_age: data.applicant_age ?? null,
+        occupation: {
+          type: data.occupation_type || null,
+          place_name: data.occupation_place || null,
+          position: data.occupation_position || null,
+          phone: data.occupation_phone || null,
+          years: data.occupation_years ?? null
+        },
         housing: {
-          type: data.housing_type || null,
-          years_at_address: data.housing_years ?? null
+          ownership_type: data.housing_ownership_type || null,
+          dimensions: data.housing_dimensions || null,
+          years_at_address: data.housing_years ?? null,
+          work_reference: {
+            name: data.work_reference_name || null,
+            phone: data.work_reference_phone || null
+          }
         }
       },
-      external_affiliations: {
-        affiliations: externalAffiliations.value.filter(a => a.organization || a.membershipType)
-      },
+      vehicles: vehicles.value
+        .filter(v => v.brand || v.model || v.year || v.plates)
+        .map(v => ({ brand: v.brand || null, model: v.model || null, year: v.year || null, plates: v.plates || null })),
       requested_credit_limit: data.requested_credit_limit ?? null,
       id_front_path: null,
       id_back_path: null,
-      proof_of_address_path: null,
-      credit_bureau_report_path: null
+      proof_of_address_path: null
     })
 
     toast.add({
@@ -204,6 +234,16 @@ async function onSubmit(event: FormSubmitEvent<Schema>) {
         />
       </div>
 
+      <div v-else-if="!coordinatorBranchId" class="p-6">
+        <UAlert
+          color="warning"
+          variant="subtle"
+          icon="i-lucide-triangle-alert"
+          title="Sin sucursal asignada"
+          description="Tu usuario coordinador no tiene una sucursal asignada. Contacta a un gerente para que te asigne una antes de registrar solicitudes."
+        />
+      </div>
+
       <UForm
         v-else
         id="new-application"
@@ -219,14 +259,13 @@ async function onSubmit(event: FormSubmitEvent<Schema>) {
             </h3>
           </template>
 
-          <UFormField label="Sucursal" name="branch_id" required>
-            <USelect
-              v-model="state.branch_id"
-              :items="branchItems"
-              placeholder="Selecciona la sucursal..."
-              class="w-full max-w-sm"
-            />
-          </UFormField>
+          <div class="flex items-center gap-2 text-sm">
+            <UIcon name="i-lucide-building-2" class="size-4 text-dimmed" />
+            <span class="font-medium">{{ coordinatorBranchName ?? `Sucursal #${coordinatorBranchId}` }}</span>
+            <UBadge color="neutral" variant="subtle" size="sm">
+              Tu sucursal asignada
+            </UBadge>
+          </div>
         </UCard>
 
         <UCard>
@@ -281,7 +320,7 @@ async function onSubmit(event: FormSubmitEvent<Schema>) {
         <UCard>
           <template #header>
             <h3 class="font-semibold text-base">
-              Domicilio y Vivienda
+              Domicilio
             </h3>
           </template>
 
@@ -304,17 +343,6 @@ async function onSubmit(event: FormSubmitEvent<Schema>) {
             <UFormField label="Código postal" name="postal_code">
               <UInput v-model="state.postal_code" class="w-full" />
             </UFormField>
-            <UFormField label="Tipo de vivienda" name="housing_type">
-              <USelect
-                v-model="state.housing_type"
-                :items="[{ label: 'Propia', value: 'propia' }, { label: 'Rentada', value: 'rentada' }, { label: 'Familiar', value: 'familiar' }]"
-                placeholder="Selecciona..."
-                class="w-full"
-              />
-            </UFormField>
-            <UFormField label="Años viviendo en el domicilio" name="housing_years">
-              <UInputNumber v-model="state.housing_years" class="w-full" :min="0" />
-            </UFormField>
           </div>
         </UCard>
 
@@ -322,71 +350,159 @@ async function onSubmit(event: FormSubmitEvent<Schema>) {
           <template #header>
             <div class="flex items-center justify-between">
               <h3 class="font-semibold text-base">
-                Referencias Familiares
+                Familiares y Cónyuge
               </h3>
               <UButton
-                label="Agregar referencia"
+                label="Agregar familiar"
                 icon="i-lucide-plus"
                 size="xs"
                 variant="subtle"
-                @click="addFamilyReference"
+                @click="addFamilyMember"
               />
             </div>
           </template>
 
           <div class="space-y-3">
-            <div v-for="(reference, index) in familyReferences" :key="index" class="grid grid-cols-1 md:grid-cols-4 gap-3 items-end">
-              <UFormField label="Nombre">
-                <UInput v-model="reference.name" class="w-full" />
+            <div v-for="(member, index) in familyMembers" :key="index" class="grid grid-cols-1 md:grid-cols-5 gap-3 items-end">
+              <UFormField label="Nombre" class="md:col-span-2">
+                <UInput v-model="member.name" class="w-full" />
               </UFormField>
               <UFormField label="Parentesco">
-                <UInput v-model="reference.relationship" class="w-full" />
+                <UInput v-model="member.relationship" placeholder="Esposo(a), padre, hijo(a)..." class="w-full" />
               </UFormField>
               <UFormField label="Teléfono">
-                <UInput v-model="reference.phone" class="w-full" />
+                <UInput v-model="member.phone" class="w-full" />
               </UFormField>
-              <UButton
-                icon="i-lucide-trash"
-                color="error"
-                variant="ghost"
-                :disabled="familyReferences.length === 1"
-                @click="removeFamilyReference(index)"
-              />
+              <div class="flex items-end gap-2">
+                <UFormField label="Edad" class="flex-1">
+                  <UInputNumber v-model="member.age" class="w-full" :min="0" />
+                </UFormField>
+                <UButton
+                  icon="i-lucide-trash"
+                  color="error"
+                  variant="ghost"
+                  :disabled="familyMembers.length === 1"
+                  @click="removeFamilyMember(index)"
+                />
+              </div>
             </div>
           </div>
         </UCard>
 
         <UCard>
           <template #header>
-            <div class="flex items-center justify-between">
-              <h3 class="font-semibold text-base">
-                Afiliación Externa
-              </h3>
-              <UButton
-                label="Agregar afiliación"
-                icon="i-lucide-plus"
-                size="xs"
-                variant="subtle"
-                @click="addExternalAffiliation"
-              />
-            </div>
+            <h3 class="font-semibold text-base">
+              Datos Adicionales para la Distribuidora
+            </h3>
           </template>
 
-          <div class="space-y-3">
-            <div v-for="(affiliation, index) in externalAffiliations" :key="index" class="grid grid-cols-1 md:grid-cols-3 gap-3 items-end">
-              <UFormField label="Organización / Institución">
-                <UInput v-model="affiliation.organization" class="w-full" />
-              </UFormField>
-              <UFormField label="Tipo de afiliación">
-                <UInput v-model="affiliation.membershipType" class="w-full" />
-              </UFormField>
-              <UButton
-                icon="i-lucide-trash"
-                color="error"
-                variant="ghost"
-                :disabled="externalAffiliations.length === 1"
-                @click="removeExternalAffiliation(index)"
-              />
+          <div class="space-y-6">
+            <div>
+              <h4 class="text-sm font-semibold text-dimmed mb-3">
+                Ocupación
+              </h4>
+              <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <UFormField label="Edad del solicitante" name="applicant_age" required>
+                  <UInputNumber v-model="state.applicant_age" class="w-full" :min="0" />
+                </UFormField>
+                <UFormField label="Trabaja o estudia" name="occupation_type">
+                  <USelect
+                    v-model="state.occupation_type"
+                    :items="[{ label: 'Trabaja', value: 'trabaja' }, { label: 'Estudia', value: 'estudia' }, { label: 'Otro', value: 'otro' }]"
+                    placeholder="Selecciona..."
+                    class="w-full"
+                  />
+                </UFormField>
+                <UFormField label="Nombre del trabajo o escuela" name="occupation_place">
+                  <UInput v-model="state.occupation_place" class="w-full" />
+                </UFormField>
+                <UFormField label="Puesto o grado" name="occupation_position">
+                  <UInput v-model="state.occupation_position" class="w-full" />
+                </UFormField>
+                <UFormField label="Teléfono del trabajo o escuela" name="occupation_phone">
+                  <UInput v-model="state.occupation_phone" class="w-full" />
+                </UFormField>
+                <UFormField label="Antigüedad (años)" name="occupation_years">
+                  <UInputNumber v-model="state.occupation_years" class="w-full" :min="0" />
+                </UFormField>
+              </div>
+            </div>
+
+            <div>
+              <div class="flex items-center justify-between mb-3">
+                <h4 class="text-sm font-semibold text-dimmed">
+                  Vehículos (si tiene)
+                </h4>
+                <UButton
+                  label="Agregar vehículo"
+                  icon="i-lucide-plus"
+                  size="xs"
+                  variant="subtle"
+                  @click="addVehicle"
+                />
+              </div>
+
+              <div v-if="!vehicles.length" class="text-sm text-dimmed">
+                El solicitante no tiene vehículos registrados.
+              </div>
+
+              <div v-else class="space-y-3">
+                <div v-for="(vehicle, index) in vehicles" :key="index" class="grid grid-cols-1 md:grid-cols-5 gap-3 items-end">
+                  <UFormField label="Marca">
+                    <UInput v-model="vehicle.brand" class="w-full" />
+                  </UFormField>
+                  <UFormField label="Modelo">
+                    <UInput v-model="vehicle.model" class="w-full" />
+                  </UFormField>
+                  <UFormField label="Año">
+                    <UInput v-model="vehicle.year" class="w-full" />
+                  </UFormField>
+                  <UFormField label="Placas">
+                    <UInput v-model="vehicle.plates" class="w-full" />
+                  </UFormField>
+                  <UButton
+                    icon="i-lucide-trash"
+                    color="error"
+                    variant="ghost"
+                    @click="removeVehicle(index)"
+                  />
+                </div>
+              </div>
+            </div>
+
+            <div>
+              <h4 class="text-sm font-semibold text-dimmed mb-3">
+                Vivienda
+              </h4>
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <UFormField label="Tenencia de la vivienda" name="housing_ownership_type">
+                  <USelect
+                    v-model="state.housing_ownership_type"
+                    :items="[
+                      { label: 'Propia', value: 'propia' },
+                      { label: 'Rentada', value: 'rentada' },
+                      { label: 'Propia (en proceso de liquidar)', value: 'liquidandola' },
+                      { label: 'Infonavit', value: 'infonavit' },
+                      { label: 'Crédito bancario', value: 'credito_bancario' }
+                    ]"
+                    placeholder="Selecciona..."
+                    class="w-full"
+                  />
+                </UFormField>
+                <UFormField label="Años viviendo en el domicilio" name="housing_years">
+                  <UInputNumber v-model="state.housing_years" class="w-full" :min="0" />
+                </UFormField>
+                <UFormField label="Dimensiones de la vivienda" name="housing_dimensions">
+                  <UInput v-model="state.housing_dimensions" placeholder="Ej. 120 m²" class="w-full" />
+                </UFormField>
+                <div />
+                <UFormField label="Referencia laboral — nombre" name="work_reference_name">
+                  <UInput v-model="state.work_reference_name" class="w-full" />
+                </UFormField>
+                <UFormField label="Referencia laboral — teléfono" name="work_reference_phone">
+                  <UInput v-model="state.work_reference_phone" class="w-full" />
+                </UFormField>
+              </div>
             </div>
           </div>
         </UCard>
@@ -398,8 +514,13 @@ async function onSubmit(event: FormSubmitEvent<Schema>) {
             </h3>
           </template>
 
-          <UFormField label="Límite de crédito solicitado" name="requested_credit_limit">
-            <UInputNumber v-model="state.requested_credit_limit" class="w-full max-w-sm" :min="0" />
+          <UFormField label="Límite de crédito solicitado" name="requested_credit_limit" required>
+            <UInputNumber
+              v-model="state.requested_credit_limit"
+              class="w-full max-w-sm"
+              :min="1000"
+              :step="100"
+            />
           </UFormField>
         </UCard>
 

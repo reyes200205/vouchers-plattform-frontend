@@ -60,6 +60,14 @@ export function useBranches() {
     return response.data
   }
 
+  async function listVerifiers(branchId: number) {
+    const response = await $fetch<AvailableManagersResponse>(`${config.public.apiBase}/branches/${branchId}/verifiers`, {
+      headers: { Authorization: `Bearer ${token.value}` }
+    })
+
+    return response.data
+  }
+
   async function createBranch(payload: CreateBranchPayload) {
     const response = await $fetch<BranchResponse>(`${config.public.apiBase}/branches`, {
       method: 'POST',
@@ -80,5 +88,5 @@ export function useBranches() {
     return response.data
   }
 
-  return { listBranches, listAvailableManagers, createBranch, updateBranch }
+  return { listBranches, listAvailableManagers, listVerifiers, createBranch, updateBranch }
 }

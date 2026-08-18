@@ -3,6 +3,7 @@ import * as z from 'zod'
 import type { FormSubmitEvent } from '@nuxt/ui'
 import type { Application } from '~/composables/useApplications'
 import { applicantFullName } from '~/composables/useApplications'
+import type { AvailableManager } from '~/composables/useBranches'
 
 const props = defineProps<{
   application: Application | null
@@ -12,7 +13,7 @@ const open = defineModel<boolean>('open', { default: false })
 const emit = defineEmits<{ assigned: [] }>()
 
 const schema = z.object({
-  verifier_user_id: z.number({ error: 'Captura el ID del verificador' }).int().positive('Captura un ID válido')
+  verifier_user_id: z.number({ error: 'Selecciona un verificador' }).int().positive('Selecciona un verificador')
 })
 
 type Schema = z.output<typeof schema>
@@ -21,13 +22,38 @@ const state = reactive<Partial<Schema>>({
   verifier_user_id: undefined
 })
 
-watch(() => props.application, () => {
-  state.verifier_user_id = undefined
-}, { immediate: true })
-
 const { assignVerifier } = useApplications()
+const { listVerifiers } = useBranches()
 const toast = useToast()
 const submitting = ref(false)
+const loadingVerifiers = ref(false)
+const verifiers = ref<AvailableManager[]>([])
+
+const verifierItems = computed(() => verifiers.value.map(v => ({
+  label: `${v.name} (${v.username})`,
+  value: v.id
+})))
+
+watch(() => props.application, async (application) => {
+  state.verifier_user_id = undefined
+  verifiers.value = []
+
+  if (!application?.branch_id) return
+
+  loadingVerifiers.value = true
+  try {
+    verifiers.value = await listVerifiers(application.branch_id)
+  } catch (e) {
+    console.error(e)
+    toast.add({
+      title: 'Error',
+      description: 'No se pudo cargar el listado de verificadores de la sucursal.',
+      color: 'error'
+    })
+  } finally {
+    loadingVerifiers.value = false
+  }
+}, { immediate: true })
 
 async function onSubmit(event: FormSubmitEvent<Schema>) {
   if (!props.application) return
@@ -48,7 +74,7 @@ async function onSubmit(event: FormSubmitEvent<Schema>) {
     console.error(e)
     toast.add({
       title: 'Error',
-      description: 'No se pudo asignar el verificador. Verifica el ID e intenta de nuevo.',
+      description: 'No se pudo asignar el verificador. Intenta de nuevo.',
       color: 'error'
     })
   } finally {
@@ -61,7 +87,7 @@ async function onSubmit(event: FormSubmitEvent<Schema>) {
   <UModal
     v-model:open="open"
     title="Asignar Verificador"
-    :description="application ? `Solicitud #${application.id} — ${applicantFullName(application.applicant)}` : ''"
+    :description="application ? `Solicitud #${application.id} — ${applicantFullName(application.applicant)} — ${application.branch?.name ?? ''}` : ''"
   >
     <template #body>
       <UForm
@@ -71,18 +97,21 @@ async function onSubmit(event: FormSubmitEvent<Schema>) {
         @submit="onSubmit"
       >
         <UAlert
-          color="neutral"
+          v-if="!loadingVerifiers && !verifierItems.length"
+          color="warning"
           variant="subtle"
-          icon="i-lucide-info"
-          description="Aún no existe un catálogo de verificadores disponibles en la API. Captura manualmente el ID del usuario con rol Verificador."
+          icon="i-lucide-triangle-alert"
+          description="No hay verificadores dados de alta en esta sucursal. Solo se puede asignar un verificador que pertenezca a la misma sucursal de la solicitud."
         />
 
-        <UFormField label="ID del usuario verificador" name="verifier_user_id" required>
-          <UInputNumber
+        <UFormField label="Verificador" name="verifier_user_id" required>
+          <USelect
             v-model="state.verifier_user_id"
+            :items="verifierItems"
+            :loading="loadingVerifiers"
+            :disabled="loadingVerifiers || !verifierItems.length"
+            placeholder="Selecciona un verificador de la sucursal..."
             class="w-full"
-            :min="1"
-            placeholder="Ej. 15"
           />
         </UFormField>
 
@@ -99,6 +128,7 @@ async function onSubmit(event: FormSubmitEvent<Schema>) {
             variant="solid"
             type="submit"
             :loading="submitting"
+            :disabled="!verifierItems.length"
           />
         </div>
       </UForm>
