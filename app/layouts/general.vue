@@ -39,7 +39,7 @@ const links = computed(() => {
       open.value = false
     }
   }, {
-    label: 'Inbox',
+    label: 'Bandeja de Aprobaciones',
     icon: 'i-lucide-inbox',
     to: '/general/inbox',
     badge: inboxCount.value > 0 ? String(inboxCount.value) : undefined,
@@ -70,6 +70,50 @@ const links = computed(() => {
     })
   }
 
+  if (hasPermission('products.view')) {
+    items.push({
+      label: 'Productos y Vales',
+      icon: 'i-lucide-ticket',
+      to: '/general/products',
+      onSelect: () => {
+        open.value = false
+      }
+    })
+  }
+
+  if (hasPermission('categories.view')) {
+    items.push({
+      label: 'Categorías',
+      icon: 'i-lucide-medal',
+      to: '/general/categories',
+      onSelect: () => {
+        open.value = false
+      }
+    })
+  }
+
+  if (hasPermission('reconciliations.view')) {
+    items.push({
+      label: 'Conciliaciones',
+      icon: 'i-lucide-hand-coins',
+      to: '/general/reconciliations',
+      onSelect: () => {
+        open.value = false
+      }
+    })
+  }
+
+  if (hasPermission('staff.view')) {
+    items.push({
+      label: 'Personal',
+      icon: 'i-lucide-user-cog',
+      to: '/general/staff',
+      onSelect: () => {
+        open.value = false
+      }
+    })
+  }
+
   if (hasAnyPermission(['branch-settings.view', 'point-settings.view'])) {
     items.push({
       label: 'Configuración',
@@ -81,12 +125,6 @@ const links = computed(() => {
         label: 'General',
         to: '/general/settings',
         exact: true,
-        onSelect: () => {
-          open.value = false
-        }
-      }, {
-        label: 'Miembros',
-        to: '/general/settings/members',
         onSelect: () => {
           open.value = false
         }
@@ -159,7 +197,7 @@ onMounted(async () => {
       collapsible
       resizable
       class="bg-elevated/25"
-      :ui="{ footer: 'lg:border-t lg:border-default' }"
+      :ui="{ footer: 'border-t border-default' }"
     >
       <template #header="{ collapsed }">
         <TeamsMenu :collapsed="collapsed" />

@@ -10,10 +10,6 @@ const props = defineProps<{
 const emit = defineEmits<{ updated: [] }>()
 
 const schema = z.object({
-  default_credit_limit: z.union([z.number(), z.string()]).optional(),
-  opening_commission_percentage: z.union([z.number(), z.string()]).optional(),
-  biweekly_interest_percentage: z.union([z.number(), z.string()]).optional(),
-  late_payment_penalty_amount: z.union([z.number(), z.string()]).optional(),
   payment_due_days: z.union([z.number(), z.string()]).optional(),
   pre_vale_max_percentage: z.union([z.number(), z.string()]).optional(),
   pre_vale_tolerance_amount: z.union([z.number(), z.string()]).optional(),
@@ -38,10 +34,6 @@ watch(open, async (isOpen) => {
   if (!isOpen) return
 
   loading.value = true
-  state.default_credit_limit = undefined
-  state.opening_commission_percentage = undefined
-  state.biweekly_interest_percentage = undefined
-  state.late_payment_penalty_amount = undefined
   state.payment_due_days = undefined
   state.pre_vale_max_percentage = undefined
   state.pre_vale_tolerance_amount = undefined
@@ -55,10 +47,6 @@ watch(open, async (isOpen) => {
       getPointSettings()
     ])
 
-    state.default_credit_limit = branchSettings.default_credit_limit ?? undefined
-    state.opening_commission_percentage = branchSettings.opening_commission_percentage ?? undefined
-    state.biweekly_interest_percentage = branchSettings.biweekly_interest_percentage ?? undefined
-    state.late_payment_penalty_amount = branchSettings.late_payment_penalty_amount ?? undefined
     state.payment_due_days = branchSettings.payment_due_days ?? undefined
     state.pre_vale_max_percentage = branchSettings.pre_vale_max_percentage ?? undefined
     state.pre_vale_tolerance_amount = branchSettings.pre_vale_tolerance_amount ?? undefined
@@ -81,10 +69,6 @@ async function onSubmit(event: FormSubmitEvent<Schema>) {
 
   try {
     const branchPayload: Partial<BranchSettings> = {
-      default_credit_limit: event.data.default_credit_limit ? String(event.data.default_credit_limit) : undefined,
-      opening_commission_percentage: event.data.opening_commission_percentage ? String(event.data.opening_commission_percentage) : undefined,
-      biweekly_interest_percentage: event.data.biweekly_interest_percentage ? String(event.data.biweekly_interest_percentage) : undefined,
-      late_payment_penalty_amount: event.data.late_payment_penalty_amount ? String(event.data.late_payment_penalty_amount) : undefined,
       payment_due_days: event.data.payment_due_days ? Number(event.data.payment_due_days) : undefined,
       pre_vale_max_percentage: event.data.pre_vale_max_percentage ? String(event.data.pre_vale_max_percentage) : undefined,
       pre_vale_tolerance_amount: event.data.pre_vale_tolerance_amount ? String(event.data.pre_vale_tolerance_amount) : undefined,
@@ -145,42 +129,6 @@ async function onSubmit(event: FormSubmitEvent<Schema>) {
         />
 
         <div v-if="tab === 'branch'" class="space-y-4 p-4">
-          <UFormField label="Límite de crédito por defecto (MXN)" name="default_credit_limit">
-            <UInput
-              v-model="state.default_credit_limit"
-              type="number"
-              min="0"
-              step="100"
-              class="w-full"
-            />
-          </UFormField>
-          <UFormField label="Comisión de apertura (%)" name="opening_commission_percentage">
-            <UInput
-              v-model="state.opening_commission_percentage"
-              type="number"
-              min="0"
-              step="0.01"
-              class="w-full"
-            />
-          </UFormField>
-          <UFormField label="Interés quincenal (%)" name="biweekly_interest_percentage">
-            <UInput
-              v-model="state.biweekly_interest_percentage"
-              type="number"
-              min="0"
-              step="0.01"
-              class="w-full"
-            />
-          </UFormField>
-          <UFormField label="Penalización por atraso (MXN)" name="late_payment_penalty_amount">
-            <UInput
-              v-model="state.late_payment_penalty_amount"
-              type="number"
-              min="0"
-              step="10"
-              class="w-full"
-            />
-          </UFormField>
           <UFormField label="Días para pago" name="payment_due_days">
             <UInput
               v-model="state.payment_due_days"
