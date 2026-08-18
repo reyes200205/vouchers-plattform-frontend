@@ -1,7 +1,6 @@
 <script setup lang="ts">
-import type { NavigationMenuItem } from '@nuxt/ui'
+import type { CommandPaletteItem, NavigationMenuItem } from '@nuxt/ui'
 
-const route = useRoute()
 const open = ref(false)
 const { roleCode, roleName, logout } = useAuth()
 
@@ -32,12 +31,7 @@ const links = computed(() => {
     items.push({
       label: 'Panel Verificador',
       icon: 'i-lucide-layout-dashboard',
-      to: '/registro-verificacion',
-      onSelect: () => { open.value = false }
-    }, {
-      label: 'Verificaciones',
-      icon: 'i-lucide-shield-check',
-      to: '/registro-verificacion/verificaciones',
+      to: '/registro-verificacion/verificador/dashboard_verificador',
       onSelect: () => { open.value = false }
     })
   } else {
@@ -62,7 +56,7 @@ const links = computed(() => {
 const groups = computed(() => [{
   id: 'links',
   label: 'Go to',
-  items: links.value.flat() as any
+  items: links.value.flat() as unknown as CommandPaletteItem[]
 }])
 </script>
 

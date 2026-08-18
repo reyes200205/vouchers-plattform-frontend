@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import type { NavigationMenuItem } from '@nuxt/ui'
+import type { CommandPaletteItem, NavigationMenuItem } from '@nuxt/ui'
 
 const route = useRoute()
 const toast = useToast()
@@ -7,6 +7,18 @@ const toast = useToast()
 const open = ref(false)
 
 const { user } = useAuth()
+const { counts } = useInbox()
+
+const inboxCount = ref(0)
+
+onMounted(async () => {
+  try {
+    const c = await counts()
+    inboxCount.value = c.applications + c.credit_increases + c.redemptions
+  } catch {
+    inboxCount.value = 0
+  }
+})
 
 const hasPermission = (permission: string) => {
   return user.value?.permissions?.includes(permission) ?? false
@@ -30,7 +42,7 @@ const links = computed(() => {
     label: 'Inbox',
     icon: 'i-lucide-inbox',
     to: '/general/inbox',
-    badge: '4',
+    badge: inboxCount.value > 0 ? String(inboxCount.value) : undefined,
     onSelect: () => {
       open.value = false
     }
@@ -100,7 +112,7 @@ const links = computed(() => {
 const groups = computed(() => [{
   id: 'links',
   label: 'Go to',
-  items: links.value.flat() as any
+  items: links.value.flat() as unknown as CommandPaletteItem[]
 }, {
   id: 'code',
   label: 'Code',

@@ -34,37 +34,51 @@ const { isNotificationsSlideoverOpen } = useDashboard()
             <template #header>
               <div class="flex items-center gap-2">
                 <UIcon name="i-lucide-shopping-bag" class="size-5 text-primary" />
-                <h3 class="font-semibold text-sm text-dimmed">Pedidos Realizados</h3>
+                <h3 class="font-semibold text-sm text-dimmed">
+                  Pedidos Realizados
+                </h3>
               </div>
             </template>
-            <div class="text-3xl font-bold mt-2">24</div>
+            <div class="text-3xl font-bold mt-2">
+              24
+            </div>
           </UCard>
 
           <UCard>
             <template #header>
               <div class="flex items-center gap-2">
                 <UIcon name="i-lucide-truck" class="size-5 text-warning" />
-                <h3 class="font-semibold text-sm text-dimmed">En Camino / Tránsito</h3>
+                <h3 class="font-semibold text-sm text-dimmed">
+                  En Camino / Tránsito
+                </h3>
               </div>
             </template>
-            <div class="text-3xl font-bold mt-2">2</div>
+            <div class="text-3xl font-bold mt-2">
+              2
+            </div>
           </UCard>
 
           <UCard>
             <template #header>
               <div class="flex items-center gap-2">
                 <UIcon name="i-lucide-dollar-sign" class="size-5 text-success" />
-                <h3 class="font-semibold text-sm text-dimmed">Saldo Pendiente</h3>
+                <h3 class="font-semibold text-sm text-dimmed">
+                  Saldo Pendiente
+                </h3>
               </div>
             </template>
-            <div class="text-3xl font-bold mt-2">$1,240.00</div>
+            <div class="text-3xl font-bold mt-2">
+              $1,240.00
+            </div>
           </UCard>
         </div>
 
         <UCard class="mt-6">
           <template #header>
             <div class="flex items-center justify-between">
-              <h3 class="font-semibold text-base">Mis Pedidos Recientes</h3>
+              <h3 class="font-semibold text-base">
+                Mis Pedidos Recientes
+              </h3>
               <UButton label="Nuevo Pedido" icon="i-lucide-plus" to="/distributor-portal/orders" />
             </div>
           </template>

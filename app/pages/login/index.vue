@@ -33,18 +33,15 @@ const handleSubmit = async () => {
 <template>
   <main class="login-page">
     <div class="login-container">
-
       <!-- ================================= -->
       <!-- PANEL IZQUIERDO -->
       <!-- ================================= -->
 
       <section class="brand-panel">
-
-        <div class="decorative-circle circle-one"></div>
-        <div class="decorative-circle circle-two"></div>
+        <div class="decorative-circle circle-one" />
+        <div class="decorative-circle circle-two" />
 
         <div class="brand-content">
-
           <!-- Logo -->
           <div class="brand-logo">
             <div class="logo-icon">
@@ -89,12 +86,10 @@ const handleSubmit = async () => {
               desde una plataforma centralizada, segura y fácil de utilizar.
             </p>
           </div>
-
         </div>
 
         <!-- Características -->
         <div class="features">
-
           <div class="feature">
             <div class="feature-icon">
               ✓
@@ -133,9 +128,7 @@ const handleSubmit = async () => {
               </p>
             </div>
           </div>
-
         </div>
-
       </section>
 
       <!-- ================================= -->
@@ -143,10 +136,8 @@ const handleSubmit = async () => {
       <!-- ================================= -->
 
       <section class="form-panel">
-
         <!-- Logo para tablet/móvil -->
         <div class="mobile-brand">
-
           <div class="mobile-logo">
             <svg
               width="23"
@@ -173,14 +164,11 @@ const handleSubmit = async () => {
             <h1>MIS VALES</h1>
             <p>Administración de vales</p>
           </div>
-
         </div>
 
         <div class="form-wrapper">
-
           <!-- Encabezado -->
           <div class="form-header">
-
             <span>BIENVENIDO DE NUEVO</span>
 
             <h2>Iniciar sesión</h2>
@@ -188,21 +176,17 @@ const handleSubmit = async () => {
             <p>
               Ingresa tus datos para acceder a la plataforma de Mis Vales.
             </p>
-
           </div>
 
           <!-- FORMULARIO -->
           <form @submit.prevent="handleSubmit">
-
             <!-- Usuario -->
             <div class="form-group">
-
               <label for="username">
                 Usuario
               </label>
 
               <div class="input-wrapper">
-
                 <svg
                   class="input-icon"
                   width="19"
@@ -231,17 +215,13 @@ const handleSubmit = async () => {
                   placeholder="usuario"
                   autocomplete="username"
                   required
-                />
-
+                >
               </div>
-
             </div>
 
             <!-- Contraseña -->
             <div class="form-group">
-
               <div class="password-header">
-
                 <label for="password">
                   Contraseña
                 </label>
@@ -252,11 +232,9 @@ const handleSubmit = async () => {
                 >
                   ¿Olvidaste tu contraseña?
                 </button>
-
               </div>
 
               <div class="input-wrapper">
-
                 <svg
                   class="input-icon"
                   width="19"
@@ -289,7 +267,7 @@ const handleSubmit = async () => {
                   placeholder="Ingresa tu contraseña"
                   autocomplete="current-password"
                   required
-                />
+                >
 
                 <button
                   type="button"
@@ -298,9 +276,7 @@ const handleSubmit = async () => {
                 >
                   {{ showPassword ? 'Ocultar' : 'Ver' }}
                 </button>
-
               </div>
-
             </div>
 
             <!-- Recordar -->
@@ -309,7 +285,7 @@ const handleSubmit = async () => {
               <input
                 v-model="rememberMe"
                 type="checkbox"
-              />
+              >
 
               <span>
                 Mantener mi sesión iniciada
@@ -328,7 +304,6 @@ const handleSubmit = async () => {
               class="login-button"
               :disabled="loading"
             >
-
               <span v-if="!loading">
                 Iniciar sesión
               </span>
@@ -340,14 +315,11 @@ const handleSubmit = async () => {
               <span v-if="!loading" class="arrow">
                 →
               </span>
-
             </button>
-
           </form>
 
           <!-- Seguridad -->
           <div class="security">
-
             <div class="security-icon">
               ✓
             </div>
@@ -356,18 +328,14 @@ const handleSubmit = async () => {
               Tu información está protegida mediante
               <strong>acceso seguro.</strong>
             </p>
-
           </div>
 
           <p class="copyright">
             © {{ new Date().getFullYear() }} Mis Vales.
             Todos los derechos reservados.
           </p>
-
         </div>
-
       </section>
-
     </div>
   </main>
 </template>
@@ -409,7 +377,6 @@ const handleSubmit = async () => {
   box-sizing: border-box;
 }
 
-
 /* =========================================================
    CONTENEDOR PRINCIPAL
  ========================================================= */
@@ -430,7 +397,6 @@ const handleSubmit = async () => {
 
   overflow: hidden;
 }
-
 
 /* =========================================================
    PANEL IZQUIERDO
@@ -456,7 +422,6 @@ const handleSubmit = async () => {
   position: relative;
   z-index: 2;
 }
-
 
 /* =========================================================
    LOGO
@@ -502,7 +467,6 @@ const handleSubmit = async () => {
 
   font-size: clamp(10px, 1vw, 12px);
 }
-
 
 /* =========================================================
    MENSAJE PRINCIPAL
@@ -551,7 +515,6 @@ const handleSubmit = async () => {
 
   line-height: 1.75;
 }
-
 
 /* =========================================================
    CARACTERÍSTICAS
@@ -613,7 +576,6 @@ const handleSubmit = async () => {
   line-height: 1.4;
 }
 
-
 /* =========================================================
    DECORACIONES
 ========================================================= */
@@ -644,7 +606,6 @@ const handleSubmit = async () => {
   left: -160px;
 }
 
-
 /* =========================================================
    PANEL DERECHO
 ========================================================= */
@@ -663,7 +624,6 @@ const handleSubmit = async () => {
 .form-wrapper {
   width: min(100%, 430px);
 }
-
 
 /* =========================================================
    HEADER DEL FORMULARIO
@@ -706,7 +666,6 @@ const handleSubmit = async () => {
 
   line-height: 1.6;
 }
-
 
 /* =========================================================
    FORMULARIO
@@ -832,7 +791,6 @@ const handleSubmit = async () => {
   cursor: pointer;
 }
 
-
 /* =========================================================
    RECORDAR SESIÓN
 ========================================================= */
@@ -863,7 +821,6 @@ const handleSubmit = async () => {
   cursor: pointer;
 }
 
-
 .login-error {
   margin: 0 0 16px;
   padding: 10px 14px;
@@ -874,7 +831,6 @@ const handleSubmit = async () => {
   color: #b3261e;
   font-size: 14px;
 }
-
 
 /* =========================================================
    BOTÓN LOGIN
@@ -948,7 +904,6 @@ const handleSubmit = async () => {
   transform: translateX(4px);
 }
 
-
 /* =========================================================
    SEGURIDAD
 ========================================================= */
@@ -1001,7 +956,6 @@ const handleSubmit = async () => {
   color: var(--blue);
 }
 
-
 /* =========================================================
    COPYRIGHT
 ========================================================= */
@@ -1018,7 +972,6 @@ const handleSubmit = async () => {
   line-height: 1.5;
 }
 
-
 /* =========================================================
    MARCA PARA TABLET / CELULAR
 ========================================================= */
@@ -1026,7 +979,6 @@ const handleSubmit = async () => {
 .mobile-brand {
   display: none;
 }
-
 
 /* =========================================================
    LAPTOP PEQUEÑA / TABLET HORIZONTAL
@@ -1059,7 +1011,6 @@ const handleSubmit = async () => {
     font-size: 34px;
   }
 }
-
 
 /* =========================================================
    TABLET
@@ -1141,7 +1092,6 @@ const handleSubmit = async () => {
   }
 }
 
-
 /* =========================================================
    TABLET VERTICAL / CELULAR GRANDE
 ========================================================= */
@@ -1189,7 +1139,6 @@ const handleSubmit = async () => {
     padding-top: 20px;
   }
 }
-
 
 /* =========================================================
    CELULARES PEQUEÑOS
@@ -1265,7 +1214,6 @@ const handleSubmit = async () => {
   }
 }
 
-
 /* =========================================================
    CELULARES MUY PEQUEÑOS
 ========================================================= */
@@ -1308,7 +1256,6 @@ const handleSubmit = async () => {
     padding-top: 18px;
   }
 }
-
 
 /* =========================================================
    CELULAR / TABLET EN HORIZONTAL
@@ -1354,7 +1301,6 @@ const handleSubmit = async () => {
   }
 }
 
-
 /* =========================================================
    PANTALLAS MUY GRANDES
 ========================================================= */
@@ -1370,7 +1316,6 @@ const handleSubmit = async () => {
     padding: 65px;
   }
 }
-
 
 /* =========================================================
    REDUCIR ANIMACIONES SI EL USUARIO LO PREFIERE
