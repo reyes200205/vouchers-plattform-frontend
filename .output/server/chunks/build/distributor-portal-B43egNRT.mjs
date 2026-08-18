@@ -1,8 +1,8 @@
-import { g as _sfc_main$2$1 } from '../virtual/entry.mjs';
+import { aI as useRuntimeConfig, g as _sfc_main$2$1 } from '../virtual/entry.mjs';
 import { c as _sfc_main$5, b as _sfc_main$3, U as UserMenu_default, a as _sfc_main$2, _ as _sfc_main$1, N as NotificationsSlideover_default } from './NotificationsSlideover-D3WJoG15.mjs';
 import { _ as _sfc_main } from './NavigationMenu-MW6KcwVY.mjs';
-import { defineComponent, ref, computed, mergeProps, withCtx, isRef, unref, createVNode, openBlock, createBlock, createCommentVNode, renderSlot, useSSRContext } from 'vue';
-import { ssrRenderComponent, ssrRenderSlot } from 'vue/server-renderer';
+import { defineComponent, ref, computed, mergeProps, withCtx, isRef, unref, createVNode, openBlock, createBlock, toDisplayString, createCommentVNode, renderSlot, useSSRContext } from 'vue';
+import { ssrRenderComponent, ssrInterpolate, ssrRenderSlot } from 'vue/server-renderer';
 import '../_/nitro.mjs';
 import 'node:http';
 import 'node:https';
@@ -53,6 +53,7 @@ var distributor_portal_vue_vue_type_script_setup_true_lang_default = /*@__PURE__
 	__ssrInlineRender: true,
 	setup(__props) {
 		const open = ref(false);
+		const version = useRuntimeConfig().public.version;
 		const links = [[
 			{
 				label: "Portal Distribuidor",
@@ -119,21 +120,22 @@ var distributor_portal_vue_vue_type_script_setup_true_lang_default = /*@__PURE__
 						}, {
 							header: withCtx(({ collapsed }, _push, _parent, _scopeId) => {
 								if (_push) {
-									_push(`<div class="flex items-center gap-2 px-3 py-2"${_scopeId}>`);
+									_push(`<div class="flex items-center gap-2.5 px-2.5 py-1.5"${_scopeId}><div class="flex items-center justify-center size-7 rounded-lg bg-primary/10 border border-primary/20 text-primary shrink-0"${_scopeId}>`);
 									_push(ssrRenderComponent(_component_UIcon, {
-										name: "i-lucide-store",
-										class: "size-6 text-primary"
+										name: "i-lucide-ticket",
+										class: "size-4"
 									}, null, _parent, _scopeId));
-									if (!collapsed) _push(`<span class="font-semibold text-sm"${_scopeId}>Distribuidor</span>`);
+									_push(`</div>`);
+									if (!collapsed) _push(`<div class="flex flex-col min-w-0"${_scopeId}><span class="font-bold text-sm text-strong truncate leading-none"${_scopeId}>Mis Vales</span><span class="text-[10px] text-dimmed mt-0.5 leading-none"${_scopeId}>v${ssrInterpolate(unref(version))} • Distribuidor</span></div>`);
 									else _push(`<!---->`);
 									_push(`</div>`);
-								} else return [createVNode("div", { class: "flex items-center gap-2 px-3 py-2" }, [createVNode(_component_UIcon, {
-									name: "i-lucide-store",
-									class: "size-6 text-primary"
-								}), !collapsed ? (openBlock(), createBlock("span", {
+								} else return [createVNode("div", { class: "flex items-center gap-2.5 px-2.5 py-1.5" }, [createVNode("div", { class: "flex items-center justify-center size-7 rounded-lg bg-primary/10 border border-primary/20 text-primary shrink-0" }, [createVNode(_component_UIcon, {
+									name: "i-lucide-ticket",
+									class: "size-4"
+								})]), !collapsed ? (openBlock(), createBlock("div", {
 									key: 0,
-									class: "font-semibold text-sm"
-								}, "Distribuidor")) : createCommentVNode("", true)])];
+									class: "flex flex-col min-w-0"
+								}, [createVNode("span", { class: "font-bold text-sm text-strong truncate leading-none" }, "Mis Vales"), createVNode("span", { class: "text-[10px] text-dimmed mt-0.5 leading-none" }, "v" + toDisplayString(unref(version)) + " • Distribuidor", 1)])) : createCommentVNode("", true)])];
 							}),
 							default: withCtx(({ collapsed }, _push, _parent, _scopeId) => {
 								if (_push) {
@@ -195,13 +197,13 @@ var distributor_portal_vue_vue_type_script_setup_true_lang_default = /*@__PURE__
 							class: "bg-elevated/25",
 							ui: { footer: "lg:border-t lg:border-default" }
 						}, {
-							header: withCtx(({ collapsed }) => [createVNode("div", { class: "flex items-center gap-2 px-3 py-2" }, [createVNode(_component_UIcon, {
-								name: "i-lucide-store",
-								class: "size-6 text-primary"
-							}), !collapsed ? (openBlock(), createBlock("span", {
+							header: withCtx(({ collapsed }) => [createVNode("div", { class: "flex items-center gap-2.5 px-2.5 py-1.5" }, [createVNode("div", { class: "flex items-center justify-center size-7 rounded-lg bg-primary/10 border border-primary/20 text-primary shrink-0" }, [createVNode(_component_UIcon, {
+								name: "i-lucide-ticket",
+								class: "size-4"
+							})]), !collapsed ? (openBlock(), createBlock("div", {
 								key: 0,
-								class: "font-semibold text-sm"
-							}, "Distribuidor")) : createCommentVNode("", true)])]),
+								class: "flex flex-col min-w-0"
+							}, [createVNode("span", { class: "font-bold text-sm text-strong truncate leading-none" }, "Mis Vales"), createVNode("span", { class: "text-[10px] text-dimmed mt-0.5 leading-none" }, "v" + toDisplayString(unref(version)) + " • Distribuidor", 1)])) : createCommentVNode("", true)])]),
 							default: withCtx(({ collapsed }) => [
 								createVNode(_component_UDashboardSearchButton, {
 									collapsed,
@@ -246,4 +248,4 @@ distributor_portal_vue_vue_type_script_setup_true_lang_default.setup = (props, c
 var distributor_portal_default = distributor_portal_vue_vue_type_script_setup_true_lang_default;
 
 export { distributor_portal_default as default };
-//# sourceMappingURL=distributor-portal-CEQtaQKW.mjs.map
+//# sourceMappingURL=distributor-portal-B43egNRT.mjs.map

@@ -1,9 +1,9 @@
-import { aG as useRoute, aL as useToast, ai as useAuth, g as _sfc_main$2$1 } from '../virtual/entry.mjs';
+import { aG as useRoute, aL as useToast, aI as useRuntimeConfig, ai as useAuth, g as _sfc_main$2$1 } from '../virtual/entry.mjs';
 import { c as _sfc_main$5, b as _sfc_main$3, U as UserMenu_default, a as _sfc_main$2, _ as _sfc_main$1, N as NotificationsSlideover_default } from './NotificationsSlideover-D3WJoG15.mjs';
 import { _ as _sfc_main } from './NavigationMenu-MW6KcwVY.mjs';
 import { u as useInbox } from './useInbox-DtuZcK1c.mjs';
-import { defineComponent, ref, computed, mergeProps, withCtx, isRef, unref, createVNode, openBlock, createBlock, createCommentVNode, renderSlot, useSSRContext } from 'vue';
-import { ssrRenderComponent, ssrRenderSlot } from 'vue/server-renderer';
+import { defineComponent, ref, computed, mergeProps, withCtx, isRef, unref, createVNode, openBlock, createBlock, toDisplayString, createCommentVNode, renderSlot, useSSRContext } from 'vue';
+import { ssrRenderComponent, ssrInterpolate, ssrRenderSlot } from 'vue/server-renderer';
 import '../_/nitro.mjs';
 import 'node:http';
 import 'node:https';
@@ -55,6 +55,7 @@ var general_vue_vue_type_script_setup_true_lang_default = /*@__PURE__*/ defineCo
 	setup(__props) {
 		const route = useRoute();
 		useToast();
+		const version = useRuntimeConfig().public.version;
 		const open = ref(false);
 		const { user } = useAuth();
 		useInbox();
@@ -183,16 +184,16 @@ var general_vue_vue_type_script_setup_true_lang_default = /*@__PURE__*/ defineCo
 										class: "size-4"
 									}, null, _parent, _scopeId));
 									_push(`</div>`);
-									if (!collapsed) _push(`<span class="font-bold text-sm text-strong truncate"${_scopeId}>Mis Vales</span>`);
+									if (!collapsed) _push(`<div class="flex flex-col min-w-0"${_scopeId}><span class="font-bold text-sm text-strong truncate leading-none"${_scopeId}>Mis Vales</span><span class="text-[10px] text-dimmed mt-0.5 leading-none"${_scopeId}>v${ssrInterpolate(unref(version))}</span></div>`);
 									else _push(`<!---->`);
 									_push(`</div>`);
 								} else return [createVNode("div", { class: "flex items-center gap-2.5 px-2.5 py-1.5" }, [createVNode("div", { class: "flex items-center justify-center size-7 rounded-lg bg-primary/10 border border-primary/20 text-primary shrink-0" }, [createVNode(_component_UIcon, {
 									name: "i-lucide-ticket",
 									class: "size-4"
-								})]), !collapsed ? (openBlock(), createBlock("span", {
+								})]), !collapsed ? (openBlock(), createBlock("div", {
 									key: 0,
-									class: "font-bold text-sm text-strong truncate"
-								}, "Mis Vales")) : createCommentVNode("", true)])];
+									class: "flex flex-col min-w-0"
+								}, [createVNode("span", { class: "font-bold text-sm text-strong truncate leading-none" }, "Mis Vales"), createVNode("span", { class: "text-[10px] text-dimmed mt-0.5 leading-none" }, "v" + toDisplayString(unref(version)), 1)])) : createCommentVNode("", true)])];
 							}),
 							default: withCtx(({ collapsed }, _push, _parent, _scopeId) => {
 								if (_push) {
@@ -240,10 +241,10 @@ var general_vue_vue_type_script_setup_true_lang_default = /*@__PURE__*/ defineCo
 							header: withCtx(({ collapsed }) => [createVNode("div", { class: "flex items-center gap-2.5 px-2.5 py-1.5" }, [createVNode("div", { class: "flex items-center justify-center size-7 rounded-lg bg-primary/10 border border-primary/20 text-primary shrink-0" }, [createVNode(_component_UIcon, {
 								name: "i-lucide-ticket",
 								class: "size-4"
-							})]), !collapsed ? (openBlock(), createBlock("span", {
+							})]), !collapsed ? (openBlock(), createBlock("div", {
 								key: 0,
-								class: "font-bold text-sm text-strong truncate"
-							}, "Mis Vales")) : createCommentVNode("", true)])]),
+								class: "flex flex-col min-w-0"
+							}, [createVNode("span", { class: "font-bold text-sm text-strong truncate leading-none" }, "Mis Vales"), createVNode("span", { class: "text-[10px] text-dimmed mt-0.5 leading-none" }, "v" + toDisplayString(unref(version)), 1)])) : createCommentVNode("", true)])]),
 							default: withCtx(({ collapsed }) => [createVNode(_component_UDashboardSearchButton, {
 								collapsed,
 								class: "bg-transparent ring-default"
@@ -278,4 +279,4 @@ general_vue_vue_type_script_setup_true_lang_default.setup = (props, ctx) => {
 var general_default = general_vue_vue_type_script_setup_true_lang_default;
 
 export { general_default as default };
-//# sourceMappingURL=general-jadtw61z.mjs.map
+//# sourceMappingURL=general-By3wXPk9.mjs.map

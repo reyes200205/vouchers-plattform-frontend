@@ -3,6 +3,8 @@ import type { CommandPaletteItem, NavigationMenuItem } from '@nuxt/ui'
 
 const route = useRoute()
 const toast = useToast()
+const config = useRuntimeConfig()
+const version = config.public.version
 
 const open = ref(false)
 
@@ -166,7 +168,10 @@ onMounted(async () => {
           <div class="flex items-center justify-center size-7 rounded-lg bg-primary/10 border border-primary/20 text-primary shrink-0">
             <UIcon name="i-lucide-ticket" class="size-4" />
           </div>
-          <span v-if="!collapsed" class="font-bold text-sm text-strong truncate">Mis Vales</span>
+          <div v-if="!collapsed" class="flex flex-col min-w-0">
+            <span class="font-bold text-sm text-strong truncate leading-none">Mis Vales</span>
+            <span class="text-[10px] text-dimmed mt-0.5 leading-none">v{{ version }}</span>
+          </div>
         </div>
       </template>
 

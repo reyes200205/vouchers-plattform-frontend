@@ -1,4 +1,4 @@
-import { ai as useAuth, X as navigateTo, g as _sfc_main$2$1 } from '../virtual/entry.mjs';
+import { ai as useAuth, aI as useRuntimeConfig, X as navigateTo, g as _sfc_main$2$1 } from '../virtual/entry.mjs';
 import { c as _sfc_main$5, b as _sfc_main$3, U as UserMenu_default, a as _sfc_main$2, _ as _sfc_main$1, N as NotificationsSlideover_default } from './NotificationsSlideover-D3WJoG15.mjs';
 import { _ as _sfc_main } from './NavigationMenu-MW6KcwVY.mjs';
 import { defineComponent, ref, computed, mergeProps, withCtx, isRef, unref, createVNode, openBlock, createBlock, toDisplayString, createCommentVNode, renderSlot, useSSRContext } from 'vue';
@@ -54,6 +54,7 @@ var registro_verificacion_vue_vue_type_script_setup_true_lang_default = /*@__PUR
 	setup(__props) {
 		const open = ref(false);
 		const { roleCode, roleName, logout } = useAuth();
+		const version = useRuntimeConfig().public.version;
 		const links = computed(() => {
 			const isCoordinator = roleCode.value === "coordinator";
 			const isVerifier = roleCode.value === "verifier";
@@ -133,21 +134,22 @@ var registro_verificacion_vue_vue_type_script_setup_true_lang_default = /*@__PUR
 						}, {
 							header: withCtx(({ collapsed }, _push, _parent, _scopeId) => {
 								if (_push) {
-									_push(`<div class="flex items-center gap-2 px-3 py-2"${_scopeId}>`);
+									_push(`<div class="flex items-center gap-2.5 px-2.5 py-1.5"${_scopeId}><div class="flex items-center justify-center size-7 rounded-lg bg-primary/10 border border-primary/20 text-primary shrink-0"${_scopeId}>`);
 									_push(ssrRenderComponent(_component_UIcon, {
-										name: "i-lucide-shield-check",
-										class: "size-6 text-primary"
+										name: "i-lucide-ticket",
+										class: "size-4"
 									}, null, _parent, _scopeId));
-									if (!collapsed) _push(`<span class="font-semibold text-sm"${_scopeId}>${ssrInterpolate(unref(roleName) ?? "Registro y Verificación")}</span>`);
+									_push(`</div>`);
+									if (!collapsed) _push(`<div class="flex flex-col min-w-0"${_scopeId}><span class="font-bold text-sm text-strong truncate leading-none"${_scopeId}>Mis Vales</span><span class="text-[10px] text-dimmed mt-0.5 leading-none"${_scopeId}>v${ssrInterpolate(unref(version))} • ${ssrInterpolate(unref(roleName) ?? "Registro")}</span></div>`);
 									else _push(`<!---->`);
 									_push(`</div>`);
-								} else return [createVNode("div", { class: "flex items-center gap-2 px-3 py-2" }, [createVNode(_component_UIcon, {
-									name: "i-lucide-shield-check",
-									class: "size-6 text-primary"
-								}), !collapsed ? (openBlock(), createBlock("span", {
+								} else return [createVNode("div", { class: "flex items-center gap-2.5 px-2.5 py-1.5" }, [createVNode("div", { class: "flex items-center justify-center size-7 rounded-lg bg-primary/10 border border-primary/20 text-primary shrink-0" }, [createVNode(_component_UIcon, {
+									name: "i-lucide-ticket",
+									class: "size-4"
+								})]), !collapsed ? (openBlock(), createBlock("div", {
 									key: 0,
-									class: "font-semibold text-sm"
-								}, toDisplayString(unref(roleName) ?? "Registro y Verificación"), 1)) : createCommentVNode("", true)])];
+									class: "flex flex-col min-w-0"
+								}, [createVNode("span", { class: "font-bold text-sm text-strong truncate leading-none" }, "Mis Vales"), createVNode("span", { class: "text-[10px] text-dimmed mt-0.5 leading-none" }, "v" + toDisplayString(unref(version)) + " • " + toDisplayString(unref(roleName) ?? "Registro"), 1)])) : createCommentVNode("", true)])];
 							}),
 							default: withCtx(({ collapsed }, _push, _parent, _scopeId) => {
 								if (_push) {
@@ -209,13 +211,13 @@ var registro_verificacion_vue_vue_type_script_setup_true_lang_default = /*@__PUR
 							class: "bg-elevated/25",
 							ui: { footer: "lg:border-t lg:border-default" }
 						}, {
-							header: withCtx(({ collapsed }) => [createVNode("div", { class: "flex items-center gap-2 px-3 py-2" }, [createVNode(_component_UIcon, {
-								name: "i-lucide-shield-check",
-								class: "size-6 text-primary"
-							}), !collapsed ? (openBlock(), createBlock("span", {
+							header: withCtx(({ collapsed }) => [createVNode("div", { class: "flex items-center gap-2.5 px-2.5 py-1.5" }, [createVNode("div", { class: "flex items-center justify-center size-7 rounded-lg bg-primary/10 border border-primary/20 text-primary shrink-0" }, [createVNode(_component_UIcon, {
+								name: "i-lucide-ticket",
+								class: "size-4"
+							})]), !collapsed ? (openBlock(), createBlock("div", {
 								key: 0,
-								class: "font-semibold text-sm"
-							}, toDisplayString(unref(roleName) ?? "Registro y Verificación"), 1)) : createCommentVNode("", true)])]),
+								class: "flex flex-col min-w-0"
+							}, [createVNode("span", { class: "font-bold text-sm text-strong truncate leading-none" }, "Mis Vales"), createVNode("span", { class: "text-[10px] text-dimmed mt-0.5 leading-none" }, "v" + toDisplayString(unref(version)) + " • " + toDisplayString(unref(roleName) ?? "Registro"), 1)])) : createCommentVNode("", true)])]),
 							default: withCtx(({ collapsed }) => [
 								createVNode(_component_UDashboardSearchButton, {
 									collapsed,
@@ -260,4 +262,4 @@ registro_verificacion_vue_vue_type_script_setup_true_lang_default.setup = (props
 var registro_verificacion_default = registro_verificacion_vue_vue_type_script_setup_true_lang_default;
 
 export { registro_verificacion_default as default };
-//# sourceMappingURL=registro-verificacion-BJmQiXOO.mjs.map
+//# sourceMappingURL=registro-verificacion-lBpmqoGO.mjs.map
