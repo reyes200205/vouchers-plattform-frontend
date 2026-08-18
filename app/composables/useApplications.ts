@@ -51,6 +51,9 @@ export interface ApplicationVerificationRef {
   notes: string | null
   visit_date: string | null
   distance_meters: string | null
+  front_photo: string | null
+  id_with_person_photo: string | null
+  proof_of_address_photo: string | null
 }
 
 export interface Application {
@@ -101,12 +104,11 @@ export interface CreateApplicationPayload {
   branch_id: number
   person: ApplicationPersonPayload
   family_data?: Record<string, unknown> | null
-  external_affiliations?: Record<string, unknown> | null
+  vehicles?: Record<string, unknown>[] | null
   requested_credit_limit?: number | null
   id_front_path?: string | null
   id_back_path?: string | null
   proof_of_address_path?: string | null
-  credit_bureau_report_path?: string | null
 }
 
 export interface SubmitVerificationPayload {
@@ -116,6 +118,15 @@ export interface SubmitVerificationPayload {
   verification_latitude?: number
   verification_longitude?: number
   distance_meters?: number
+  front_photo: string
+}
+
+export type VerificationPhotoType = 'front_photo' | 'id_with_person_photo' | 'proof_of_address_photo'
+
+export interface VerificationPhotoUploadResult {
+  type: VerificationPhotoType
+  path: string
+  url: string
 }
 
 export interface ApplicationListParams {
@@ -143,6 +154,12 @@ interface ApplicationResponse {
   success: boolean
   message: string
   data: Application
+}
+
+interface VerificationPhotoResponse {
+  success: boolean
+  message: string
+  data: VerificationPhotoUploadResult
 }
 
 export function useApplications() {
@@ -192,7 +209,21 @@ export function useApplications() {
     return response.data
   }
 
-  return { listApplications, createApplication, assignVerifier, submitVerification }
+  async function uploadVerificationPhoto(applicationId: number, file: File, type: VerificationPhotoType) {
+    const formData = new FormData()
+    formData.append('type', type)
+    formData.append('photo', file)
+
+    const response = await $fetch<VerificationPhotoResponse>(`${config.public.apiBase}/applications/${applicationId}/verification-photos`, {
+      method: 'POST',
+      headers: authHeaders(),
+      body: formData
+    })
+
+    return response.data
+  }
+
+  return { listApplications, createApplication, assignVerifier, submitVerification, uploadVerificationPhoto }
 }
 
 export function applicantFullName(person: ApplicationPerson | null | undefined): string {

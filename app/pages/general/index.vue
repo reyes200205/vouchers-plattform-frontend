@@ -72,7 +72,7 @@ onMounted(async () => {
 
       <template v-else>
         <HomeStats :stats="stats" />
-        <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6 mt-4">
+        <div class="grid grid-cols-2 gap-6 mt-4">
           <HomeChart title="Colocación mensual" :points="stats?.monthly_placement ?? []" />
           <HomeSales title="Cobranza mensual" :points="stats?.monthly_collections ?? []" />
         </div>

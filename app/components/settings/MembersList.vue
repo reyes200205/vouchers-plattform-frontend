@@ -21,7 +21,7 @@ const items = [{
     <li
       v-for="(member, index) in members"
       :key="index"
-      class="flex items-center justify-between gap-3 py-3 px-4 sm:px-6"
+      class="flex items-center justify-between gap-3 px-6 py-3"
     >
       <div class="flex items-center gap-3 min-w-0">
         <UAvatar
