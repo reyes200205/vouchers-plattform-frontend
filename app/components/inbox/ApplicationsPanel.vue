@@ -18,7 +18,7 @@ const emit = defineEmits<{ decided: [] }>()
   </div>
 
   <div v-else class="overflow-y-auto divide-y divide-default">
-    <div v-for="item in items" :key="item.id" class="p-4 sm:px-6">
+    <div v-for="item in items" :key="item.id" class="px-6 py-4">
       <div class="flex flex-wrap items-center justify-between gap-3">
         <div class="flex min-w-0 items-center gap-3">
           <UAvatar :alt="item.applicant_name || 'Solicitante'" size="lg" />

@@ -81,8 +81,8 @@ function onSubmit() {
       </template>
     </UDashboardNavbar>
 
-    <div class="flex flex-col sm:flex-row justify-between gap-1 p-4 sm:px-6 border-b border-default">
-      <div class="flex items-start gap-4 sm:my-1.5">
+    <div class="flex flex-row justify-between gap-1 p-4 border-b border-default">
+      <div class="flex items-start gap-4 my-1.5">
         <UAvatar
           v-bind="mail.from.avatar"
           :alt="mail.from.name"
@@ -99,18 +99,18 @@ function onSubmit() {
         </div>
       </div>
 
-      <p class="max-sm:pl-16 text-muted text-sm sm:mt-2">
+      <p class="text-muted text-sm mt-2">
         {{ format(new Date(mail.date), 'dd MMM HH:mm') }}
       </p>
     </div>
 
-    <div class="flex-1 p-4 sm:p-6 overflow-y-auto">
+    <div class="flex-1 p-6 overflow-y-auto">
       <p class="whitespace-pre-wrap">
         {{ mail.body }}
       </p>
     </div>
 
-    <div class="pb-4 px-4 sm:px-6 shrink-0">
+    <div class="px-6 py-4 shrink-0">
       <UCard variant="subtle" class="mt-auto" :ui="{ header: 'flex items-center gap-1.5 text-dimmed' }">
         <template #header>
           <UIcon name="i-lucide-reply" class="size-5" />

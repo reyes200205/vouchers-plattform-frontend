@@ -105,8 +105,8 @@ const selectRange = (range: { days?: number, months?: number, years?: number }) 
     </UButton>
 
     <template #content>
-      <div class="flex items-stretch sm:divide-x divide-default">
-        <div class="hidden sm:flex flex-col justify-center">
+      <div class="flex items-stretch divide-x divide-default">
+        <div class="flex flex-col justify-center">
           <UButton
             v-for="(range, index) in ranges"
             :key="index"
