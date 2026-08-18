@@ -1,39 +1,73 @@
 <script setup lang="ts">
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted } from 'vue'
+import { useCustomers, customerFullName, type Customer } from '~/composables/useCustomers'
 
 definePageMeta({
   layout: false
 })
 
-interface Contact {
-  id: string
-  nombre: string
-  telefono: string
-}
+const { user } = useAuth()
+const { listCustomers } = useCustomers()
 
 const searchQuery = ref('')
+const loading = ref(true)
+const errorMessage = ref<string | null>(null)
+const customers = ref<Customer[]>([])
 
-const contacts = ref<Contact[]>([
-  { id: '1', nombre: 'Adriana Gonzalez Ramirez', telefono: '8713 43 69 47' },
-  { id: '2', nombre: 'Alan Magdiel Molina Ramirez', telefono: '8713 72 05 80' },
-  { id: '3', nombre: 'Alan Yared Jimenez Grijalva', telefono: '8714 83 52 81' },
-  { id: '4', nombre: 'Aldo Luciano Garcia Silva', telefono: '8718 74 72 25' },
-  { id: '5', nombre: 'Alicia Blanco Alvarez', telefono: '8714 04 83 61' },
-  { id: '6', nombre: 'Alma Rosa Guzman Rodriguez', telefono: '8711 10 23 87' },
-  { id: '7', nombre: 'Alondra Isabel Maldonado Martinez', telefono: '8712 31 81 28' }
-])
+const statusLabels: Record<string, string> = {
+  EN_VERIFICACION: 'En verificación',
+  ACTIVO: 'Activo',
+  BLOQUEADO: 'Bloqueado',
+  MOROSO: 'Moroso',
+  INACTIVO: 'Inactivo'
+}
+
+async function loadCustomers() {
+  loading.value = true
+  errorMessage.value = null
+
+  try {
+    const distributorId = user.value?.distributor?.id
+    const result = await listCustomers({
+      per_page: 100,
+      ...(distributorId ? { distributor_id: distributorId } : {})
+    })
+    customers.value = result.data
+  } catch (e) {
+    console.error(e)
+    errorMessage.value = 'No se pudo cargar la lista de clientes.'
+  } finally {
+    loading.value = false
+  }
+}
+
+onMounted(loadCustomers)
 
 const filteredContacts = computed(() => {
-  if (!searchQuery.value.trim()) return contacts.value
+  if (!searchQuery.value.trim()) return customers.value
   const query = searchQuery.value.toLowerCase()
-  return contacts.value.filter(
-    c => c.nombre.toLowerCase().includes(query) || c.telefono.includes(query)
-  )
+  return customers.value.filter((c) => {
+    const nombre = customerFullName(c.person).toLowerCase()
+    const telefono = c.person?.mobile_phone ?? ''
+    return nombre.includes(query) || telefono.includes(query)
+  })
 })
 
-const seleccionarContacto = (contacto: Contact) => {
-  // Redirige al siguiente paso o flujo de expedición
-  navigateTo(`/distributor-portal/vales/expedir?clienteId=${contacto.id}`)
+function isSelectable(customer: Customer) {
+  return customer.status === 'ACTIVO' && Boolean(customer.verified_at)
+}
+
+const seleccionarContacto = (customer: Customer) => {
+  if (!isSelectable(customer)) return
+
+  navigateTo({
+    path: '/distributor-portal/configure_vale',
+    query: {
+      customerId: String(customer.id),
+      nombre: customerFullName(customer.person),
+      contacto: customer.person?.mobile_phone ?? ''
+    }
+  })
 }
 
 const volver = () => {
@@ -44,11 +78,14 @@ const volver = () => {
 <template>
   <main class="contacts-shell">
     <div class="contacts-wrapper">
-      
       <!-- NAVBAR AZUL -->
       <header class="top-navbar">
-        <button class="back-btn" @click="volver">←</button>
-        <h1 class="nav-title">Seleccionar contacto</h1>
+        <button class="back-btn" @click="volver">
+          ←
+        </button>
+        <h1 class="nav-title">
+          Seleccionar cliente
+        </h1>
       </header>
 
       <!-- CONTENIDO PRINCIPAL -->
@@ -58,37 +95,56 @@ const volver = () => {
           <input
             v-model="searchQuery"
             type="text"
-            placeholder="Buscar contacto"
+            placeholder="Buscar cliente"
             class="search-input"
-          />
+          >
           <span class="search-icon">🔍</span>
         </div>
 
-        <!-- En app/pages/distributor-portal/vales/nuevo.vue -->
-<button class="add-contact-btn" @click="navigateTo('/distributor-portal/clientes')">
-  <div class="plus-circle">+</div>
-  <span class="add-text">Nuevo contacto</span>
-</button>
+        <button class="add-contact-btn" @click="navigateTo('/distributor-portal/clientes')">
+          <div class="plus-circle">
+            +
+          </div>
+          <span class="add-text">Nuevo cliente</span>
+        </button>
 
-        <!-- LISTA DE CONTACTOS -->
-        <div class="contacts-list">
+        <p v-if="loading" class="state-text">
+          Cargando clientes…
+        </p>
+        <p v-else-if="errorMessage" class="state-text error">
+          {{ errorMessage }}
+        </p>
+        <p v-else-if="filteredContacts.length === 0" class="state-text">
+          No tienes clientes registrados todavía.
+        </p>
+
+        <!-- LISTA DE CLIENTES -->
+        <div v-else class="contacts-list">
           <div
             v-for="item in filteredContacts"
             :key="item.id"
             class="contact-item"
+            :class="{ disabled: !isSelectable(item) }"
             @click="seleccionarContacto(item)"
           >
             <div class="avatar-circle">
               <span class="avatar-icon">👤</span>
             </div>
             <div class="contact-info">
-              <h3 class="contact-name">{{ item.nombre }}</h3>
-              <p class="contact-phone">📞 {{ item.telefono }}</p>
+              <h3 class="contact-name">
+                {{ customerFullName(item.person) }}
+              </h3>
+              <p class="contact-phone">
+                📞 {{ item.person?.mobile_phone || 'Sin teléfono' }}
+              </p>
             </div>
+            <span
+              class="status-badge"
+              :class="item.status?.toLowerCase()"
+            >{{ statusLabels[item.status ?? ''] ?? item.status }}</span>
           </div>
         </div>
       </div>
-
     </div>
   </main>
 </template>
@@ -219,6 +275,17 @@ const volver = () => {
   color: #1e293b;
 }
 
+.state-text {
+  text-align: center;
+  color: #64748b;
+  font-size: 14px;
+  padding: 24px 0;
+}
+
+.state-text.error {
+  color: #dc2626;
+}
+
 /* LISTA Y TARJETAS DE CONTACTO */
 .contacts-list {
   display: flex;
@@ -234,7 +301,12 @@ const volver = () => {
   cursor: pointer;
 }
 
-.contact-item:active {
+.contact-item.disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.contact-item:not(.disabled):active {
   background-color: #f8fafc;
 }
 
@@ -258,6 +330,8 @@ const volver = () => {
   display: flex;
   flex-direction: column;
   gap: 2px;
+  flex: 1;
+  min-width: 0;
 }
 
 .contact-name {
@@ -272,5 +346,37 @@ const volver = () => {
   font-size: 13px;
   color: #475569;
   font-weight: 600;
+}
+
+.status-badge {
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  padding: 4px 8px;
+  border-radius: 999px;
+  white-space: nowrap;
+  background-color: #f1f5f9;
+  color: #475569;
+}
+
+.status-badge.activo {
+  background-color: #dcfce7;
+  color: #166534;
+}
+
+.status-badge.en_verificacion {
+  background-color: #fef3c7;
+  color: #92400e;
+}
+
+.status-badge.bloqueado,
+.status-badge.moroso {
+  background-color: #fee2e2;
+  color: #991b1b;
+}
+
+.status-badge.inactivo {
+  background-color: #f1f5f9;
+  color: #64748b;
 }
 </style>
