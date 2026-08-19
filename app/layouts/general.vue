@@ -94,6 +94,17 @@ const links = computed(() => {
     })
   }
 
+  if (hasPermission('vouchers.view')) {
+    items.push({
+      label: 'Vales emitidos',
+      icon: 'i-lucide-receipt-text',
+      to: '/general/vouchers',
+      onSelect: () => {
+        open.value = false
+      }
+    })
+  }
+
   if (hasPermission('reconciliations.view')) {
     items.push({
       label: 'Conciliaciones',

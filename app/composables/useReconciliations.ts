@@ -1,4 +1,4 @@
-import type { BankTransaction, Cutoff, CutoffRelation, PaginatedData } from '~/types'
+import type { BankImportResult, BankTransaction, Cutoff, CutoffRelation, PaginatedData, Reconciliation } from '~/types'
 
 interface ReconciliationsResponse {
   success: boolean
@@ -72,5 +72,47 @@ export function useReconciliations() {
     })
   }
 
-  return { listBankTransactions, listCutoffs, listCutoffRelations, manualMatch }
+  async function listReconciliations(params?: {
+    pending_verification?: boolean
+    status?: string
+    page?: number
+  }) {
+    const search = new URLSearchParams()
+    if (params?.pending_verification) search.set('pending_verification', '1')
+    if (params?.status) search.set('status', params.status)
+    if (params?.page) search.set('page', String(params.page))
+    search.set('per_page', '15')
+
+    const response = await $fetch<{ success: boolean, message: string, data: PaginatedData<Reconciliation> }>(
+      `${config.public.apiBase}/reconciliations${search.toString() ? `?${search.toString()}` : ''}`,
+      { headers: { Authorization: `Bearer ${token.value}` } }
+    )
+
+    return response.data
+  }
+
+  async function verifyReconciliation(id: number) {
+    await $fetch(`${config.public.apiBase}/reconciliations/${id}/verify`, {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${token.value}` }
+    })
+  }
+
+  async function importBankDeposits(branchId: number, file: File) {
+    const formData = new FormData()
+    formData.append('file', file)
+
+    const response = await $fetch<{ success: boolean, message: string, data: BankImportResult }>(
+      `${config.public.apiBase}/branches/${branchId}/reconciliations/import`,
+      {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${token.value}` },
+        body: formData
+      }
+    )
+
+    return response.data
+  }
+
+  return { listBankTransactions, listCutoffs, listCutoffRelations, manualMatch, listReconciliations, verifyReconciliation, importBankDeposits }
 }

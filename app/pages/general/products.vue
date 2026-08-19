@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import ProductModal from '~/components/products/ProductModal.vue'
 import type { DropdownMenuItem } from '@nuxt/ui'
 import type { Branch, BranchSettings, DistributorCategory, FinancialProduct, InsuranceTier } from '~/types'
 

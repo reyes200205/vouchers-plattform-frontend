@@ -224,7 +224,7 @@ async function onSubmit(event: FormSubmitEvent<Schema>) {
             <div class="flex items-center gap-3 text-sm">
               <span class="text-muted">
                 Comisión
-                <span class="font-semibold text-highlighted">{{ category.commission_percentage }}%</span>
+                <span class="font-semibold text-highlighted">{{ Number(category.commission_percentage) }}%</span>
               </span>
               <UBadge
                 v-if="category.is_active"

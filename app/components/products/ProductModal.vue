@@ -270,7 +270,7 @@ async function onSubmit(event: FormSubmitEvent<Schema>) {
           <div class="flex flex-col gap-1">
             <span class="text-xs uppercase text-muted">Comisión distribuidora</span>
             <span class="font-semibold text-highlighted">
-              {{ selectedCategory.commission_percentage }}%
+              {{ Number(selectedCategory.commission_percentage) }}%
               <span class="font-normal text-muted">({{ distributorMargin !== null ? `${money.format(distributorMargin)} / quincena` : '—' }})</span>
             </span>
           </div>

@@ -1,16 +1,36 @@
 <script setup lang="ts">
-import type { InboxData } from '~/types'
+import type { CustomerChangeRequest, InboxData, PaginatedData } from '~/types'
 
 const { listInbox } = useInbox()
 const { listBranches } = useBranches()
+const { listCustomerChangeRequests } = useCustomers()
+const { user } = useAuth()
 
 const toast = useToast()
 const branchId = ref<number | null>(null)
 const branches = ref<{ id: number, name: string }[]>([])
+
+const canApproveCustomers = computed(() => user.value?.permissions?.includes('customers.update.approve') ?? false)
+
+const emptyChangeRequestsPage: PaginatedData<CustomerChangeRequest> = {
+  data: [],
+  links: [],
+  meta: { current_page: 1, last_page: 1, per_page: 15, total: 0 }
+}
+
+const { data: customerRequests, refresh: refreshCustomerRequests } = await useAsyncData('inbox-customer-requests', () => {
+  if (!canApproveCustomers.value) return Promise.resolve(emptyChangeRequestsPage)
+  return listCustomerChangeRequests({ status: 'PENDIENTE', page: 1 })
+}, {
+  default: () => emptyChangeRequestsPage
+})
+
+const pendingCustomerRequests = computed(() => customerRequests.value.data ?? [])
+
 const tabItems = computed(() => {
   const totals = data.value
 
-  return [{
+  const items = [{
     label: `Distribuidoras (${totals?.applications?.total ?? 0})`,
     value: 'applications'
   }, {
@@ -20,6 +40,15 @@ const tabItems = computed(() => {
     label: `Puntos (${totals?.redemptions?.total ?? 0})`,
     value: 'redemptions'
   }]
+
+  if (canApproveCustomers.value) {
+    items.push({
+      label: `Clientes (${pendingCustomerRequests.value.length})`,
+      value: 'customers'
+    })
+  }
+
+  return items
 })
 
 const selectedTab = ref('applications')
@@ -62,6 +91,7 @@ watch(error, async (e) => {
 
 async function onDecided() {
   await refresh()
+  await refreshCustomerRequests()
 
   toast.add({
     title: 'Lista actualizada',
@@ -125,6 +155,10 @@ async function onDecided() {
 
         <div v-else-if="selectedTab === 'credit'" class="h-full overflow-y-auto">
           <InboxCreditPanel :items="data.credit_increases?.items ?? []" @decided="onDecided" />
+        </div>
+
+        <div v-else-if="selectedTab === 'customers'" class="h-full overflow-y-auto">
+          <InboxCustomersPanel :items="pendingCustomerRequests" @decided="onDecided" />
         </div>
 
         <div v-else class="h-full overflow-y-auto">

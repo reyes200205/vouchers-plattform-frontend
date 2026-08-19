@@ -26,43 +26,15 @@ watch([branchManagerBranchId, branches], () => {
   }
 }, { immediate: true })
 
-const tiersSchema = z.array(z.object({
-  min_amount: z.coerce.string().min(1, 'Requerido').refine(v => Number(v) >= 0, 'Monto inválido'),
-  max_amount: z.coerce.string().min(1, 'Requerido').refine(v => Number(v) > 0, 'Monto inválido'),
-  insurance_amount: z.coerce.string().min(1, 'Requerido').refine(v => Number(v) >= 0, 'Monto inválido')
-})).superRefine((tiers, ctx) => {
-  const sorted = [...tiers].map(t => Number(t.min_amount)).sort((a, b) => a - b)
-  const prevMins = new Set(sorted.map(String))
-  tiers.forEach((tier, index) => {
-    const min = Number(tier.min_amount)
-    const max = Number(tier.max_amount)
-    if (min >= max) {
-      ctx.addIssue({ code: 'custom', path: [index, 'max_amount'], message: 'Debe ser mayor al mínimo' })
-    }
-    const overlapping = tiers.find((t, i) => i !== index && min < Number(t.max_amount) && max > Number(t.min_amount))
-    if (overlapping) {
-      ctx.addIssue({ code: 'custom', path: [index, 'min_amount'], message: 'Tramos traslapados' })
-    }
-  })
-})
-
 const formSchema = z.object({
   payment_due_days: z.coerce.number().int().min(1, 'Mínimo 1 día').optional(),
   voucher_amount_step: z.coerce.number().int().refine(v => v === 100 || v === 500, 'Solo 100 o 500').optional(),
   pre_vale_max_percentage: z.coerce.string().min(1, 'Requerido').refine(v => Number(v) >= 0 && Number(v) <= 100, 'Entre 0 y 100'),
   pre_vale_tolerance_amount: z.coerce.string().min(1, 'Requerido').refine(v => Number(v) >= 0, 'Monto inválido'),
-  point_value_mxn: z.coerce.string().min(1, 'Requerido').refine(v => Number(v) >= 0, 'Monto inválido'),
-  insurance_rates: tiersSchema.optional()
+  point_value_mxn: z.coerce.string().min(1, 'Requerido').refine(v => Number(v) >= 0, 'Monto inválido')
 })
 
 type FormSchema = z.output<typeof formSchema>
-
-interface InsuranceTierRow {
-  min_amount: string
-  max_amount: string
-  insurance_amount: string
-  _id: number
-}
 
 interface SettingsFormState {
   payment_due_days?: number
@@ -70,7 +42,6 @@ interface SettingsFormState {
   pre_vale_max_percentage: string
   pre_vale_tolerance_amount: string
   point_value_mxn: string
-  insurance_rates?: InsuranceTierRow[]
 }
 
 const state = reactive<SettingsFormState>({
@@ -78,23 +49,7 @@ const state = reactive<SettingsFormState>({
   voucher_amount_step: undefined,
   pre_vale_max_percentage: '',
   pre_vale_tolerance_amount: '',
-  point_value_mxn: '',
-  insurance_rates: undefined
-})
-
-let tierIdCounter = 0
-
-const insurancePreviewInput = ref('')
-
-const insurancePreview = computed(() => {
-  const amount = Number(insurancePreviewInput.value)
-  if (!amount || !state.insurance_rates?.length) return null
-  const tier = state.insurance_rates.find(t => {
-    const min = Number(t.min_amount)
-    const max = Number(t.max_amount)
-    return amount >= min && amount < max
-  })
-  return tier ? Number(tier.insurance_amount) : 0
+  point_value_mxn: ''
 })
 
 async function loadSettings(branchId: number) {
@@ -104,12 +59,6 @@ async function loadSettings(branchId: number) {
   state.pre_vale_max_percentage = settings.pre_vale_max_percentage ?? ''
   state.pre_vale_tolerance_amount = settings.pre_vale_tolerance_amount ?? ''
   state.point_value_mxn = settings.point_value_mxn ?? ''
-  state.insurance_rates = (settings.insurance_rates ?? []).map(tier => ({
-    min_amount: String(tier.min_amount),
-    max_amount: String(tier.max_amount),
-    insurance_amount: String(tier.insurance_amount),
-    _id: tierIdCounter++
-  }))
 }
 
 const settingsStatus = ref<'idle' | 'loading' | 'error'>('idle')
@@ -129,12 +78,7 @@ async function saveSettings(event: FormSubmitEvent<FormSchema>) {
       voucher_amount_step: event.data.voucher_amount_step,
       pre_vale_max_percentage: event.data.pre_vale_max_percentage,
       pre_vale_tolerance_amount: event.data.pre_vale_tolerance_amount,
-      point_value_mxn: event.data.point_value_mxn,
-      insurance_rates: event.data.insurance_rates?.map(t => ({
-        min_amount: t.min_amount,
-        max_amount: t.max_amount,
-        insurance_amount: t.insurance_amount
-      }))
+      point_value_mxn: event.data.point_value_mxn
     })
 
     toast.add({ title: 'Configuración guardada', description: 'La configuración de la sucursal fue actualizada.', color: 'success' })
@@ -181,22 +125,6 @@ async function savePoints(event: FormSubmitEvent<PointSchema>) {
     toast.add({ title: 'Error', description: 'No se pudieron guardar los puntos.', color: 'error' })
   }
 }
-
-function addTier() {
-  if (!state.insurance_rates) state.insurance_rates = []
-  state.insurance_rates.push({
-    min_amount: '',
-    max_amount: '',
-    insurance_amount: '',
-    _id: tierIdCounter++
-  })
-}
-
-function removeTier(id: number) {
-  state.insurance_rates = (state.insurance_rates ?? []).filter(t => t._id !== id)
-}
-
-const money = new Intl.NumberFormat('es-MX', { style: 'currency', currency: 'MXN' })
 </script>
 
 <template>
@@ -224,7 +152,18 @@ const money = new Intl.NumberFormat('es-MX', { style: 'currency', currency: 'MXN
             <UIcon name="i-lucide-loader-circle" class="size-8 animate-spin text-muted" />
           </div>
 
-          <template v-else-if="selectedBranchId">
+          <div v-else-if="settingsLoad === 'error'" class="flex flex-col items-center justify-center gap-3 py-16">
+            <UIcon name="i-lucide-triangle-alert" class="size-8 text-error" />
+            <p class="text-sm text-muted">No se pudo cargar la configuración de la sucursal.</p>
+            <UButton label="Reintentar" color="neutral" variant="outline" @click="refreshSettings()" />
+          </div>
+
+          <div v-else-if="!selectedBranchId" class="flex flex-col items-center justify-center gap-3 py-16">
+            <UIcon name="i-lucide-building" class="size-8 text-muted" />
+            <p class="text-sm text-muted">Selecciona una sucursal para ver su configuración.</p>
+          </div>
+
+          <template v-else>
             <UForm
               id="branch-settings"
               :schema="formSchema"
@@ -232,79 +171,6 @@ const money = new Intl.NumberFormat('es-MX', { style: 'currency', currency: 'MXN
               class="space-y-6"
               @submit="saveSettings"
             >
-              <UPageCard
-                title="Seguros"
-                description="El seguro se cobra dentro del vale y forma parte del pago de la distribuidora. Se resuelve automáticamente según el monto del vale; cada producto puede sobrescribirlo."
-              >
-                <div class="space-y-3">
-                  <div class="grid grid-cols-[1fr_1fr_1fr_auto] items-center gap-3 text-xs font-semibold uppercase text-muted">
-                    <span>Monto mínimo</span>
-                    <span>Monto máximo</span>
-                    <span>Seguro</span>
-                    <span />
-                  </div>
-
-                  <div
-                    v-for="(tier, index) in state.insurance_rates ?? []"
-                    :key="tier._id"
-                    class="grid grid-cols-[1fr_1fr_1fr_auto] items-center gap-3"
-                  >
-                    <UInput
-                      v-model="tier.min_amount"
-                      type="number"
-                      min="0"
-                      step="0.01"
-                      placeholder="0.00"
-                    />
-                    <UInput
-                      v-model="tier.max_amount"
-                      type="number"
-                      min="0"
-                      step="0.01"
-                      placeholder="9999.99"
-                    />
-                    <UInput
-                      v-model="tier.insurance_amount"
-                      type="number"
-                      min="0"
-                      step="0.01"
-                      placeholder="100.00"
-                    />
-                    <UButton
-                      icon="i-lucide-trash-2"
-                      color="error"
-                      variant="ghost"
-                      aria-label="Eliminar tramo"
-                      @click="removeTier(tier._id)"
-                    />
-                  </div>
-
-                  <UButton
-                    label="Agregar tramo"
-                    icon="i-lucide-plus"
-                    color="neutral"
-                    variant="outline"
-                    size="sm"
-                    @click="addTier"
-                  />
-
-                  <div class="flex items-center gap-3 pt-2">
-                    <UInput
-                      v-model="insurancePreviewInput"
-                      type="number"
-                      min="0"
-                      step="0.01"
-                      placeholder="Monto del vale para probar"
-                      class="w-56"
-                    />
-                    <span class="text-sm text-muted">
-                      Seguro aplicable:
-                      <span class="font-semibold text-highlighted">{{ insurancePreview !== null ? money.format(insurancePreview) : '—' }}</span>
-                    </span>
-                  </div>
-                </div>
-              </UPageCard>
-
               <UPageCard
                 title="Vales y puntos"
                 description="Reglas de vales y valor del punto para esta sucursal."
