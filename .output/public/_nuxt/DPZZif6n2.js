@@ -1,0 +1,1 @@
+import{xt as e}from"./Dd8x-jxf.js";import{t}from"./BDNMzG2s2.js";var n={};function r(t,n){return e(t.$slots,`default`,{},void 0,!0)}var i=t(n,[[`render`,r],[`__scopeId`,`data-v-23abeeb3`]]);export{i as default};
