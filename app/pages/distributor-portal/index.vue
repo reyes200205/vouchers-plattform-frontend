@@ -1,205 +1,147 @@
 <script setup lang="ts">
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted } from 'vue'
+import { useVouchers, type Voucher } from '~/composables/useVouchers'
+import { customerFullName } from '~/composables/useCustomers'
 
 definePageMeta({
   layout: false
 })
 
-const route = useRoute()
+const { user, logout } = useAuth()
+const { listMyVouchers } = useVouchers()
 
-// Datos del cliente
-const cliente = ref({
-  nombre: (route.query.nombre as string) || 'Alicia Blanco Alvarez',
-  contacto: (route.query.contacto as string) || '680172',
-  calificacion: 'Sin Calificaciones'
+const loading = ref(true)
+const errorMessage = ref<string | null>(null)
+const vouchers = ref<Voucher[]>([])
+
+const statusLabels: Record<string, string> = {
+  BORRADOR: 'Borrador',
+  APROBADO: 'Aprobado',
+  TRANSFERIDO: 'Transferido',
+  ACTIVO: 'Activo',
+  PAGO_PARCIAL: 'Pago parcial',
+  PAGADO: 'Pagado',
+  LIQUIDADO: 'Liquidado',
+  MOROSO: 'Moroso',
+  RECLAMADO: 'Reclamado',
+  CANCELADO: 'Cancelado',
+  REVERSADO: 'Reversado'
+}
+
+async function loadVouchers() {
+  loading.value = true
+  errorMessage.value = null
+
+  try {
+    const result = await listMyVouchers({ per_page: 20 })
+    vouchers.value = result.data
+  } catch (e) {
+    console.error(e)
+    errorMessage.value = 'No se pudieron cargar tus vales.'
+  } finally {
+    loading.value = false
+  }
+}
+
+onMounted(loadVouchers)
+
+const distributorName = computed(() => {
+  const person = user.value?.person
+  if (!person) return user.value?.username ?? 'Distribuidora'
+  return [person.first_name, person.last_name].filter(Boolean).join(' ')
 })
 
-// Estado de configuración
-const monto = ref(1000)
-const disponible = ref(18000)
-const quincenasOpciones = [8, 10, 12, 14, 16]
-const quincenasSeleccionadas = ref(8)
-const seguroMonto = 18
+const availableCredit = computed(() => Number(user.value?.distributor?.available_credit ?? 0))
+const unlimitedCredit = computed(() => Boolean(user.value?.distributor?.unlimited_credit))
+const currentPoints = computed(() => Number(user.value?.distributor?.current_points ?? 0))
+const categoryName = computed(() => user.value?.distributor?.category?.name ?? 'Sin categoría')
 
-// Estado del Modal
-const showModal = ref(false)
-
-const decrementarMonto = () => {
-  if (monto.value > 500) monto.value -= 500
-}
-
-const incrementarMonto = () => {
-  if (monto.value + 500 <= disponible.value) monto.value += 500
-}
-
-// Cálculos
-const totalAPagar = computed(() => {
-  const tasaInteres = 0.544
-  return Math.round(monto.value * (1 + tasaInteres))
-})
-
-const pagoQuincenal = computed(() => {
-  return Math.round(totalAPagar.value / quincenasSeleccionadas.value)
-})
-
-const procesarVale = () => {
-  showModal.value = true
-}
-
-const finalizarYVolver = () => {
-  showModal.value = false
-  navigateTo('/distributor-portal')
-}
-
-const volver = () => {
-  navigateTo('/distributor-portal/clientes')
+const cerrarSesion = async () => {
+  await logout()
+  await navigateTo('/login')
 }
 </script>
 
 <template>
-  <main class="config-shell">
-    <div class="config-wrapper">
-
+  <main class="home-shell">
+    <div class="home-wrapper">
       <!-- NAVBAR AZUL -->
       <header class="top-navbar">
-        <button class="back-btn" @click="volver">←</button>
-        <h1 class="nav-title">Configurar vale</h1>
+        <h1 class="nav-title">
+          Hola, {{ distributorName }}
+        </h1>
+        <button class="logout-btn" @click="cerrarSesion">
+          Salir
+        </button>
       </header>
 
       <div class="content-body">
-
-        <!-- TARJETA CLIENTE SELECCIONADO -->
-       <div class="client-card" @click="navigateTo('/distributor-portal/vales')">
-          <div class="avatar-circle">
-            <span class="avatar-icon">👤</span>
+        <!-- TARJETA DE CRÉDITO -->
+        <div class="credit-card">
+          <div class="credit-row">
+            <span class="credit-label">Crédito disponible</span>
+            <span class="credit-value">
+              {{ unlimitedCredit ? 'Ilimitado' : `$${availableCredit.toLocaleString('es-MX')}` }}
+            </span>
           </div>
-          <div class="client-info">
-            <h3 class="client-name">{{ cliente.nombre }}</h3>
-            <p class="client-detail">Contacto: {{ cliente.contacto }}</p>
-            <span class="client-tag">({{ cliente.calificacion }})</span>
-          </div>
-          <span class="chevron-icon">❯</span>
-        </div>
-
-        <!-- SECCIÓN MONTO -->
-        <section class="monto-section">
-          <label class="section-label">Monto del Vale Financiero</label>
-
-          <div class="monto-selector">
-            <button
-              class="btn-monto btn-minus"
-              :disabled="monto <= 500"
-              @click="decrementarMonto"
-            >
-              −
-            </button>
-            <span class="monto-display">${{ monto.toLocaleString('es-MX') }}</span>
-            <button
-              class="btn-monto btn-plus"
-              :disabled="monto >= disponible"
-              @click="incrementarMonto"
-            >
-              +
-            </button>
-          </div>
-
-          <div class="disponible-badge">
-            Disponible <strong>${{ disponible.toLocaleString('es-MX') }}</strong>
-          </div>
-        </section>
-
-        <!-- SECCIÓN QUINCENAS -->
-        <section class="quincenas-section">
-          <label class="section-label">Quincenas a pagar</label>
-          <div class="quincenas-grid">
-            <button
-              v-for="opcion in quincenasOpciones"
-              :key="opcion"
-              class="quincena-pill"
-              :class="{ active: quincenasSeleccionadas === opcion }"
-              @click="quincenasSeleccionadas = opcion"
-            >
-              {{ opcion }}
-            </button>
-          </div>
-        </section>
-
-        <!-- DETALLES DE PAGO -->
-        <div class="summary-cards">
-          <div class="summary-card">
-            <span class="summary-label">Seguro</span>
-            <span class="summary-value bold">Básico</span>
-          </div>
-
-          <div class="summary-card">
-            <div>
-              <div class="summary-label">Pago quincenal</div>
-              <div class="summary-subtext">Seguro incluido ${{ seguroMonto }}</div>
-            </div>
-            <span class="summary-value bold">${{ pagoQuincenal.toLocaleString('es-MX') }}</span>
-          </div>
-
-          <div class="summary-card">
-            <div>
-              <div class="summary-label">Total a pagar</div>
-              <div class="summary-subtext">Con intereses</div>
-            </div>
-            <span class="summary-value bold">${{ totalAPagar.toLocaleString('es-MX') }}</span>
+          <div class="credit-footer">
+            <span>{{ categoryName }}</span>
+            <span>{{ currentPoints.toLocaleString('es-MX') }} pts</span>
           </div>
         </div>
 
-        <!-- BOTÓN CONTINUAR -->
-        <button class="submit-btn" @click="procesarVale">
-          Continuar
-        </button>
+        <!-- ACCIONES -->
+        <div class="actions-row">
+          <button class="action-btn primary" @click="navigateTo('/distributor-portal/vales')">
+            <span class="action-icon">➕</span>
+            Nuevo vale
+          </button>
+          <button class="action-btn" @click="navigateTo('/distributor-portal/clientes')">
+            <span class="action-icon">👤</span>
+            Nuevo cliente
+          </button>
+        </div>
 
+        <!-- LISTA DE VALES -->
+        <section class="vouchers-section">
+          <label class="section-label">Mis vales</label>
+
+          <p v-if="loading" class="state-text">
+            Cargando…
+          </p>
+          <p v-else-if="errorMessage" class="state-text error">
+            {{ errorMessage }}
+          </p>
+          <p v-else-if="vouchers.length === 0" class="state-text">
+            Todavía no tienes vales emitidos.
+          </p>
+
+          <div v-else class="voucher-list">
+            <div v-for="voucher in vouchers" :key="voucher.id" class="voucher-item">
+              <div class="voucher-avatar">
+                👤
+              </div>
+              <div class="voucher-info">
+                <h3 class="voucher-name">
+                  {{ customerFullName(voucher.customer?.person) }}
+                </h3>
+                <p class="voucher-detail">
+                  ${{ Number(voucher.amount).toLocaleString('es-MX') }} · {{ voucher.total_fortnights }} quincenas
+                </p>
+              </div>
+              <span class="status-badge" :class="voucher.status?.toLowerCase()">
+                {{ statusLabels[voucher.status ?? ''] ?? voucher.status }}
+              </span>
+            </div>
+          </div>
+        </section>
       </div>
-
-      <!-- MODAL ANIMADO DE CONFIRMACIÓN -->
-      <Transition name="modal-fade">
-        <div v-if="showModal" class="modal-overlay">
-          <div class="modal-card">
-            
-            <!-- ANIMACIÓN DEL CHECK -->
-            <div class="success-checkmark">
-              <div class="check-icon">
-                <span class="icon-line line-tip"></span>
-                <span class="icon-line line-long"></span>
-                <div class="icon-circle"></div>
-                <div class="icon-fix"></div>
-              </div>
-            </div>
-
-            <h2 class="modal-title">¡Vale Confirmado!</h2>
-            <p class="modal-subtitle">
-              El vale para <strong>{{ cliente.nombre }}</strong> por 
-              <strong>${{ monto.toLocaleString('es-MX') }}</strong> ha sido expedido con éxito.
-            </p>
-
-            <div class="modal-details">
-              <div class="modal-row">
-                <span>Plazo:</span>
-                <strong>{{ quincenasSeleccionadas }} quincenas</strong>
-              </div>
-              <div class="modal-row">
-                <span>Pago quincenal:</span>
-                <strong>${{ pagoQuincenal.toLocaleString('es-MX') }}</strong>
-              </div>
-            </div>
-
-            <button class="modal-btn" @click="finalizarYVolver">
-              Volver al inicio
-            </button>
-          </div>
-        </div>
-      </Transition>
-
     </div>
   </main>
 </template>
 
 <style scoped>
-.config-shell {
+.home-shell {
   position: fixed;
   top: 0;
   left: 0;
@@ -212,7 +154,7 @@ const volver = () => {
   font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
 }
 
-.config-wrapper {
+.home-wrapper {
   width: 100%;
   max-width: 440px;
   margin: 0 auto;
@@ -220,7 +162,6 @@ const volver = () => {
   display: flex;
   flex-direction: column;
   background-color: #ffffff;
-  position: relative;
 }
 
 .top-navbar {
@@ -229,26 +170,28 @@ const volver = () => {
   height: 56px;
   display: flex;
   align-items: center;
+  justify-content: space-between;
   padding: 0 16px;
   position: sticky;
   top: 0;
   z-index: 10;
 }
 
-.back-btn {
-  background: none;
-  border: none;
-  color: #ffffff;
-  font-size: 24px;
-  cursor: pointer;
-  padding: 0;
-  margin-right: 16px;
-}
-
 .nav-title {
-  font-size: 18px;
+  font-size: 17px;
   font-weight: 700;
   margin: 0;
+}
+
+.logout-btn {
+  background: none;
+  border: 1px solid rgba(255, 255, 255, 0.5);
+  color: #ffffff;
+  border-radius: 8px;
+  padding: 6px 12px;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
 }
 
 .content-body {
@@ -258,70 +201,77 @@ const volver = () => {
   gap: 20px;
 }
 
-/* CLIENTE SELECCIONADO */
-.client-card {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  padding: 12px;
-  border: 1px solid #e2e8f0;
+/* TARJETA DE CRÉDITO */
+.credit-card {
+  background: linear-gradient(135deg, #002366, #1e3a8a);
   border-radius: 16px;
-  background-color: #ffffff;
-  cursor: pointer;
-}
-
-.avatar-circle {
-  width: 48px;
-  height: 48px;
-  border-radius: 50%;
-  background-color: #002366;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
-}
-
-.avatar-icon {
-  font-size: 24px;
+  padding: 18px;
   color: #ffffff;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
 }
 
-.client-info {
-  flex: 1;
-  min-width: 0;
+.credit-row {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
 }
 
-.client-name {
-  margin: 0;
-  font-size: 15px;
-  font-weight: 700;
-  color: #0f172a;
-}
-
-.client-detail {
-  margin: 2px 0 0 0;
+.credit-label {
   font-size: 12px;
-  color: #475569;
+  opacity: 0.8;
 }
 
-.client-tag {
-  font-size: 11px;
-  color: #64748b;
-  font-style: italic;
+.credit-value {
+  font-size: 26px;
+  font-weight: 800;
 }
 
-.chevron-icon {
-  font-size: 16px;
-  color: #2563eb;
-  font-weight: bold;
+.credit-footer {
+  display: flex;
+  justify-content: space-between;
+  font-size: 12px;
+  opacity: 0.9;
 }
 
-/* MONTO */
-.monto-section {
+/* ACCIONES */
+.actions-row {
+  display: flex;
+  gap: 10px;
+}
+
+.action-btn {
+  flex: 1;
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 12px;
+  gap: 6px;
+  padding: 14px 10px;
+  border-radius: 14px;
+  border: 1px solid #e2e8f0;
+  background-color: #ffffff;
+  font-size: 13px;
+  font-weight: 700;
+  color: #1e293b;
+  cursor: pointer;
+}
+
+.action-btn.primary {
+  background-color: #002366;
+  color: #ffffff;
+  border-color: #002366;
+}
+
+.action-icon {
+  font-size: 20px;
+}
+
+/* VALES */
+.vouchers-section {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
 }
 
 .section-label {
@@ -330,311 +280,91 @@ const volver = () => {
   color: #1e293b;
 }
 
-.monto-selector {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 20px;
-  width: 100%;
+.state-text {
+  text-align: center;
+  color: #64748b;
+  font-size: 14px;
+  padding: 20px 0;
 }
 
-.btn-monto {
-  width: 44px;
-  height: 44px;
-  border-radius: 50%;
-  border: none;
-  font-size: 24px;
-  font-weight: 700;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
+.state-text.error {
+  color: #dc2626;
 }
 
-.btn-minus {
-  background-color: #cbd5e1;
-  color: #475569;
-}
-
-.btn-plus {
-  background-color: #002366;
-  color: #ffffff;
-}
-
-.btn-monto:disabled {
-  opacity: 0.4;
-  cursor: not-allowed;
-}
-
-.monto-display {
-  font-size: 28px;
-  font-weight: 800;
-  color: #002366;
-}
-
-.disponible-badge {
-  background-color: #f0f6ff;
-  color: #002366;
-  padding: 6px 16px;
-  border-radius: 8px;
-  font-size: 13px;
-}
-
-/* QUINCENAS */
-.quincenas-section {
+.voucher-list {
   display: flex;
   flex-direction: column;
+}
+
+.voucher-item {
+  display: flex;
   align-items: center;
   gap: 12px;
+  padding: 12px 0;
+  border-bottom: 1px solid #f1f5f9;
 }
 
-.quincenas-grid {
-  display: flex;
-  gap: 8px;
-  justify-content: center;
-  width: 100%;
-}
-
-.quincena-pill {
-  flex: 1;
-  max-width: 56px;
-  height: 44px;
-  border-radius: 12px;
-  border: 1px solid #2563eb;
-  background-color: #ffffff;
-  color: #2563eb;
-  font-size: 16px;
-  font-weight: 700;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.quincena-pill.active {
-  background-color: #4f46e5;
-  color: #ffffff;
-  border-color: #4f46e5;
-}
-
-/* RESUMEN */
-.summary-cards {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-
-.summary-card {
-  background-color: #f8fafc;
-  border-radius: 12px;
-  padding: 12px 16px;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-
-.summary-label {
-  font-size: 14px;
-  font-weight: 700;
-  color: #1e293b;
-}
-
-.summary-subtext {
-  font-size: 11px;
-  color: #64748b;
-  margin-top: 2px;
-}
-
-.summary-value {
-  font-size: 15px;
-  color: #0f172a;
-}
-
-.summary-value.bold {
-  font-weight: 800;
-}
-
-.submit-btn {
-  width: 100%;
+.voucher-avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
   background-color: #002366;
   color: #ffffff;
-  border: none;
-  padding: 14px;
-  border-radius: 24px;
-  font-size: 16px;
-  font-weight: 700;
-  cursor: pointer;
-  margin-top: 8px;
-}
-
-/* MODAL Y ANIMACIÓN */
-.modal-overlay {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background-color: rgba(15, 23, 42, 0.6);
-  backdrop-filter: blur(4px);
   display: flex;
   align-items: center;
   justify-content: center;
-  z-index: 100;
-  padding: 20px;
+  flex-shrink: 0;
+  font-size: 18px;
 }
 
-.modal-card {
-  background-color: #ffffff;
-  border-radius: 24px;
-  padding: 28px 20px;
-  width: 100%;
-  max-width: 360px;
-  text-align: center;
-  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
-  display: flex;
-  flex-direction: column;
-  align-items: center;
+.voucher-info {
+  flex: 1;
+  min-width: 0;
 }
 
-.modal-title {
-  margin: 16px 0 8px 0;
-  font-size: 22px;
-  font-weight: 800;
+.voucher-name {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 700;
   color: #0f172a;
 }
 
-.modal-subtitle {
-  margin: 0 0 20px 0;
-  font-size: 14px;
+.voucher-detail {
+  margin: 2px 0 0 0;
+  font-size: 12px;
+  color: #64748b;
+}
+
+.status-badge {
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  padding: 4px 8px;
+  border-radius: 999px;
+  white-space: nowrap;
+  background-color: #f1f5f9;
   color: #475569;
-  line-height: 1.4;
 }
 
-.modal-details {
-  background-color: #f8fafc;
-  border-radius: 12px;
-  padding: 12px 16px;
-  width: 100%;
-  box-sizing: border-box;
-  margin-bottom: 20px;
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
+.status-badge.activo,
+.status-badge.pagado,
+.status-badge.liquidado,
+.status-badge.aprobado {
+  background-color: #dcfce7;
+  color: #166534;
 }
 
-.modal-row {
-  display: flex;
-  justify-content: space-between;
-  font-size: 13px;
-  color: #334155;
+.status-badge.moroso,
+.status-badge.reclamado,
+.status-badge.cancelado {
+  background-color: #fee2e2;
+  color: #991b1b;
 }
 
-.modal-btn {
-  width: 100%;
-  background-color: #84cc16;
-  color: #0d2747;
-  border: none;
-  padding: 12px;
-  border-radius: 12px;
-  font-size: 15px;
-  font-weight: 800;
-  cursor: pointer;
-}
-
-/* ANIMACIÓN DEL CHECK */
-.success-checkmark {
-  width: 80px;
-  height: 115px;
-  margin: 0 auto;
-}
-
-.check-icon {
-  width: 80px;
-  height: 80px;
-  position: relative;
-  border-radius: 50%;
-  box-sizing: content-box;
-  border: 4px solid #84cc16;
-}
-
-.check-icon::before {
-  top: 3px;
-  left: -2px;
-  width: 30px;
-  transform-origin: 100% 50%;
-  border-radius: 100px 0 0 100px;
-}
-
-.check-icon::after {
-  top: 0;
-  left: 30px;
-  width: 60px;
-  transform-origin: 0 50%;
-  border-radius: 0 100px 100px 0;
-  animation: rotate-circle 4.25s ease-in;
-}
-
-.icon-line {
-  height: 5px;
-  background-color: #84cc16;
-  display: block;
-  border-radius: 2px;
-  position: absolute;
-  z-index: 10;
-}
-
-.line-tip {
-  top: 46px;
-  left: 14px;
-  width: 25px;
-  transform: rotate(45deg);
-  animation: icon-line-tip 0.75s;
-}
-
-.line-long {
-  top: 38px;
-  right: 8px;
-  width: 47px;
-  transform: rotate(-45deg);
-  animation: icon-line-long 0.75s;
-}
-
-.icon-circle {
-  top: -4px;
-  left: -4px;
-  z-index: 10;
-  width: 80px;
-  height: 80px;
-  border-radius: 50%;
-  position: absolute;
-  box-sizing: content-box;
-  border: 4px solid rgba(132, 204, 22, 0.2);
-}
-
-/* TRANSICIÓN VUE */
-.modal-fade-enter-active,
-.modal-fade-leave-active {
-  transition: opacity 0.3s ease;
-}
-
-.modal-fade-enter-from,
-.modal-fade-leave-to {
-  opacity: 0;
-}
-
-/* KEYFRAMES */
-@keyframes icon-line-tip {
-  0% { width: 0; left: 1px; top: 19px; }
-  54% { width: 0; left: 1px; top: 19px; }
-  70% { width: 50px; left: -8px; top: 37px; }
-  84% { width: 17px; left: 21px; top: 48px; }
-  100% { width: 25px; left: 14px; top: 46px; }
-}
-
-@keyframes icon-line-long {
-  0% { width: 0; right: 46px; top: 54px; }
-  65% { width: 0; right: 46px; top: 54px; }
-  84% { width: 55px; right: 0px; top: 35px; }
-  100% { width: 47px; right: 8px; top: 38px; }
+.status-badge.borrador,
+.status-badge.transferido,
+.status-badge.pago_parcial {
+  background-color: #fef3c7;
+  color: #92400e;
 }
 </style>

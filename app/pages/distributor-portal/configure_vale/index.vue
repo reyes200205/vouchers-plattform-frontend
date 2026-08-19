@@ -1,55 +1,112 @@
 <script setup lang="ts">
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted } from 'vue'
+import { useProducts } from '~/composables/useProducts'
+import { useVouchers, type VoucherRequest } from '~/composables/useVouchers'
+import type { FinancialProduct } from '~/types'
 
 definePageMeta({
   layout: false
 })
 
 const route = useRoute()
+const { user } = useAuth()
+const { listBranchProducts } = useProducts()
+const { preIssueVoucher } = useVouchers()
 
-// Datos del cliente
+const customerId = computed(() => {
+  const raw = route.query.customerId as string | undefined
+  return raw ? Number(raw) : null
+})
+
 const cliente = ref({
-  nombre: (route.query.nombre as string) || 'Alicia Blanco Alvarez',
-  contacto: (route.query.contacto as string) || '680172',
-  calificacion: 'Sin Calificaciones'
+  nombre: (route.query.nombre as string) || '',
+  contacto: (route.query.contacto as string) || ''
 })
 
-// Estado de configuración del vale
-const monto = ref(1000)
-const disponible = ref(18000)
-const quincenasOpciones = [8, 10, 12, 14, 16]
-const quincenasSeleccionadas = ref(8)
-const seguroMonto = 18
+const availableCredit = computed(() => Number(user.value?.distributor?.available_credit ?? 0))
+const unlimitedCredit = computed(() => Boolean(user.value?.distributor?.unlimited_credit))
 
-// Estado del Modal
+const loading = ref(true)
+const errorMessage = ref<string | null>(null)
+const products = ref<FinancialProduct[]>([])
+const selectedProductId = ref<number | null>(null)
+
+const submitting = ref(false)
+const submitError = ref<string | null>(null)
 const showModal = ref(false)
+const confirmedVoucher = ref<VoucherRequest | null>(null)
 
-// Incremento / Decremento de monto
-const decrementarMonto = () => {
-  if (monto.value > 500) {
-    monto.value -= 500
+async function loadProducts() {
+  loading.value = true
+  errorMessage.value = null
+
+  const branchId = user.value?.distributor?.branch_id
+  if (!branchId) {
+    errorMessage.value = 'No se encontró la sucursal de la distribuidora.'
+    loading.value = false
+    return
+  }
+
+  try {
+    const result = await listBranchProducts(branchId, { per_page: 50 })
+    products.value = result.data.filter(p =>
+      p.is_active && (unlimitedCredit.value || Number(p.principal_amount) <= availableCredit.value)
+    )
+    selectedProductId.value = products.value[0]?.id ?? null
+  } catch (e) {
+    console.error(e)
+    errorMessage.value = 'No se pudieron cargar los productos financieros disponibles.'
+  } finally {
+    loading.value = false
   }
 }
 
-const incrementarMonto = () => {
-  if (monto.value + 500 <= disponible.value) {
-    monto.value += 500
+onMounted(() => {
+  if (!customerId.value) {
+    navigateTo('/distributor-portal/vales')
+    return
   }
+  loadProducts()
+})
+
+const selectedProduct = computed(() =>
+  products.value.find(p => p.id === selectedProductId.value) ?? null
+)
+
+// Replica el calculo del backend (FinancialCalculationService) solo para mostrar
+// una vista previa; el monto final y oficial lo calcula y persiste el servidor.
+function previewFortnightlyPayment(product: FinancialProduct) {
+  const principal = Number(product.principal_amount)
+  const commission = Math.round(principal * Number(product.company_commission_percentage) / 100 * 100) / 100
+  const interestPerFortnight = Math.round(principal * Number(product.fortnightly_interest_percentage) / 100 * 100) / 100
+  const interestTotal = Math.round(interestPerFortnight * product.number_of_fortnights * 100) / 100
+  const totalDebt = Math.round((principal + commission + Number(product.insurance_amount) + interestTotal) * 100) / 100
+  return Math.round((totalDebt / product.number_of_fortnights) * 100) / 100
 }
 
-// Cálculos dinámicos
-const totalAPagar = computed(() => {
-  const tasaInteres = 0.544
-  return Math.round(monto.value * (1 + tasaInteres))
-})
+function previewTotalDebt(product: FinancialProduct) {
+  return previewFortnightlyPayment(product) * product.number_of_fortnights
+}
 
-const pagoQuincenal = computed(() => {
-  return Math.round(totalAPagar.value / quincenasSeleccionadas.value)
-})
+const continuar = async () => {
+  if (!selectedProduct.value || !customerId.value) return
 
-// Abrir el modal en lugar de navegar
-const continuar = () => {
-  showModal.value = true
+  submitting.value = true
+  submitError.value = null
+
+  try {
+    confirmedVoucher.value = await preIssueVoucher({
+      customer_id: customerId.value,
+      financial_product_id: selectedProduct.value.id
+    })
+    showModal.value = true
+  } catch (e: unknown) {
+    console.error(e)
+    const fetchError = e as { data?: { message?: string } }
+    submitError.value = fetchError?.data?.message || 'No se pudo enviar la solicitud de vale.'
+  } finally {
+    submitting.value = false
+  }
 }
 
 const finalizarYVolver = () => {
@@ -58,139 +115,157 @@ const finalizarYVolver = () => {
 }
 
 const volver = () => {
-  navigateTo('/distributor-portal/clientes')
+  navigateTo('/distributor-portal/vales')
 }
 </script>
 
 <template>
   <main class="config-shell">
     <div class="config-wrapper">
-
       <!-- NAVBAR AZUL -->
       <header class="top-navbar">
-        <button type="button" class="back-btn" @click="volver">←</button>
-        <h1 class="nav-title">Configurar vale</h1>
+        <button type="button" class="back-btn" @click="volver">
+          ←
+        </button>
+        <h1 class="nav-title">
+          Configurar vale
+        </h1>
       </header>
 
       <div class="content-body">
-
         <!-- TARJETA CLIENTE SELECCIONADO -->
-        <div class="client-card" @click="navigateTo('/distributor-portal/vales')">
+        <div class="client-card">
           <div class="avatar-circle">
             <span class="avatar-icon">👤</span>
           </div>
           <div class="client-info">
-            <h3 class="client-name">{{ cliente.nombre }}</h3>
-            <p class="client-detail">Contacto: {{ cliente.contacto }}</p>
-            <span class="client-tag">({{ cliente.calificacion }})</span>
-          </div>
-          <span class="chevron-icon">❯</span>
-        </div>
-
-        <!-- SECCIÓN MONTO -->
-        <section class="monto-section">
-          <label class="section-label">Monto del Vale Financiero</label>
-
-          <div class="monto-selector">
-            <button
-              type="button"
-              class="btn-monto btn-minus"
-              :disabled="monto <= 500"
-              @click="decrementarMonto"
-            >
-              −
-            </button>
-            <span class="monto-display">${{ monto.toLocaleString('es-MX') }}</span>
-            <button
-              type="button"
-              class="btn-monto btn-plus"
-              :disabled="monto >= disponible"
-              @click="incrementarMonto"
-            >
-              +
-            </button>
-          </div>
-
-          <div class="disponible-badge">
-            Disponible <strong>${{ disponible.toLocaleString('es-MX') }}</strong>
-          </div>
-        </section>
-
-        <!-- SECCIÓN QUINCENAS -->
-        <section class="quincenas-section">
-          <label class="section-label">Quincenas a pagar</label>
-          <div class="quincenas-grid">
-            <button
-              v-for="opcion in quincenasOpciones"
-              :key="opcion"
-              type="button"
-              class="quincena-pill"
-              :class="{ active: quincenasSeleccionadas === opcion }"
-              @click="quincenasSeleccionadas = opcion"
-            >
-              {{ opcion }}
-            </button>
-          </div>
-        </section>
-
-        <!-- DETALLES DE PAGO -->
-        <div class="summary-cards">
-          <div class="summary-card">
-            <span class="summary-label">Seguro</span>
-            <span class="summary-value bold">Básico</span>
-          </div>
-
-          <div class="summary-card">
-            <div>
-              <div class="summary-label">Pago quincenal</div>
-              <div class="summary-subtext">Seguro incluido ${{ seguroMonto }}</div>
-            </div>
-            <span class="summary-value bold">${{ pagoQuincenal.toLocaleString('es-MX') }}</span>
-          </div>
-
-          <div class="summary-card">
-            <div>
-              <div class="summary-label">Total a pagar</div>
-              <div class="summary-subtext">Con intereses</div>
-            </div>
-            <span class="summary-value bold">${{ totalAPagar.toLocaleString('es-MX') }}</span>
+            <h3 class="client-name">
+              {{ cliente.nombre }}
+            </h3>
+            <p class="client-detail">
+              Contacto: {{ cliente.contacto || 'Sin teléfono' }}
+            </p>
           </div>
         </div>
 
-        <!-- BOTÓN CONTINUAR -->
-        <button type="button" class="submit-btn" @click.prevent="continuar">
-          Continuar
-        </button>
+        <div class="disponible-badge">
+          Crédito disponible
+          <strong>{{ unlimitedCredit ? 'Ilimitado' : `$${availableCredit.toLocaleString('es-MX')}` }}</strong>
+        </div>
 
+        <p v-if="loading" class="state-text">
+          Cargando productos disponibles…
+        </p>
+        <p v-else-if="errorMessage" class="state-text error">
+          {{ errorMessage }}
+        </p>
+        <p v-else-if="products.length === 0" class="state-text">
+          No hay productos financieros disponibles para tu crédito actual.
+        </p>
+
+        <!-- SELECCIÓN DE PRODUCTO -->
+        <section v-else class="product-section">
+          <label class="section-label">Elige el vale a expedir</label>
+
+          <div class="product-list">
+            <button
+              v-for="product in products"
+              :key="product.id"
+              type="button"
+              class="product-card"
+              :class="{ active: selectedProductId === product.id }"
+              @click="selectedProductId = product.id"
+            >
+              <div class="product-head">
+                <span class="product-name">{{ product.name }}</span>
+                <span class="product-amount">${{ Number(product.principal_amount).toLocaleString('es-MX') }}</span>
+              </div>
+              <div class="product-detail">
+                {{ product.number_of_fortnights }} quincenas · Seguro ${{ Number(product.insurance_amount).toLocaleString('es-MX') }}
+              </div>
+              <div class="product-detail bold">
+                Pago quincenal ${{ previewFortnightlyPayment(product).toLocaleString('es-MX') }}
+              </div>
+            </button>
+          </div>
+
+          <!-- DETALLES DE PAGO -->
+          <div v-if="selectedProduct" class="summary-cards">
+            <div class="summary-card">
+              <span class="summary-label">Seguro</span>
+              <span class="summary-value bold">${{ Number(selectedProduct.insurance_amount).toLocaleString('es-MX') }}</span>
+            </div>
+
+            <div class="summary-card">
+              <div>
+                <div class="summary-label">
+                  Pago quincenal
+                </div>
+                <div class="summary-subtext">
+                  {{ selectedProduct.number_of_fortnights }} quincenas
+                </div>
+              </div>
+              <span class="summary-value bold">${{ previewFortnightlyPayment(selectedProduct).toLocaleString('es-MX') }}</span>
+            </div>
+
+            <div class="summary-card">
+              <div>
+                <div class="summary-label">
+                  Total a pagar
+                </div>
+                <div class="summary-subtext">
+                  Con intereses y comisión
+                </div>
+              </div>
+              <span class="summary-value bold">${{ previewTotalDebt(selectedProduct).toLocaleString('es-MX') }}</span>
+            </div>
+          </div>
+
+          <p v-if="submitError" class="state-text error">
+            {{ submitError }}
+          </p>
+
+          <!-- BOTÓN CONTINUAR -->
+          <button
+            type="button"
+            class="submit-btn"
+            :disabled="!selectedProduct || submitting"
+            @click="continuar"
+          >
+            {{ submitting ? 'Enviando…' : 'Solicitar vale' }}
+          </button>
+        </section>
       </div>
 
       <!-- MODAL DE CONFIRMACIÓN -->
       <Transition name="modal-fade">
         <div v-if="showModal" class="modal-overlay">
           <div class="modal-card">
-            
             <div class="success-checkmark">
               <div class="check-icon">
-                <span class="icon-line line-tip"></span>
-                <span class="icon-line line-long"></span>
-                <div class="icon-circle"></div>
+                <span class="icon-line line-tip" />
+                <span class="icon-line line-long" />
+                <div class="icon-circle" />
               </div>
             </div>
 
-            <h2 class="modal-title">¡Vale Confirmado!</h2>
+            <h2 class="modal-title">
+              ¡Solicitud enviada!
+            </h2>
             <p class="modal-subtitle">
-              El vale para <strong>{{ cliente.nombre }}</strong> por 
-              <strong>${{ monto.toLocaleString('es-MX') }}</strong> ha sido expedido con éxito.
+              La solicitud de vale para <strong>{{ cliente.nombre }}</strong> por
+              <strong>${{ Number(confirmedVoucher?.requested_amount ?? 0).toLocaleString('es-MX') }}</strong>
+              quedó registrada y está pendiente de aprobación del coordinador.
             </p>
 
-            <div class="modal-details">
+            <div v-if="confirmedVoucher" class="modal-details">
               <div class="modal-row">
                 <span>Plazo:</span>
-                <strong>{{ quincenasSeleccionadas }} quincenas</strong>
+                <strong>{{ confirmedVoucher.snapshot.total_fortnights }} quincenas</strong>
               </div>
               <div class="modal-row">
                 <span>Pago quincenal:</span>
-                <strong>${{ pagoQuincenal.toLocaleString('es-MX') }}</strong>
+                <strong>${{ confirmedVoucher.snapshot.fortnightly_payment_amount.toLocaleString('es-MX') }}</strong>
               </div>
             </div>
 
@@ -200,7 +275,6 @@ const volver = () => {
           </div>
         </div>
       </Transition>
-
     </div>
   </main>
 </template>
@@ -274,7 +348,6 @@ const volver = () => {
   border: 1px solid #e2e8f0;
   border-radius: 16px;
   background-color: #ffffff;
-  cursor: pointer;
 }
 
 .avatar-circle {
@@ -311,23 +384,30 @@ const volver = () => {
   color: #475569;
 }
 
-.client-tag {
-  font-size: 11px;
+.disponible-badge {
+  background-color: #f0f6ff;
+  color: #002366;
+  padding: 10px 16px;
+  border-radius: 12px;
+  font-size: 13px;
+  text-align: center;
+}
+
+.state-text {
+  text-align: center;
   color: #64748b;
-  font-style: italic;
+  font-size: 14px;
+  padding: 12px 0;
 }
 
-.chevron-icon {
-  font-size: 16px;
-  color: #2563eb;
-  font-weight: bold;
+.state-text.error {
+  color: #dc2626;
 }
 
-/* MONTO */
-.monto-section {
+/* PRODUCTOS */
+.product-section {
   display: flex;
   flex-direction: column;
-  align-items: center;
   gap: 12px;
 }
 
@@ -337,91 +417,55 @@ const volver = () => {
   color: #1e293b;
 }
 
-.monto-selector {
+.product-list {
   display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 20px;
-  width: 100%;
+  flex-direction: column;
+  gap: 10px;
 }
 
-.btn-monto {
-  width: 44px;
-  height: 44px;
-  border-radius: 50%;
-  border: none;
-  font-size: 24px;
-  font-weight: 700;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+.product-card {
+  text-align: left;
+  border: 1px solid #cbd5e1;
+  background-color: #ffffff;
+  border-radius: 14px;
+  padding: 12px 14px;
   cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
 }
 
-.btn-minus {
-  background-color: #cbd5e1;
-  color: #475569;
+.product-card.active {
+  border-color: #4f46e5;
+  background-color: #eef2ff;
 }
 
-.btn-plus {
-  background-color: #002366;
-  color: #ffffff;
+.product-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
 }
 
-.btn-monto:disabled {
-  opacity: 0.4;
-  cursor: not-allowed;
+.product-name {
+  font-size: 14px;
+  font-weight: 700;
+  color: #1e293b;
 }
 
-.monto-display {
-  font-size: 28px;
+.product-amount {
+  font-size: 16px;
   font-weight: 800;
   color: #002366;
 }
 
-.disponible-badge {
-  background-color: #f0f6ff;
-  color: #002366;
-  padding: 6px 16px;
-  border-radius: 8px;
-  font-size: 13px;
+.product-detail {
+  font-size: 12px;
+  color: #64748b;
 }
 
-/* QUINCENAS */
-.quincenas-section {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 12px;
-}
-
-.quincenas-grid {
-  display: flex;
-  gap: 8px;
-  justify-content: center;
-  width: 100%;
-}
-
-.quincena-pill {
-  flex: 1;
-  max-width: 56px;
-  height: 44px;
-  border-radius: 12px;
-  border: 1px solid #2563eb;
-  background-color: #ffffff;
-  color: #2563eb;
-  font-size: 16px;
+.product-detail.bold {
   font-weight: 700;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.quincena-pill.active {
-  background-color: #4f46e5;
-  color: #ffffff;
-  border-color: #4f46e5;
+  color: #1e293b;
 }
 
 /* RESUMEN */
@@ -475,8 +519,9 @@ const volver = () => {
   margin-top: 8px;
 }
 
-.submit-btn:active {
-  opacity: 0.9;
+.submit-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
 }
 
 /* MODAL Y ANIMACIONES */

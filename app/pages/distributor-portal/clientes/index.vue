@@ -1,9 +1,12 @@
 <script setup lang="ts">
 import { ref } from 'vue'
+import { useCustomers } from '~/composables/useCustomers'
 
 definePageMeta({
   layout: false
 })
+
+const { createCustomer } = useCustomers()
 
 const form = ref({
   nombre: '',
@@ -15,32 +18,65 @@ const form = ref({
   direccion: ''
 })
 
-const guardarCliente = () => {
-  // Lógica para enviar los datos a tu API o estado
-  console.log('Cliente registrado:', form.value)
+const saving = ref(false)
+const errorMessage = ref<string | null>(null)
 
-  // Redirigir de regreso a la selección de contactos o expedición
-  navigateTo('/distributor-portal')
+const guardarCliente = async () => {
+  if (form.value.curp.trim().length !== 18) {
+    errorMessage.value = 'La CURP debe tener exactamente 18 caracteres.'
+    return
+  }
+
+  saving.value = true
+  errorMessage.value = null
+
+  try {
+    await createCustomer({
+      person: {
+        first_name: form.value.nombre.trim(),
+        last_name: form.value.apellidoPaterno.trim(),
+        second_last_name: form.value.apellidoMaterno.trim() || undefined,
+        mobile_phone: form.value.telefono.trim() || undefined,
+        curp: form.value.curp.trim().toUpperCase(),
+        rfc: form.value.rfc.trim() ? form.value.rfc.trim().toUpperCase() : undefined,
+        street: form.value.direccion.trim() || undefined
+      }
+    })
+
+    navigateTo('/distributor-portal/vales')
+  } catch (e: unknown) {
+    console.error(e)
+    const fetchError = e as { data?: { message?: string } }
+    errorMessage.value = fetchError?.data?.message || 'No se pudo registrar el cliente. Verifica los datos e intenta de nuevo.'
+  } finally {
+    saving.value = false
+  }
 }
 
 const volver = () => {
-  navigateTo('/distributor-portal')
+  navigateTo('/distributor-portal/vales')
 }
 </script>
 
 <template>
   <main class="form-shell">
     <div class="form-wrapper">
-
       <!-- NAVBAR AZUL -->
       <header class="top-navbar">
-        <button class="back-btn" @click="volver">←</button>
-        <h1 class="nav-title">Nuevo Cliente</h1>
+        <button class="back-btn" @click="volver">
+          ←
+        </button>
+        <h1 class="nav-title">
+          Nuevo Cliente
+        </h1>
       </header>
 
       <!-- FORMULARIO -->
       <form class="form-body" @submit.prevent="guardarCliente">
-        
+        <p v-if="errorMessage" class="error-banner">
+          {{ errorMessage }}
+        </p>
+
         <div class="input-group">
           <label>Nombre(s) *</label>
           <input
@@ -49,7 +85,7 @@ const volver = () => {
             placeholder="Ej. María Elena"
             required
             class="app-input"
-          />
+          >
         </div>
 
         <div class="input-row">
@@ -61,7 +97,7 @@ const volver = () => {
               placeholder="Ej. Gómez"
               required
               class="app-input"
-            />
+            >
           </div>
 
           <div class="input-group">
@@ -71,7 +107,7 @@ const volver = () => {
               type="text"
               placeholder="Ej. López"
               class="app-input"
-            />
+            >
           </div>
         </div>
 
@@ -84,7 +120,7 @@ const volver = () => {
             maxlength="10"
             required
             class="app-input"
-          />
+          >
         </div>
 
         <div class="input-group">
@@ -96,19 +132,18 @@ const volver = () => {
             maxlength="18"
             required
             class="app-input uppercase"
-          />
+          >
         </div>
 
         <div class="input-group">
-          <label>RFC *</label>
+          <label>RFC</label>
           <input
             v-model="form.rfc"
             type="text"
             placeholder="13 caracteres"
             maxlength="13"
-            required
             class="app-input uppercase"
-          />
+          >
         </div>
 
         <div class="input-group">
@@ -118,14 +153,13 @@ const volver = () => {
             placeholder="Calle, número, colonia y C.P."
             rows="3"
             class="app-input textarea"
-          ></textarea>
+          />
         </div>
 
-        <button type="submit" class="submit-btn" @click="navigateTo('/distributor-portal/configure_vale')">
-          Guardar Cliente
+        <button type="submit" class="submit-btn" :disabled="saving">
+          {{ saving ? 'Guardando…' : 'Guardar Cliente' }}
         </button>
       </form>
-
     </div>
   </main>
 </template>
@@ -189,6 +223,16 @@ const volver = () => {
   gap: 16px;
 }
 
+.error-banner {
+  background-color: #fee2e2;
+  color: #991b1b;
+  border-radius: 10px;
+  padding: 10px 14px;
+  font-size: 13px;
+  font-weight: 600;
+  margin: 0;
+}
+
 .input-row {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -245,5 +289,10 @@ const volver = () => {
 
 .submit-btn:active {
   opacity: 0.9;
+}
+
+.submit-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
 }
 </style>

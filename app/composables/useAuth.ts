@@ -13,10 +13,24 @@ interface AuthRole {
   is_primary: boolean
 }
 
+export interface AuthDistributor {
+  id: number
+  distributor_number: string
+  branch_id: number | null
+  status: string | null
+  credit_limit: string
+  available_credit: string
+  unlimited_credit: boolean
+  current_points: string
+  can_issue_vouchers: boolean
+  category: { id: number, code: string, name: string } | null
+}
+
 interface AuthUser {
   id: number
   username: string
   person: AuthPerson | null
+  distributor: AuthDistributor | null
   roles: AuthRole[]
   permissions: string[]
 }

@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import type { TableColumn, DropdownMenuItem } from '@nuxt/ui'
 import type { Row } from '@tanstack/table-core'
-import { applicantFullName, APPLICATION_STATUS_LABELS } from '~/composables/useApplications'
+import { applicantFullName, verifierDisplayName, APPLICATION_STATUS_LABELS } from '~/composables/useApplications'
 import type { Application, ApplicationStatus } from '~/composables/useApplications'
 
 const UButton = resolveComponent('UButton')
@@ -92,11 +92,12 @@ const columns: TableColumn<Application>[] = [
     }
   },
   {
-    accessorKey: 'assigned_verifier_id',
+    accessorKey: 'assigned_verifier',
     header: 'Verificador',
-    cell: ({ row }) => row.original.assigned_verifier_id
-      ? `Usuario #${row.original.assigned_verifier_id}`
-      : h('span', { class: 'text-dimmed' }, 'Sin asignar')
+    cell: ({ row }) => {
+      const name = verifierDisplayName(row.original.assigned_verifier)
+      return name ? name : h('span', { class: 'text-dimmed' }, 'Sin asignar')
+    }
   },
   {
     accessorKey: 'submitted_at',

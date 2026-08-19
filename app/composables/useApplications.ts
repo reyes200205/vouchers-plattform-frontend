@@ -39,6 +39,7 @@ export interface ApplicationBranchRef {
 export interface ApplicationUserRef {
   id: number
   username: string
+  person?: { first_name: string | null, last_name: string | null } | null
 }
 
 // El backend expone la relacion de verificacion como el modelo ApplicationVerification completo
@@ -88,10 +89,9 @@ export interface Application {
   created_at: string | null
   applicant: ApplicationPerson | null
   branch: ApplicationBranchRef | null
-  // Ojo: el backend carga esta relacion como `assignedVerifier` (camelCase) via
-  // Application::with(['assignedVerifier']) en CoordinadorController::index, por lo que
-  // la clave en el JSON es exactamente esa, NO `assigned_verifier`.
-  assignedVerifier: ApplicationUserRef | null
+  // El backend serializa esta relacion (metodo Application::assignedVerifier()) como
+  // `assigned_verifier` (snake_case) en el JSON, no `assignedVerifier`.
+  assigned_verifier: ApplicationUserRef | null
   verification: ApplicationVerificationRef | null
   // Los siguientes solo vienen poblados en la respuesta de CoordinadorController::show
   // (GET /applications/{id}), usada por el detalle de la Bandeja de Aprobaciones.
@@ -268,6 +268,13 @@ export function applicantFullName(person: ApplicationPerson | null | undefined):
   return [person.first_name, person.middle_name, person.last_name, person.second_last_name]
     .filter(Boolean)
     .join(' ') || 'Sin nombre'
+}
+
+export function verifierDisplayName(verifier: ApplicationUserRef | null | undefined): string | null {
+  if (!verifier) return null
+
+  const personName = [verifier.person?.first_name, verifier.person?.last_name].filter(Boolean).join(' ')
+  return personName || verifier.username
 }
 
 export const APPLICATION_STATUS_LABELS: Record<ApplicationStatus, string> = {

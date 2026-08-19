@@ -20,11 +20,19 @@ const NOTIFICATION_META: Record<string, { title: string, icon: string, color: st
 }
 
 function metaFor(notification: AppNotification) {
-  return NOTIFICATION_META[notification.data.type] ?? {
+  const base = NOTIFICATION_META[notification.data.type] ?? {
     title: 'Notificación',
     icon: 'i-lucide-bell',
     color: 'neutral'
   }
+
+  if (notification.data.type === 'application_verified_by_verifier') {
+    return notification.data.result === 'RECHAZADA'
+      ? { title: 'Solicitud rechazada', icon: 'i-lucide-circle-x', color: 'error' }
+      : { title: 'Solicitud verificada', icon: 'i-lucide-circle-check', color: 'success' }
+  }
+
+  return base
 }
 </script>
 
