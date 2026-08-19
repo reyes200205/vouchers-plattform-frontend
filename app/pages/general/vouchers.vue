@@ -1,6 +1,4 @@
 <script setup lang="ts">
-import type { VoucherStatus } from '~/types'
-
 const toast = useToast()
 const { user } = useAuth()
 const { listVouchers } = useVouchers()
@@ -62,6 +60,7 @@ function onDisbursed() {
               { label: 'Todos los estados', value: undefined },
               { label: 'Aprobados', value: 'APROBADO' },
               { label: 'Activos', value: 'ACTIVO' },
+              { label: 'Pago parcial', value: 'PAGO_PARCIAL' },
               { label: 'Pagados', value: 'PAGADO' },
               { label: 'Liquidados', value: 'LIQUIDADO' },
               { label: 'Morosos', value: 'MOROSO' },

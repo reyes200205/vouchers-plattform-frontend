@@ -59,7 +59,7 @@ async function onSubmit(event: FormSubmitEvent<Schema>) {
 </script>
 
 <template>
-  <UModal v-model:open="open" title="Entregar vale" description="Registra la transferencia y el número de autorización">
+  <UModal v-model:open="open" title="Entregar vale" description="Registra la transferencia y el número de autorización" :ui="{ content: 'max-w-xl' }">
     <UButton
       label="Entregar vale"
       icon="i-lucide-handshake"

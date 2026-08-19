@@ -70,7 +70,7 @@ async function onSubmit(event: FormSubmitEvent<Schema>) {
 </script>
 
 <template>
-  <UModal v-model:open="open" title="Decidir incremento" description="Aprobar, reducir o rechazar el incremento de crédito">
+  <UModal v-model:open="open" title="Decidir incremento" description="Aprobar, reducir o rechazar el incremento de crédito" :ui="{ content: 'max-w-xl' }">
     <UButton
       label="Decidir"
       icon="i-lucide-clipboard-check"

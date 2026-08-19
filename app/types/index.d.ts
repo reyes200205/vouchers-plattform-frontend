@@ -249,7 +249,6 @@ export interface FinancialProduct {
   company_commission_percentage: string
   insurance_amount: string
   fortnightly_interest_percentage: string
-  late_fee_amount: string
   disbursement_method: string | null
   is_active: boolean
   created_at?: string
@@ -264,6 +263,9 @@ export interface BranchSettings {
   payment_frequency_days: number | null
   payment_due_days: number | null
   insurance_rates: InsuranceTier[] | null
+  opening_commission_percentage: string | null
+  biweekly_interest_percentage: string | null
+  late_payment_penalty_amount: string | null
   auto_increase_threshold: string | null
   minimum_score_increase_percentage: string | null
   category_settings: Record<string, unknown> | null
@@ -427,6 +429,7 @@ export interface Voucher {
   status: VoucherStatus
   amount: string
   total_debt_amount: string
+  late_fee_amount_snapshot: string
   fortnightly_payment_amount: string
   total_fortnights: number
   payments_made: number
@@ -442,16 +445,78 @@ export interface Voucher {
   created_at: string
 }
 
+export type PaymentMethod = 'EFECTIVO' | 'TRANSFERENCIA'
+
+export interface CustomerPayment {
+  id: number
+  voucher_id: number
+  customer_id: number
+  distributor_id: number
+  collected_by_user_id: number
+  payment_date: string | null
+  amount: string
+  payment_method: PaymentMethod | null
+  is_partial: boolean
+  affects_points: boolean
+  notes: string | null
+  reversed_at: string | null
+  reversed_by_user_id: number | null
+  reversal_reason: string | null
+  created_at: string
+  voucher?: {
+    id: number
+    voucher_number: string
+    status: VoucherStatus
+    current_balance: string
+  }
+}
+
+export type CutoffStatus = 'PROGRAMADO' | 'EJECUTADO' | 'CERRADO' | 'REPROCESADO'
+export type CutoffRelationStatus = 'GENERADA' | 'PAGADA' | 'PARCIAL' | 'VENCIDA' | 'CERRADA'
+
+export interface CutoffRelationItem {
+  id: number
+  cutoff_relation_id: number
+  voucher_id: number
+  customer_id: number
+  product_name_snapshot: string | null
+  payments_made: number
+  total_payments: number
+  is_late_payment: boolean
+  installment_number: number | null
+  accumulated_late_installments: number | null
+  commission_amount: string
+  payment_amount: string
+  late_fee_amount: string
+  line_total_amount: string
+  previous_paid_amount: string | null
+  origin_cutoff_id: number | null
+  origin_relation_id: number | null
+}
+
 export interface CutoffRelation {
   id: number
   cutoff_id: number
   distributor_id: number
+  previous_relation_id: number | null
   relation_number: string
   payment_reference: string | null
   payment_due_date: string | null
+  early_payment_start_date: string | null
+  early_payment_end_date: string | null
+  credit_limit_snapshot: string | null
+  available_credit_snapshot: string | null
+  points_snapshot: number | null
+  total_commission: string | null
+  total_payment: string | null
+  total_late_fees: string | null
+  total_carryover_received: string | null
   total_amount_due: string
-  status: string | null
+  status: CutoffRelationStatus | null
+  closed_by_carryover_at: string | null
+  generated_at: string | null
   distributor: CutoffRelationDistributor | null
+  items?: CutoffRelationItem[]
 }
 
 export interface Cutoff {
@@ -462,7 +527,10 @@ export interface Cutoff {
   base_time: string | null
   scheduled_at: string | null
   executed_at: string | null
-  status: string | null
+  status: CutoffStatus | null
+  config_snapshot_json: Record<string, unknown> | null
+  notes: string | null
+  created_at?: string
   relations_count?: number
   total_amount_due?: number
   relations?: CutoffRelation[]

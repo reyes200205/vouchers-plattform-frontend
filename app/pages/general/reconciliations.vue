@@ -12,6 +12,7 @@ const reference = ref('')
 
 const canImport = computed(() => user.value?.permissions?.includes('reconciliations.import') ?? false)
 const canVerify = computed(() => user.value?.permissions?.includes('reconciliations.verify') ?? false)
+const canManualMatch = computed(() => user.value?.permissions?.includes('reconciliations.manual') ?? false)
 
 const selectedTab = ref('movements')
 
@@ -270,7 +271,7 @@ async function onVerify(item: Reconciliation) {
                   </p>
 
                   <ReconciliationsManualMatchModal
-                    v-if="!item.reconciled"
+                    v-if="!item.reconciled && canManualMatch"
                     :transaction="item"
                     @matched="onMatched"
                   />

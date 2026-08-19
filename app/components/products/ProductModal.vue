@@ -114,7 +114,7 @@ const autoInsurance = computed(() => {
   const tier = props.insuranceTiers.find(t => {
     const min = Number(t.min_amount)
     const max = Number(t.max_amount)
-    return principal.value >= min && principal.value < max
+    return principal.value >= min && principal.value <= max
   })
   return tier ? Number(tier.insurance_amount) : 0
 })
@@ -199,7 +199,7 @@ async function onSubmit(event: FormSubmitEvent<Schema>) {
     v-model:open="open"
     :title="product ? 'Editar vale' : (cloneTemplate ? 'Usar vale del catálogo general' : 'Nuevo vale')"
     :description="product ? `Actualizar ${product.name}` : (cloneTemplate ? 'Cópialo en tu sucursal y ajústalo si es necesario' : 'Agrega un nuevo producto o vale a la sucursal')"
-    class="max-w-2xl"
+    :ui="{ content: 'max-w-3xl' }"
   >
     <template #body>
       <UForm

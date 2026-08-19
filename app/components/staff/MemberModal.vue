@@ -13,6 +13,11 @@ const open = defineModel<boolean>('open', { default: false })
 const emit = defineEmits<{ created: [], updated: [] }>()
 
 const STAFF_ROLE_CODES = ['coordinator', 'verifier', 'branch_manager', 'cashier']
+// Roles que un gerente de sucursal puede crear/administrar en su propia
+// sucursal. Debe reflejar exactamente ListStaffService::BRANCH_MANAGER_ROLES
+// del backend — ahí es donde realmente se aplica la restricción; esta lista
+// solo evita mostrarle al gerente opciones que el backend igual rechazaría.
+const BRANCH_MANAGER_ROLE_CODES = ['cashier', 'coordinator', 'verifier']
 
 const schema = z.object({
   first_name: z.string().min(2, 'Muy corto').max(100, 'Muy largo'),
@@ -67,7 +72,7 @@ const isBranchManager = computed(() => user.value?.roles?.some(r => r.code === '
 const roles = ref<SystemRole[]>([])
 const roleItems = computed(() => {
   const available = isBranchManager.value
-    ? [{ code: 'cashier', description: 'Cajera' }]
+    ? roles.value.filter(r => BRANCH_MANAGER_ROLE_CODES.includes(r.code))
     : roles.value.filter(r => STAFF_ROLE_CODES.includes(r.code))
 
   return available.map(r => ({
@@ -272,7 +277,7 @@ async function onSubmit(event: FormSubmitEvent<Schema>) {
     v-model:open="open"
     :title="member ? 'Editar personal' : 'Nuevo miembro'"
     :description="member ? `Actualizar a ${member.username}` : 'Agrega un nuevo miembro al personal'"
-    class="max-w-2xl"
+    :ui="{ content: 'max-w-4xl' }"
   >
     <template #body>
       <UForm
@@ -381,7 +386,6 @@ async function onSubmit(event: FormSubmitEvent<Schema>) {
           <USelect
             v-model="state.role_code"
             :items="roleItems"
-            :disabled="isBranchManager"
             placeholder="Seleccionar rol..."
             class="w-full"
           />

@@ -67,7 +67,7 @@ async function onSubmit(event: FormSubmitEvent<Schema>) {
 </script>
 
 <template>
-  <UModal v-model:open="open" title="Decidir cambio de datos" description="Aprobar o rechazar la solicitud de la cajera">
+  <UModal v-model:open="open" title="Decidir cambio de datos" description="Aprobar o rechazar la solicitud de la cajera" :ui="{ content: 'max-w-xl' }">
     <UButton
       label="Decidir"
       icon="i-lucide-clipboard-check"

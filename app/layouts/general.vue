@@ -13,15 +13,6 @@ const { counts } = useInbox()
 
 const inboxCount = ref(0)
 
-onMounted(async () => {
-  try {
-    const c = await counts()
-    inboxCount.value = c.applications + c.credit_increases + c.redemptions
-  } catch {
-    inboxCount.value = 0
-  }
-})
-
 const hasPermission = (permission: string) => {
   return user.value?.permissions?.includes(permission) ?? false
 }
@@ -29,6 +20,21 @@ const hasPermission = (permission: string) => {
 const hasAnyPermission = (permissions: string[]) => {
   return permissions.some(p => hasPermission(p))
 }
+
+onMounted(async () => {
+  // Antes se pedía siempre, para cualquier rol (incluida la cajera, que no
+  // tiene inbox.view) — eso disparaba una petición que siempre regresaba 403.
+  if (!hasPermission('inbox.view')) {
+    return
+  }
+
+  try {
+    const c = await counts()
+    inboxCount.value = c.applications + c.credit_increases + c.redemptions
+  } catch {
+    inboxCount.value = 0
+  }
+})
 
 const links = computed(() => {
   const items: NavigationMenuItem[] = []
@@ -40,15 +46,19 @@ const links = computed(() => {
     onSelect: () => {
       open.value = false
     }
-  }, {
-    label: 'Bandeja de Aprobaciones',
-    icon: 'i-lucide-inbox',
-    to: '/general/inbox',
-    badge: inboxCount.value > 0 ? String(inboxCount.value) : undefined,
-    onSelect: () => {
-      open.value = false
-    }
   })
+
+  if (hasPermission('inbox.view')) {
+    items.push({
+      label: 'Bandeja de Aprobaciones',
+      icon: 'i-lucide-inbox',
+      to: '/general/inbox',
+      badge: inboxCount.value > 0 ? String(inboxCount.value) : undefined,
+      onSelect: () => {
+        open.value = false
+      }
+    })
+  }
 
   if (hasPermission('customers.view')) {
     items.push({
@@ -99,6 +109,17 @@ const links = computed(() => {
       label: 'Vales emitidos',
       icon: 'i-lucide-receipt-text',
       to: '/general/vouchers',
+      onSelect: () => {
+        open.value = false
+      }
+    })
+  }
+
+  if (hasPermission('cutoffs.view')) {
+    items.push({
+      label: 'Cortes y Relaciones',
+      icon: 'i-lucide-scroll-text',
+      to: '/general/cutoffs',
       onSelect: () => {
         open.value = false
       }
