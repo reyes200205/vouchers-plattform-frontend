@@ -255,7 +255,7 @@ const selectedDetails = ref<Customer | null>(null)
           v-else
           class="shrink-0"
           :data="filteredItems"
-          :columns="columns"
+          :columns="(columns as any)"
           :ui="{
             base: 'table-fixed border-separate border-spacing-0',
             thead: '[&>tr]:bg-elevated/50 [&>tr]:after:content-none',
@@ -267,7 +267,7 @@ const selectedDetails = ref<Customer | null>(null)
         />
       </template>
 
-      <div v-if="meta?.last_page > 1" class="flex items-center justify-end gap-3 border-t border-default pt-4 mt-auto">
+      <div class="flex items-center justify-end gap-3 border-t border-default pt-4 mt-auto">
         <UPagination
           :model-value="page"
           :total="meta?.total ?? 0"
@@ -275,29 +275,29 @@ const selectedDetails = ref<Customer | null>(null)
           @update:model-value="onPageChange"
         />
       </div>
+
+      <CustomersCustomerDetailsModal
+        v-if="selectedDetails"
+        :customer="selectedDetails"
+        :open="true"
+        @update:open="(open: boolean) => { if (!open) selectedDetails = null }"
+      />
+
+      <CustomersVerifyCustomerModal
+        v-if="selectedVerification"
+        :customer="selectedVerification"
+        :open="true"
+        @update:open="(open: boolean) => { if (!open) selectedVerification = null }"
+        @verified="refreshList(); selectedVerification = null"
+      />
+
+      <CustomersChangeCustomerRequestModal
+        v-if="selectedChangeRequest"
+        :customer="selectedChangeRequest"
+        :open="true"
+        @update:open="(open: boolean) => { if (!open) selectedChangeRequest = null }"
+        @changed="selectedChangeRequest = null"
+      />
     </template>
-
-    <CustomerDetailsModal
-      v-if="selectedDetails"
-      :customer="selectedDetails"
-      :open="true"
-      @update:open="(open: boolean) => { if (!open) selectedDetails = null }"
-    />
-
-    <VerifyCustomerModal
-      v-if="selectedVerification"
-      :customer="selectedVerification"
-      :open="true"
-      @update:open="(open: boolean) => { if (!open) selectedVerification = null }"
-      @verified="refreshList(); selectedVerification = null"
-    />
-
-    <ChangeCustomerRequestModal
-      v-if="selectedChangeRequest"
-      :customer="selectedChangeRequest"
-      :open="true"
-      @update:open="(open: boolean) => { if (!open) selectedChangeRequest = null }"
-      @changed="selectedChangeRequest = null"
-    />
   </UDashboardPanel>
 </template>
