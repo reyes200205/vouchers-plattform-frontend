@@ -46,6 +46,7 @@ export function useBranches() {
 
   async function listBranches() {
     const response = await $fetch<BranchListResponse>(`${config.public.apiBase}/branches`, {
+      params: { per_page: -1 },
       headers: { Authorization: `Bearer ${token.value}` }
     })
 
