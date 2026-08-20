@@ -39,8 +39,12 @@ export interface Voucher {
   payments_made: number
   current_balance: string
   issued_at: string | null
+  transferred_at: string | null
+  transfer_reference: string | null
   payment_due_date: string | null
   is_canceled: boolean
+  is_expired: boolean
+  expiration_date: string | null
   notes: string | null
   created_at: string | null
   customer: VoucherCustomerRef | null
@@ -264,14 +268,5 @@ export function useVouchers() {
     return response.data
   }
 
-  return {
-    listMyVouchers,
-    listMyVoucherRequests,
-    preIssueVoucher,
-    listVouchers,
-    disburseVoucher,
-    listPendingVoucherRequests,
-    approveVoucherRequest,
-    rejectVoucherRequest
-  }
+  return { listMyVouchers, listMyVoucherRequests, preIssueVoucher }
 }

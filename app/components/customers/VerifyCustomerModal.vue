@@ -14,14 +14,14 @@ const emit = defineEmits<{
 }>()
 
 const schema = z.object({
-  confirmed: z.literal(true, { message: 'Debes confirmar que revisaste los documentos en persona.' }),
+  confirmed: z.boolean().refine(val => val === true, { message: 'Debes confirmar que revisaste los documentos en persona.' }),
   notes: z.string().optional()
 })
 
 type Schema = z.output<typeof schema>
 
 const submitting = ref(false)
-const state = reactive<Partial<Schema>>({ confirmed: false, notes: undefined })
+const state = reactive<{ confirmed: boolean, notes?: string }>({ confirmed: false, notes: undefined })
 
 const { verifyCustomer } = useCustomers()
 const toast = useToast()

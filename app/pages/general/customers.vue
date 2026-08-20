@@ -96,9 +96,9 @@ const columns: TableColumn<Customer>[] = [
     accessorKey: 'status',
     header: 'Estado',
     cell: ({ row }) => h(UBadge, {
-      color: statusColors[row.original.status],
+      color: row.original.status ? statusColors[row.original.status] : 'neutral',
       variant: 'subtle',
-      label: row.original.status
+      label: row.original.status ?? ''
     })
   },
   {
@@ -255,7 +255,7 @@ const selectedDetails = ref<Customer | null>(null)
           v-else
           class="shrink-0"
           :data="filteredItems"
-          :columns="columns"
+          :columns="(columns as any)"
           :ui="{
             base: 'table-fixed border-separate border-spacing-0',
             thead: '[&>tr]:bg-elevated/50 [&>tr]:after:content-none',
@@ -267,7 +267,7 @@ const selectedDetails = ref<Customer | null>(null)
         />
       </template>
 
-      <div v-if="meta?.last_page > 1" class="flex items-center justify-end gap-3 border-t border-default pt-4 mt-auto">
+      <div class="flex items-center justify-end gap-3 border-t border-default pt-4 mt-auto">
         <UPagination
           :model-value="page"
           :total="meta?.total ?? 0"
@@ -275,7 +275,31 @@ const selectedDetails = ref<Customer | null>(null)
           @update:model-value="onPageChange"
         />
       </div>
+
+      <CustomersCustomerDetailsModal
+        v-if="selectedDetails"
+        :customer="selectedDetails"
+        :open="true"
+        @update:open="(open: boolean) => { if (!open) selectedDetails = null }"
+      />
+
+      <CustomersVerifyCustomerModal
+        v-if="selectedVerification"
+        :customer="selectedVerification"
+        :open="true"
+        @update:open="(open: boolean) => { if (!open) selectedVerification = null }"
+        @verified="refreshList(); selectedVerification = null"
+      />
+
+      <CustomersChangeCustomerRequestModal
+        v-if="selectedChangeRequest"
+        :customer="selectedChangeRequest"
+        :open="true"
+        @update:open="(open: boolean) => { if (!open) selectedChangeRequest = null }"
+        @changed="selectedChangeRequest = null"
+      />
     </template>
+<<<<<<< HEAD
 
     <CustomersCustomerDetailsModal
       v-if="selectedDetails"
@@ -299,5 +323,7 @@ const selectedDetails = ref<Customer | null>(null)
       @update:open="(open: boolean) => { if (!open) selectedChangeRequest = null }"
       @changed="selectedChangeRequest = null"
     />
+=======
+>>>>>>> 5b480282d6104335ba42cf689da66fd670fc3abb
   </UDashboardPanel>
 </template>
