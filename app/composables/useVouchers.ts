@@ -133,17 +133,6 @@ export interface PreIssueVoucherPayload {
   notes?: string
 }
 
-export interface PreValeLimit {
-  is_pre_vale: boolean
-  max_amount: number | null
-}
-
-interface PreValeLimitResponse {
-  success: boolean
-  message: string
-  data: PreValeLimit
-}
-
 export function useVouchers() {
   const config = useRuntimeConfig()
   const { token } = useAuth()
@@ -180,14 +169,5 @@ export function useVouchers() {
     return response.data
   }
 
-  async function getPreValeLimit(customerId: number) {
-    const response = await $fetch<PreValeLimitResponse>(`${config.public.apiBase}/distributor/pre-vale-limit`, {
-      headers: authHeaders(),
-      query: { customer_id: customerId }
-    })
-
-    return response.data
-  }
-
-  return { listMyVouchers, listMyVoucherRequests, preIssueVoucher, getPreValeLimit }
+  return { listMyVouchers, listMyVoucherRequests, preIssueVoucher }
 }

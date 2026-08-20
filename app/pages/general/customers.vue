@@ -1,221 +1,216 @@
 <script setup lang="ts">
 import type { TableColumn } from '@nuxt/ui'
-import { upperFirst } from 'scule'
-import { getPaginationRowModel } from '@tanstack/table-core'
 import type { Row } from '@tanstack/table-core'
-import type { User } from '~/types'
+import type { Customer, CustomerStatus } from '~/types'
 
-const UAvatar = resolveComponent('UAvatar')
-const UButton = resolveComponent('UButton')
 const UBadge = resolveComponent('UBadge')
 const UDropdownMenu = resolveComponent('UDropdownMenu')
-const UCheckbox = resolveComponent('UCheckbox')
+const UButton = resolveComponent('UButton')
 
 const toast = useToast()
-const table = useTemplateRef('table')
+const { user } = useAuth()
+const { listCustomers } = useCustomers()
 
-const columnFilters = ref([{
-  id: 'email',
-  value: ''
-}])
-const columnVisibility = ref()
-const rowSelection = ref({})
+const canVerify = computed(() => user.value?.permissions?.includes('customers.verify') ?? false)
+const canRequestChange = computed(() => user.value?.permissions?.includes('customers.update.request') ?? false)
 
-const { data, status } = await useFetch<User[]>('/api/customers', {
-  lazy: true
+const statusFilter = ref<CustomerStatus | undefined>(undefined)
+const verifiedFilter = ref<'all' | 'yes' | 'no'>('all')
+const q = ref('')
+const page = ref(1)
+
+const { data, status, refresh } = await useAsyncData(
+  'customers',
+  () => listCustomers({
+    status: statusFilter.value,
+    verified: verifiedFilter.value === 'all' ? undefined : verifiedFilter.value === 'yes',
+    page: page.value,
+    per_page: 15
+  }),
+  {
+    watch: [statusFilter, verifiedFilter, page],
+    default: () => ({ data: [], meta: { current_page: 1, last_page: 1, per_page: 15, total: 0 } })
+  }
+)
+
+const items = computed(() => data.value?.data ?? [])
+const meta = computed(() => data.value?.meta)
+
+const filteredItems = computed(() => {
+  const query = q.value.trim().toLowerCase()
+  if (!query) return items.value
+
+  return items.value.filter((customer) => {
+    const person = customer.person
+    const fullName = [person?.first_name, person?.middle_name, person?.last_name, person?.second_last_name].filter(Boolean).join(' ').toLowerCase()
+    return fullName.includes(query)
+      || customer.customer_code.toLowerCase().includes(query)
+      || (person?.curp ?? '').toLowerCase().includes(query)
+      || (person?.mobile_phone ?? '').toLowerCase().includes(query)
+  })
 })
 
-function getRowItems(row: Row<User>) {
-  return [
-    {
-      type: 'label',
-      label: 'Actions'
-    },
-    {
-      label: 'Copy customer ID',
-      icon: 'i-lucide-copy',
-      onSelect() {
-        navigator.clipboard.writeText(row.original.id.toString())
-        toast.add({
-          title: 'Copied to clipboard',
-          description: 'Customer ID copied to clipboard'
-        })
-      }
-    },
-    {
-      type: 'separator'
-    },
-    {
-      label: 'View customer details',
-      icon: 'i-lucide-list'
-    },
-    {
-      label: 'View customer payments',
-      icon: 'i-lucide-wallet'
-    },
-    {
-      type: 'separator'
-    },
-    {
-      label: 'Delete customer',
-      icon: 'i-lucide-trash',
-      color: 'error',
-      onSelect() {
-        toast.add({
-          title: 'Customer deleted',
-          description: 'The customer has been deleted.'
-        })
-      }
-    }
-  ]
+function fullName(customer: Customer) {
+  const person = customer.person
+  return [person?.first_name, person?.middle_name, person?.last_name, person?.second_last_name].filter(Boolean).join(' ') || 'Sin nombre'
 }
 
-const columns: TableColumn<User>[] = [
+const statusColors: Record<CustomerStatus, 'success' | 'warning' | 'error' | 'neutral'> = {
+  ACTIVO: 'success',
+  EN_VERIFICACION: 'warning',
+  BLOQUEADO: 'error',
+  MOROSO: 'error',
+  INACTIVO: 'neutral'
+}
+
+function onPageChange(nextPage: number) {
+  page.value = nextPage
+}
+
+function refreshList() {
+  refresh()
+}
+
+const columns: TableColumn<Customer>[] = [
   {
-    id: 'select',
-    header: ({ table }) =>
-      h(UCheckbox, {
-        'modelValue': table.getIsSomePageRowsSelected()
-          ? 'indeterminate'
-          : table.getIsAllPageRowsSelected(),
-        'onUpdate:modelValue': (value: boolean | 'indeterminate') =>
-          table.toggleAllPageRowsSelected(!!value),
-        'ariaLabel': 'Select all'
-      }),
-    cell: ({ row }) =>
-      h(UCheckbox, {
-        'modelValue': row.getIsSelected(),
-        'onUpdate:modelValue': (value: boolean | 'indeterminate') => row.toggleSelected(!!value),
-        'ariaLabel': 'Select row'
-      })
+    accessorKey: 'customer_code',
+    header: 'Código'
   },
   {
-    accessorKey: 'id',
-    header: 'ID'
-  },
-  {
-    accessorKey: 'name',
-    header: 'Name',
+    accessorKey: 'person',
+    header: 'Cliente',
     cell: ({ row }) => {
-      return h('div', { class: 'flex items-center gap-3' }, [
-        h(UAvatar, {
-          ...row.original.avatar,
-          size: 'lg'
-        }),
-        h('div', undefined, [
-          h('p', { class: 'font-medium text-highlighted' }, row.original.name),
-          h('p', { class: '' }, `@${row.original.name}`)
-        ])
+      const person = row.original.person
+      return h('div', { class: 'min-w-0' }, [
+        h('p', { class: 'truncate font-medium text-highlighted' }, fullName(row.original)),
+        h('p', { class: 'truncate text-xs text-muted' }, person?.curp || person?.mobile_phone || '')
       ])
     }
   },
   {
-    accessorKey: 'email',
-    header: ({ column }) => {
-      const isSorted = column.getIsSorted()
-
-      return h(UButton, {
-        color: 'neutral',
-        variant: 'ghost',
-        label: 'Email',
-        icon: isSorted
-          ? isSorted === 'asc'
-            ? 'i-lucide-arrow-up-narrow-wide'
-            : 'i-lucide-arrow-down-wide-narrow'
-          : 'i-lucide-arrow-up-down',
-        class: '-mx-2.5',
-        onClick: () => column.toggleSorting(column.getIsSorted() === 'asc')
-      })
-    }
-  },
-  {
-    accessorKey: 'location',
-    header: 'Location',
-    cell: ({ row }) => row.original.location
+    accessorKey: 'branch',
+    header: 'Sucursal',
+    cell: ({ row }) => row.original.branch?.name ?? '—'
   },
   {
     accessorKey: 'status',
-    header: 'Status',
-    filterFn: 'equals',
+    header: 'Estado',
+    cell: ({ row }) => h(UBadge, {
+      color: statusColors[row.original.status],
+      variant: 'subtle',
+      label: row.original.status
+    })
+  },
+  {
+    accessorKey: 'verified_at',
+    header: 'Verificado',
     cell: ({ row }) => {
-      const color = {
-        subscribed: 'success' as const,
-        unsubscribed: 'error' as const,
-        bounced: 'warning' as const
-      }[row.original.status]
-
-      return h(UBadge, { class: 'capitalize', variant: 'subtle', color }, () =>
-        row.original.status
-      )
+      if (!row.original.verified_at) {
+        return h(UBadge, { color: 'warning', variant: 'subtle', label: 'Sin verificar' })
+      }
+      const date = new Date(row.original.verified_at)
+      return h(UBadge, {
+        color: 'success',
+        variant: 'subtle',
+        label: date.toLocaleDateString('es-MX', { day: '2-digit', month: 'short', year: 'numeric' })
+      })
     }
   },
   {
     id: 'actions',
     cell: ({ row }) => {
+      const rowCustomer = row.original
+      const actionItems = []
+
+      if (canVerify.value && !rowCustomer.verified_at) {
+        actionItems.push({
+          key: 'verify',
+          label: 'Verificar',
+          icon: 'i-lucide-badge-check',
+          onSelect() {
+            selectedVerification.value = rowCustomer
+          }
+        })
+      }
+
+      if (canRequestChange.value) {
+        actionItems.push({
+          key: 'change',
+          label: 'Solicitar cambio de datos',
+          icon: 'i-lucide-file-pen-line',
+          onSelect() {
+            selectedChangeRequest.value = rowCustomer
+          }
+        })
+      }
+
+      actionItems.push({
+        key: 'details',
+        label: 'Detalles',
+        icon: 'i-lucide-eye',
+        onSelect() {
+          selectedDetails.value = rowCustomer
+        }
+      })
+
       return h(
         'div',
         { class: 'text-right' },
         h(
           UDropdownMenu,
           {
-            content: {
-              align: 'end'
-            },
-            items: getRowItems(row)
+            content: { align: 'end' },
+            items: actionItems
           },
-          () =>
-            h(UButton, {
-              icon: 'i-lucide-ellipsis-vertical',
-              color: 'neutral',
-              variant: 'ghost',
-              class: 'ml-auto'
-            })
+          () => h(UButton, {
+            icon: 'i-lucide-ellipsis-vertical',
+            color: 'neutral',
+            variant: 'ghost',
+            class: 'ml-auto'
+          })
         )
       )
     }
   }
 ]
 
-const statusFilter = ref('all')
-
-watch(() => statusFilter.value, (newVal) => {
-  if (!table?.value?.tableApi) return
-
-  const statusColumn = table.value.tableApi.getColumn('status')
-  if (!statusColumn) return
-
-  if (newVal === 'all') {
-    statusColumn.setFilterValue(undefined)
-  } else {
-    statusColumn.setFilterValue(newVal)
-  }
-})
-
-const email = computed({
-  get: (): string => {
-    return (table.value?.tableApi?.getColumn('email')?.getFilterValue() as string) || ''
-  },
-  set: (value: string) => {
-    table.value?.tableApi?.getColumn('email')?.setFilterValue(value || undefined)
-  }
-})
-
-const pagination = ref({
-  pageIndex: 0,
-  pageSize: 10
-})
+const selectedVerification = ref<Customer | null>(null)
+const selectedChangeRequest = ref<Customer | null>(null)
+const selectedDetails = ref<Customer | null>(null)
 </script>
 
 <template>
   <UDashboardPanel id="customers">
     <template #header>
-      <UDashboardNavbar title="Customers">
+      <UDashboardNavbar title="Clientes">
         <template #leading>
           <UDashboardSidebarCollapse />
         </template>
 
         <template #right>
-          <CustomersAddModal />
+          <USelect
+            v-model="verifiedFilter"
+            :items="[
+              { label: 'Todas', value: 'all' },
+              { label: 'Verificadas', value: 'yes' },
+              { label: 'Sin verificar', value: 'no' }
+            ]"
+            placeholder="Verificación"
+            class="w-40"
+          />
+          <USelect
+            v-model="statusFilter"
+            :items="[
+              { label: 'Todos los estados', value: undefined },
+              { label: 'Activo', value: 'ACTIVO' },
+              { label: 'En verificación', value: 'EN_VERIFICACION' },
+              { label: 'Bloqueado', value: 'BLOQUEADO' },
+              { label: 'Moroso', value: 'MOROSO' },
+              { label: 'Inactivo', value: 'INACTIVO' }
+            ]"
+            placeholder="Estado"
+            class="w-40"
+          />
         </template>
       </UDashboardNavbar>
     </template>
@@ -223,108 +218,86 @@ const pagination = ref({
     <template #body>
       <div class="flex flex-wrap items-center justify-between gap-1.5">
         <UInput
-          v-model="email"
-          class="max-w-sm"
+          v-model="q"
           icon="i-lucide-search"
-          placeholder="Filter emails..."
+          placeholder="Buscar por nombre, código, CURP o teléfono..."
+          class="max-w-sm"
         />
-
-        <div class="flex flex-wrap items-center gap-1.5">
-          <CustomersDeleteModal :count="table?.tableApi?.getFilteredSelectedRowModel().rows.length">
-            <UButton
-              v-if="table?.tableApi?.getFilteredSelectedRowModel().rows.length"
-              label="Delete"
-              color="error"
-              variant="subtle"
-              icon="i-lucide-trash"
-            >
-              <template #trailing>
-                <UKbd>
-                  {{ table?.tableApi?.getFilteredSelectedRowModel().rows.length }}
-                </UKbd>
-              </template>
-            </UButton>
-          </CustomersDeleteModal>
-
-          <USelect
-            v-model="statusFilter"
-            :items="[
-              { label: 'All', value: 'all' },
-              { label: 'Subscribed', value: 'subscribed' },
-              { label: 'Unsubscribed', value: 'unsubscribed' },
-              { label: 'Bounced', value: 'bounced' }
-            ]"
-            :ui="{ trailingIcon: 'group-data-[state=open]:rotate-180 transition-transform duration-200' }"
-            placeholder="Filter status"
-            class="min-w-28"
-          />
-          <UDropdownMenu
-            :items="
-              table?.tableApi
-                ?.getAllColumns()
-                .filter((column: any) => column.getCanHide())
-                .map((column: any) => ({
-                  label: upperFirst(column.id),
-                  type: 'checkbox' as const,
-                  checked: column.getIsVisible(),
-                  onUpdateChecked(checked: boolean) {
-                    table?.tableApi?.getColumn(column.id)?.toggleVisibility(!!checked)
-                  },
-                  onSelect(e?: Event) {
-                    e?.preventDefault()
-                  }
-                }))
-            "
-            :content="{ align: 'end' }"
-          >
-            <UButton
-              label="Display"
-              color="neutral"
-              variant="outline"
-              trailing-icon="i-lucide-settings-2"
-            />
-          </UDropdownMenu>
-        </div>
       </div>
 
-      <UTable
-        ref="table"
-        v-model:column-filters="columnFilters"
-        v-model:column-visibility="columnVisibility"
-        v-model:row-selection="rowSelection"
-        v-model:pagination="pagination"
-        :pagination-options="{
-          getPaginationRowModel: getPaginationRowModel()
-        }"
-        class="shrink-0"
-        :data="data"
-        :columns="columns"
-        :loading="status === 'pending'"
-        :ui="{
-          base: 'table-fixed border-separate border-spacing-0',
-          thead: '[&>tr]:bg-elevated/50 [&>tr]:after:content-none',
-          tbody: '[&>tr]:last:[&>td]:border-b-0',
-          th: 'py-2 first:rounded-l-lg last:rounded-r-lg border-y border-default first:border-l last:border-r',
-          td: 'border-b border-default',
-          separator: 'h-0'
-        }"
-      />
+      <div v-if="status === 'pending'" class="flex items-center justify-center py-16">
+        <UIcon name="i-lucide-loader-circle" class="size-8 animate-spin text-muted" />
+      </div>
 
-      <div class="flex items-center justify-between gap-3 border-t border-default pt-4 mt-auto">
-        <div class="text-sm text-muted">
-          {{ table?.tableApi?.getFilteredSelectedRowModel().rows.length || 0 }} of
-          {{ table?.tableApi?.getFilteredRowModel().rows.length || 0 }} row(s) selected.
+      <div v-else-if="status === 'error'" class="flex flex-col items-center justify-center gap-4 py-16 text-center">
+        <UIcon name="i-lucide-triangle-alert" class="size-12 text-error" />
+        <p class="text-sm text-muted">
+          No se pudieron cargar los clientes.
+        </p>
+        <UButton
+          label="Reintentar"
+          icon="i-lucide-refresh-cw"
+          color="primary"
+          variant="solid"
+          @click="refresh()"
+        />
+      </div>
+
+      <template v-else>
+        <div v-if="filteredItems.length === 0" class="flex flex-col items-center justify-center py-16 text-center">
+          <UIcon name="i-lucide-users" class="size-12 text-dimmed" />
+          <p class="mt-2 text-sm text-muted">
+            No hay clientes con esos filtros
+          </p>
         </div>
 
-        <div class="flex items-center gap-1.5">
-          <UPagination
-            :default-page="(table?.tableApi?.getState().pagination.pageIndex || 0) + 1"
-            :items-per-page="table?.tableApi?.getState().pagination.pageSize"
-            :total="table?.tableApi?.getFilteredRowModel().rows.length"
-            @update:page="(p: number) => table?.tableApi?.setPageIndex(p - 1)"
-          />
-        </div>
+        <UTable
+          v-else
+          class="shrink-0"
+          :data="filteredItems"
+          :columns="columns"
+          :ui="{
+            base: 'table-fixed border-separate border-spacing-0',
+            thead: '[&>tr]:bg-elevated/50 [&>tr]:after:content-none',
+            tbody: '[&>tr]:last:[&>td]:border-b-0',
+            th: 'py-2 first:rounded-l-lg last:rounded-r-lg border-y border-default first:border-l last:border-r',
+            td: 'border-b border-default',
+            separator: 'h-0'
+          }"
+        />
+      </template>
+
+      <div v-if="meta?.last_page > 1" class="flex items-center justify-end gap-3 border-t border-default pt-4 mt-auto">
+        <UPagination
+          :model-value="page"
+          :total="meta?.total ?? 0"
+          :items-per-page="meta?.per_page ?? 15"
+          @update:model-value="onPageChange"
+        />
       </div>
     </template>
+
+    <CustomerDetailsModal
+      v-if="selectedDetails"
+      :customer="selectedDetails"
+      :open="true"
+      @update:open="(open: boolean) => { if (!open) selectedDetails = null }"
+    />
+
+    <VerifyCustomerModal
+      v-if="selectedVerification"
+      :customer="selectedVerification"
+      :open="true"
+      @update:open="(open: boolean) => { if (!open) selectedVerification = null }"
+      @verified="refreshList(); selectedVerification = null"
+    />
+
+    <ChangeCustomerRequestModal
+      v-if="selectedChangeRequest"
+      :customer="selectedChangeRequest"
+      :open="true"
+      @update:open="(open: boolean) => { if (!open) selectedChangeRequest = null }"
+      @changed="selectedChangeRequest = null"
+    />
   </UDashboardPanel>
 </template>

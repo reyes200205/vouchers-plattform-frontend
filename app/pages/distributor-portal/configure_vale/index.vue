@@ -9,9 +9,9 @@ definePageMeta({
 })
 
 const route = useRoute()
-const { user } = useAuth()
+const { user, fetchMe } = useAuth()
 const { listBranchProducts } = useProducts()
-const { preIssueVoucher, getPreValeLimit } = useVouchers()
+const { preIssueVoucher } = useVouchers()
 
 const customerId = computed(() => {
   const raw = route.query.customerId as string | undefined
@@ -25,6 +25,15 @@ const cliente = ref({
 
 const availableCredit = computed(() => Number(user.value?.distributor?.available_credit ?? 0))
 const unlimitedCredit = computed(() => Boolean(user.value?.distributor?.unlimited_credit))
+// Regla del pre-vale: cuando la distribuidora tiene el 100% de su credito
+// disponible (o le acaban de aumentar la linea), el primer vale no puede
+// superar el 50% del disponible + tolerancia. El backend ya calcula este
+// tope (AuthController::attachPreValeMaxAmount) para que aqui solo se
+// filtre con el mismo numero, sin reimplementar la regla en el frontend.
+const preValeMaxAmount = computed(() => {
+  const raw = user.value?.distributor?.pre_vale_max_amount
+  return raw === null || raw === undefined ? null : Number(raw)
+})
 
 const loading = ref(true)
 const errorMessage = ref<string | null>(null)
@@ -54,21 +63,20 @@ async function loadProducts() {
   }
 
   try {
-    // El prevale es exclusivo del primer vale de ESTE cliente (ver
-    // FinancialCalculationService::validatePreVale en el backend), no del estado de
-    // credito de la distribuidora; lo consultamos en vez de adivinar la regla aqui,
-    // para no ofrecer productos que el backend terminaria rechazando.
-    const [result, preValeLimit] = await Promise.all([
-      listBranchProducts(branchId, { per_page: 50 }),
-      getPreValeLimit(customerId.value)
-    ])
-
-    const maxAmount = preValeLimit.is_pre_vale && preValeLimit.max_amount !== null
-      ? preValeLimit.max_amount
-      : availableCredit.value
-
+    const distributorCategoryId = user.value?.distributor?.category?.id ?? null
+    const result = await listBranchProducts(branchId, { per_page: 50 })
     products.value = result.data.filter(p =>
-      p.is_active && (unlimitedCredit.value || Number(p.principal_amount) <= maxAmount)
+      p.is_active
+      && (unlimitedCredit.value || Number(p.principal_amount) <= availableCredit.value)
+      // Un producto con categoria asignada solo lo puede pedir una distribuidora
+      // de esa misma categoria (igual que valida el backend en
+      // RequestVoucherService::assertProductMatchesCategory). Un producto sin
+      // categoria (category_id null) es generico y lo puede pedir cualquiera.
+      && (p.category_id === null || p.category_id === distributorCategoryId)
+      // Regla del pre-vale: si aplica, solo deben aparecer como elegibles los
+      // vales que no la violen (ver RequestVoucherService::execute, que
+      // rechaza la solicitud si el monto supera este tope).
+      && (preValeMaxAmount.value === null || Number(p.principal_amount) <= preValeMaxAmount.value)
     )
     selectedProductId.value = products.value[0]?.id ?? null
   } catch (e) {
@@ -79,11 +87,16 @@ async function loadProducts() {
   }
 }
 
-onMounted(() => {
+onMounted(async () => {
   if (!customerId.value) {
     navigateTo('/distributor-portal/vales')
     return
   }
+  // El usuario guardado en la cookie (comisión de categoría, crédito disponible)
+  // puede estar desactualizado si un administrador cambió esos valores después
+  // del último login. Se refresca aquí para que la vista previa del cálculo no
+  // se quede con datos viejos.
+  await fetchMe()
   loadProducts()
 })
 
@@ -93,17 +106,29 @@ const selectedProduct = computed(() =>
 
 // Replica el calculo del backend (FinancialCalculationService) solo para mostrar
 // una vista previa; el monto final y oficial lo calcula y persiste el servidor.
-function previewFortnightlyPayment(product: FinancialProduct) {
+// La utilidad de la distribuidora (comisión de su categoría) no se le cobra al
+// cliente aparte: sale de lo que ya cobra la empresa, así que se resta del
+// total antes de dividir entre quincenas. El pago quincenal se redondea
+// siempre al piso, al peso entero (nunca a los centavos ni al más cercano).
+function previewSnapshot(product: FinancialProduct) {
   const principal = Number(product.principal_amount)
   const commission = Math.round(principal * Number(product.company_commission_percentage) / 100 * 100) / 100
   const interestPerFortnight = Math.round(principal * Number(product.fortnightly_interest_percentage) / 100 * 100) / 100
   const interestTotal = Math.round(interestPerFortnight * product.number_of_fortnights * 100) / 100
-  const totalDebt = Math.round((principal + commission + Number(product.insurance_amount) + interestTotal) * 100) / 100
-  return Math.round((totalDebt / product.number_of_fortnights) * 100) / 100
+  const categoryCommissionRaw = user.value?.distributor?.category?.commission_percentage ?? 0
+  const distributorProfit = Math.round(principal * Number(categoryCommissionRaw) / 100 * 100) / 100
+  const totalDebt = Math.round((principal + commission + Number(product.insurance_amount) + interestTotal - distributorProfit) * 100) / 100
+  const fortnightlyPayment = Math.floor(totalDebt / product.number_of_fortnights)
+
+  return { totalDebt, fortnightlyPayment }
+}
+
+function previewFortnightlyPayment(product: FinancialProduct) {
+  return previewSnapshot(product).fortnightlyPayment
 }
 
 function previewTotalDebt(product: FinancialProduct) {
-  return previewFortnightlyPayment(product) * product.number_of_fortnights
+  return previewSnapshot(product).totalDebt
 }
 
 const continuar = async () => {
@@ -170,6 +195,11 @@ const volver = () => {
           Crédito disponible
           <strong>{{ unlimitedCredit ? 'Ilimitado' : `$${availableCredit.toLocaleString('es-MX')}` }}</strong>
         </div>
+
+        <p v-if="preValeMaxAmount !== null" class="state-text">
+          Por ser tu primer vale (o por un aumento de crédito reciente), solo puedes pedir hasta
+          <strong>${{ preValeMaxAmount.toLocaleString('es-MX') }}</strong>.
+        </p>
 
         <p v-if="loading" class="state-text">
           Cargando productos disponibles…

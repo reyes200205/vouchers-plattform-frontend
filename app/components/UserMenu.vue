@@ -194,6 +194,7 @@ const items = computed<DropdownMenuItem[][]>(() => ([[{
     v-model:open="isProfileOpen"
     title="Mi Perfil"
     description="Información detallada de tu cuenta"
+    :ui="{ content: 'max-w-lg' }"
   >
     <template #body>
       <div v-if="isProfileLoading && !authUser?.person?.email" class="flex flex-col items-center justify-center py-12 gap-3">

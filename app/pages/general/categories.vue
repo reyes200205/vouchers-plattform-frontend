@@ -224,7 +224,7 @@ async function onSubmit(event: FormSubmitEvent<Schema>) {
             <div class="flex items-center gap-3 text-sm">
               <span class="text-muted">
                 Comisión
-                <span class="font-semibold text-highlighted">{{ category.commission_percentage }}%</span>
+                <span class="font-semibold text-highlighted">{{ Number(category.commission_percentage) }}%</span>
               </span>
               <UBadge
                 v-if="category.is_active"
@@ -266,6 +266,7 @@ async function onSubmit(event: FormSubmitEvent<Schema>) {
     v-model:open="isEditOpen"
     :title="selectedCategory ? 'Editar categoría' : 'Nueva categoría'"
     :description="selectedCategory ? `Actualizar ${selectedCategory.name}` : 'Define la comisión de la categoría'"
+    :ui="{ content: 'max-w-lg' }"
   >
     <template #body>
       <UForm
@@ -284,7 +285,7 @@ async function onSubmit(event: FormSubmitEvent<Schema>) {
           </UFormField>
         </div>
 
-        <UFormField required label="Comisión distribuidora (%)" name="commission_percentage">
+        <UFormField required label="Comisión distribuidora (%)" name="commission_percentage" description="Utilidad de la distribuidora por quincena sobre el principal del vale.">
           <UInput
             v-model="state.commission_percentage"
             type="number"
@@ -321,6 +322,7 @@ async function onSubmit(event: FormSubmitEvent<Schema>) {
     v-model:open="isMoveOpen"
     title="Mover categoría a otra sucursal"
     :description="categoryToMove ? `La categoría ${categoryToMove.name} (${categoryToMove.code}) se moverá a la sucursal seleccionada. Las distribuidoras de la sucursal anterior conservarán la referencia.` : ''"
+    :ui="{ content: 'max-w-md' }"
   >
     <template #body>
       <div class="space-y-4">

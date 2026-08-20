@@ -78,7 +78,7 @@ async function onSubmit(event: FormSubmitEvent<Schema>) {
 </script>
 
 <template>
-  <UModal v-model:open="open" title="Nueva Sucursal" description="Agrega una nueva sucursal a la base de datos">
+  <UModal v-model:open="open" title="Nueva Sucursal" description="Agrega una nueva sucursal a la base de datos" :ui="{ content: 'max-w-xl' }">
     <UButton label="Nueva sucursal" icon="i-lucide-plus" />
 
     <template #body>

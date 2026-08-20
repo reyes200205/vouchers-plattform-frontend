@@ -52,9 +52,22 @@ export interface ApplicationVerificationRef {
   notes: string | null
   visit_date: string | null
   distance_meters: string | null
+  checklist_json: Record<string, unknown> | null
   front_photo: string | null
   id_with_person_photo: string | null
   proof_of_address_photo: string | null
+  // Solo presentes en la respuesta de CoordinadorController::show — la URL
+  // completa ya armada por el backend (ver base storage disk), no en el
+  // listado paginado de /applications.
+  front_photo_url?: string | null
+  id_with_person_photo_url?: string | null
+  proof_of_address_photo_url?: string | null
+  verifier?: { id: number, person: ApplicationPerson | null } | null
+}
+
+export interface ApplicationFamilyData {
+  applicant_age?: number
+  [key: string]: unknown
 }
 
 export interface Application {
@@ -67,6 +80,9 @@ export interface Application {
   requested_credit_limit: string | null
   initial_category_code: string | null
   rejection_reason: string | null
+  credit_bureau_result: string | null
+  prevale_approved: boolean
+  house_photos_complete: boolean
   submitted_at: string | null
   reviewed_at: string | null
   decided_at: string | null
@@ -77,6 +93,18 @@ export interface Application {
   // `assigned_verifier` (snake_case) en el JSON, no `assignedVerifier`.
   assigned_verifier: ApplicationUserRef | null
   verification: ApplicationVerificationRef | null
+  // Los siguientes solo vienen poblados en la respuesta de CoordinadorController::show
+  // (GET /applications/{id}), usada por el detalle de la Bandeja de Aprobaciones.
+  coordinator?: { id: number, person: ApplicationPerson | null } | null
+  family_data_json?: ApplicationFamilyData | null
+  external_affiliations_json?: Record<string, unknown> | null
+  vehicles_json?: Record<string, unknown>[] | null
+  id_front_path?: string | null
+  id_back_path?: string | null
+  proof_of_address_path?: string | null
+  id_front_url?: string | null
+  id_back_url?: string | null
+  proof_of_address_url?: string | null
 }
 
 export interface ApplicationPersonPayload {
@@ -179,6 +207,14 @@ export function useApplications() {
     return response.data
   }
 
+  async function getApplication(applicationId: number) {
+    const response = await $fetch<ApplicationResponse>(`${config.public.apiBase}/applications/${applicationId}`, {
+      headers: authHeaders()
+    })
+
+    return response.data
+  }
+
   async function createApplication(payload: CreateApplicationPayload) {
     const response = await $fetch<ApplicationResponse>(`${config.public.apiBase}/applications`, {
       method: 'POST',
@@ -223,7 +259,7 @@ export function useApplications() {
     return response.data
   }
 
-  return { listApplications, createApplication, assignVerifier, submitVerification, uploadVerificationPhoto }
+  return { listApplications, getApplication, createApplication, assignVerifier, submitVerification, uploadVerificationPhoto }
 }
 
 export function applicantFullName(person: ApplicationPerson | null | undefined): string {

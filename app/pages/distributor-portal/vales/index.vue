@@ -53,16 +53,7 @@ const filteredContacts = computed(() => {
   })
 })
 
-// Un cliente en EN_VERIFICACION tambien puede recibir un vale si califica como
-// prevale (la distribuidora aun no ha usado credito); el backend valida esa regla
-// al enviar la solicitud y, si no aplica, devuelve un error explicando por que.
-function isSelectable(customer: Customer) {
-  return customer.status === 'ACTIVO' || customer.status === 'EN_VERIFICACION'
-}
-
 const seleccionarContacto = (customer: Customer) => {
-  if (!isSelectable(customer)) return
-
   navigateTo({
     path: '/distributor-portal/configure_vale',
     query: {
@@ -127,7 +118,6 @@ const volver = () => {
             v-for="item in filteredContacts"
             :key="item.id"
             class="contact-item"
-            :class="{ disabled: !isSelectable(item) }"
             @click="seleccionarContacto(item)"
           >
             <div class="avatar-circle">

@@ -132,7 +132,7 @@ async function onSubmit(event: FormSubmitEvent<Schema>) {
 </script>
 
 <template>
-  <UModal v-model:open="open" title="Conciliar depósito" description="Emparejar la transacción con una relación de corte">
+  <UModal v-model:open="open" title="Conciliar depósito" description="Emparejar la transacción con una relación de corte" :ui="{ content: 'max-w-2xl' }">
     <UButton
       label="Conciliar"
       icon="i-lucide-hand-coins"
