@@ -41,7 +41,7 @@ const schema = z.object({
   city: z.string().max(120, 'Muy largo').optional(),
   state: z.string().max(120, 'Muy largo').optional(),
   postal_code: z.string().max(10, 'Muy largo').optional(),
-  username: z.string().min(3, 'Muy corto').max(80, 'Muy largo'),
+  username: z.string().email('Correo inválido').max(80, 'Muy largo'),
   password: z.string().optional().superRefine((value, ctx) => {
     if (!props.member && (!value || value.length < 8)) {
       ctx.addIssue({ code: 'custom', message: 'Mínimo 8 caracteres' })
