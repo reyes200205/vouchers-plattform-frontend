@@ -13,6 +13,7 @@ const emit = defineEmits<{ saved: [] }>()
 
 const schema = z.object({
   payment_due_days: z.coerce.number().int().min(1, 'Mínimo 1 día').optional(),
+  voucher_expiration_days: z.coerce.number().int().min(1, 'Mínimo 1 día').optional().nullable(),
   voucher_amount_step: z.coerce.number().int().refine(v => v === 100 || v === 500, 'Solo 100 o 500').optional(),
   pre_vale_max_percentage: z.coerce.string().min(1, 'Requerido').refine(v => Number(v) >= 0 && Number(v) <= 100, 'Entre 0 y 100'),
   pre_vale_tolerance_amount: z.coerce.string().min(1, 'Requerido').refine(v => Number(v) >= 0, 'Monto inválido'),
@@ -50,6 +51,7 @@ interface InsuranceTierRow {
 
 interface SettingsFormState {
   payment_due_days?: number
+  voucher_expiration_days?: number
   voucher_amount_step?: number
   pre_vale_max_percentage: string
   pre_vale_tolerance_amount: string
@@ -68,6 +70,7 @@ let tierIdCounter = 0
 
 const state = reactive<SettingsFormState>({
   payment_due_days: undefined,
+  voucher_expiration_days: undefined,
   voucher_amount_step: undefined,
   pre_vale_max_percentage: '',
   pre_vale_tolerance_amount: '',
@@ -101,6 +104,7 @@ function removeTier(id: number) {
 
 function applySettings(settings: BranchSettings) {
   state.payment_due_days = settings.payment_due_days ?? undefined
+  state.voucher_expiration_days = settings.voucher_expiration_days ?? undefined
   state.voucher_amount_step = settings.voucher_amount_step ?? undefined
   state.pre_vale_max_percentage = settings.pre_vale_max_percentage ?? ''
   state.pre_vale_tolerance_amount = settings.pre_vale_tolerance_amount ?? ''
@@ -152,6 +156,7 @@ async function onSubmit(event: FormSubmitEvent<Schema>) {
   try {
     await updateBranchSettings(props.branchId, {
       payment_due_days: event.data.payment_due_days,
+      voucher_expiration_days: event.data.voucher_expiration_days || null,
       voucher_amount_step: event.data.voucher_amount_step,
       pre_vale_max_percentage: event.data.pre_vale_max_percentage,
       pre_vale_tolerance_amount: event.data.pre_vale_tolerance_amount,
@@ -221,6 +226,10 @@ defineExpose({ refreshSettings })
         <div class="grid grid-cols-2 gap-6">
           <UFormField label="Días para pagar (pago puntual)" name="payment_due_days">
             <UInput v-model="state.payment_due_days" type="number" min="1" step="1" class="w-full" />
+          </UFormField>
+
+          <UFormField label="Días de vencimiento del vale" name="voucher_expiration_days">
+            <UInput v-model="state.voucher_expiration_days" type="number" min="1" step="1" placeholder="Sin vencimiento" class="w-full" />
           </UFormField>
 
           <UFormField label="Escalón de monto del vale" name="voucher_amount_step">

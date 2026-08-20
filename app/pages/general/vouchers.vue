@@ -1,11 +1,13 @@
 <script setup lang="ts">
+import type { VoucherStatus } from '~/composables/useVouchers'
+
 const toast = useToast()
 const { user } = useAuth()
 const { listVouchers } = useVouchers()
 
 const canDisburse = computed(() => user.value?.permissions?.includes('vouchers.disburse') ?? false)
 
-const statusFilter = ref<string | undefined>(undefined)
+const statusFilter = ref<VoucherStatus | undefined>(undefined)
 const page = ref(1)
 
 const { data, status, refresh } = await useAsyncData(
@@ -112,9 +114,16 @@ function onDisbursed() {
                       {{ item.voucher_number }}
                     </p>
                     <UBadge
-                      :color="statusColors[item.status] ?? 'neutral'"
+                      v-if="item.is_expired"
+                      color="error"
+                      variant="solid"
+                      label="VENCIDO"
+                    />
+                    <UBadge
+                      v-else
+                      :color="(item.status && statusColors[item.status]) || 'neutral'"
                       variant="subtle"
-                      :label="item.status"
+                      :label="item.status ?? undefined"
                     />
                   </div>
                   <div class="flex flex-wrap items-center gap-x-3 gap-y-0.5 text-xs text-muted">
@@ -124,6 +133,9 @@ function onDisbursed() {
                       Entregado {{ new Date(item.transferred_at).toLocaleDateString('es-MX') }}
                     </span>
                     <span v-if="item.transfer_reference">Ref: {{ item.transfer_reference }}</span>
+                    <span v-if="item.status === 'APROBADO' && item.expiration_date" :class="{ 'text-error font-medium': item.is_expired }">
+                      {{ item.is_expired ? 'Expiró' : 'Vence' }} el {{ new Date(item.expiration_date + 'T00:00:00').toLocaleDateString('es-MX') }}
+                    </span>
                   </div>
                 </div>
               </div>
@@ -139,7 +151,7 @@ function onDisbursed() {
                 </div>
 
                 <DisburseVoucherModal
-                  v-if="canDisburse && item.status === 'APROBADO'"
+                  v-if="canDisburse && item.status === 'APROBADO' && !item.is_expired"
                   :item="item"
                   @disbursed="onDisbursed"
                 />

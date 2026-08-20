@@ -38,8 +38,12 @@ export interface Voucher {
   payments_made: number
   current_balance: string
   issued_at: string | null
+  transferred_at: string | null
+  transfer_reference: string | null
   payment_due_date: string | null
   is_canceled: boolean
+  is_expired: boolean
+  expiration_date: string | null
   notes: string | null
   created_at: string | null
   customer: VoucherCustomerRef | null
@@ -141,6 +145,15 @@ export function useVouchers() {
     return { Authorization: `Bearer ${token.value}` }
   }
 
+  async function listVouchers(params: VoucherListParams = {}) {
+    const response = await $fetch<VoucherListResponse>(`${config.public.apiBase}/vouchers`, {
+      headers: authHeaders(),
+      query: params
+    })
+
+    return response.data
+  }
+
   async function listMyVouchers(params: VoucherListParams = {}) {
     const response = await $fetch<VoucherListResponse>(`${config.public.apiBase}/distributor/vouchers`, {
       headers: authHeaders(),
@@ -169,5 +182,15 @@ export function useVouchers() {
     return response.data
   }
 
-  return { listMyVouchers, listMyVoucherRequests, preIssueVoucher }
+  async function disburseVoucher(id: number, payload: { transfer_reference: string; authorized_number: string; notes?: string }) {
+    const response = await $fetch<{ success: boolean; data: Voucher }>(`${config.public.apiBase}/vouchers/${id}/disburse`, {
+      method: 'POST',
+      headers: authHeaders(),
+      body: payload
+    })
+
+    return response.data
+  }
+
+  return { listVouchers, listMyVouchers, listMyVoucherRequests, preIssueVoucher, disburseVoucher }
 }

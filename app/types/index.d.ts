@@ -276,6 +276,7 @@ export interface BranchSettings {
   pre_vale_max_percentage: string | null
   pre_vale_tolerance_amount: string | null
   point_value_mxn: string | null
+  voucher_expiration_days: number | null
 }
 
 export interface PointSettings {
@@ -440,6 +441,8 @@ export interface Voucher {
   issued_at: string | null
   transferred_at: string | null
   payment_due_date: string | null
+  is_expired: boolean
+  expiration_date: string | null
   notes: string | null
   customer: (Pick<Customer, 'id' | 'customer_code'> & { person: Person | null }) | null
   distributor?: { id: number, distributor_number: string } | null

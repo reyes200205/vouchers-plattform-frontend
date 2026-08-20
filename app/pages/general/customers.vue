@@ -96,9 +96,9 @@ const columns: TableColumn<Customer>[] = [
     accessorKey: 'status',
     header: 'Estado',
     cell: ({ row }) => h(UBadge, {
-      color: statusColors[row.original.status],
+      color: row.original.status ? statusColors[row.original.status] : 'neutral',
       variant: 'subtle',
-      label: row.original.status
+      label: row.original.status ?? ''
     })
   },
   {
