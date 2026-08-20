@@ -1,4 +1,5 @@
 import type { CustomerPerson } from '~/composables/useCustomers'
+import type { PaginatedData, PendingVoucherRequest, Voucher as VoucherRecord } from '~/types'
 
 export type VoucherStatus
   = | 'BORRADOR'
@@ -133,12 +134,106 @@ export interface PreIssueVoucherPayload {
   notes?: string
 }
 
+// Listado general de vales emitidos (cajera/coordinador/gerente, vía GET
+// /vouchers) y entrega del vale por la cajera (POST /vouchers/{id}/disburse).
+// Usa el tipo Voucher "completo" de ~/types (incluye distribuidora y estado
+// de verificación del cliente), a diferencia del Voucher local de este
+// archivo que es el que consume el portal de la distribuidora.
+interface VouchersListResponse {
+  success: boolean
+  message: string
+  data: PaginatedData<VoucherRecord>
+}
+
+interface VoucherRecordResponse {
+  success: boolean
+  message: string
+  data: VoucherRecord
+}
+
+export interface DisburseVoucherPayload {
+  transfer_reference: string
+  authorized_number: string
+  notes?: string
+}
+
+// Apartado "Solicitudes de vale" (gerentes): listado y decision de las
+// solicitudes que las distribuidoras mandan desde "Configurar vale", antes
+// de que se conviertan en un Voucher real (ver PendingVoucherRequestResource
+// / CoordinatorVoucherController::pendingRequests en el backend).
+interface PendingVoucherRequestsResponse {
+  success: boolean
+  message: string
+  data: PaginatedData<PendingVoucherRequest>
+}
+
+interface DecisionResponse {
+  success: boolean
+  message: string
+  data: unknown
+}
+
 export function useVouchers() {
   const config = useRuntimeConfig()
   const { token } = useAuth()
 
   function authHeaders() {
     return { Authorization: `Bearer ${token.value}` }
+  }
+
+  async function listVouchers(params?: { status?: string, page?: number }) {
+    const search = new URLSearchParams()
+    if (params?.status) search.set('status', params.status)
+    if (params?.page) search.set('page', String(params.page))
+    search.set('per_page', '15')
+
+    const response = await $fetch<VouchersListResponse>(`${config.public.apiBase}/vouchers?${search.toString()}`, {
+      headers: authHeaders()
+    })
+
+    return response.data
+  }
+
+  async function disburseVoucher(id: number, payload: DisburseVoucherPayload) {
+    const response = await $fetch<VoucherRecordResponse>(`${config.public.apiBase}/vouchers/${id}/disburse`, {
+      method: 'POST',
+      headers: authHeaders(),
+      body: payload
+    })
+
+    return response.data
+  }
+
+  async function listPendingVoucherRequests(params?: { page?: number }) {
+    const search = new URLSearchParams()
+    if (params?.page) search.set('page', String(params.page))
+    search.set('per_page', '15')
+
+    const response = await $fetch<PendingVoucherRequestsResponse>(`${config.public.apiBase}/voucher-requests?${search.toString()}`, {
+      headers: authHeaders()
+    })
+
+    return response.data
+  }
+
+  async function approveVoucherRequest(id: number, payload: { notes?: string } = {}) {
+    const response = await $fetch<DecisionResponse>(`${config.public.apiBase}/voucher-requests/${id}/approve`, {
+      method: 'POST',
+      headers: authHeaders(),
+      body: payload
+    })
+
+    return response.data
+  }
+
+  async function rejectVoucherRequest(id: number, payload: { rejection_reason: string }) {
+    const response = await $fetch<DecisionResponse>(`${config.public.apiBase}/voucher-requests/${id}/reject`, {
+      method: 'POST',
+      headers: authHeaders(),
+      body: payload
+    })
+
+    return response.data
   }
 
   async function listMyVouchers(params: VoucherListParams = {}) {
@@ -169,5 +264,14 @@ export function useVouchers() {
     return response.data
   }
 
-  return { listMyVouchers, listMyVoucherRequests, preIssueVoucher }
+  return {
+    listMyVouchers,
+    listMyVoucherRequests,
+    preIssueVoucher,
+    listVouchers,
+    disburseVoucher,
+    listPendingVoucherRequests,
+    approveVoucherRequest,
+    rejectVoucherRequest
+  }
 }

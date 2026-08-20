@@ -7,7 +7,7 @@ import type { Branch, Cutoff, CutoffRelation, CutoffStatus } from '~/types'
 const toast = useToast()
 const { user } = useAuth()
 const { listBranches } = useBranches()
-const { listCutoffs, getCutoff, reprocessCutoff } = useReconciliations()
+const { listCutoffs, getCutoff, reprocessCutoff, closeCutoff } = useReconciliations()
 
 const canManage = computed(() => user.value?.permissions?.includes('cutoffs.manage') ?? false)
 const isGeneralManager = computed(() => user.value?.permissions?.includes('branches.manage') ?? false)
@@ -120,22 +120,57 @@ function openRelationDetail(relation: CutoffRelation) {
 }
 
 const reprocessingId = ref<number | null>(null)
+const closingId = ref<number | null>(null)
+
+async function refreshActiveCutoff(cutoffId: number) {
+  if (isRelationsOpen.value && activeCutoff.value?.id === cutoffId) {
+    activeCutoff.value = await getCutoff(cutoffId)
+  }
+}
 
 async function onReprocess(cutoff: Cutoff) {
   reprocessingId.value = cutoff.id
   try {
-    const newCutoff = await reprocessCutoff(cutoff.id)
+    const updated = await reprocessCutoff(cutoff.id)
+    const before = cutoff.relations_count ?? 0
+    const after = updated.relations_count ?? updated.relations?.length ?? before
+    const newCount = Math.max(0, after - before)
     toast.add({
       title: 'Corte reprocesado',
-      description: `Se generó el corte #${newCutoff.id} en sustitución del #${cutoff.id}.`,
+      description: newCount > 0
+        ? `Se encontraron ${newCount} relación(es) nueva(s) en el corte #${cutoff.id}.`
+        : `El corte #${cutoff.id} se revisó de nuevo; no hay relaciones nuevas.`,
       color: 'success'
     })
     await refresh()
+    await refreshActiveCutoff(cutoff.id)
   } catch {
     toast.add({ title: 'Error', description: 'No se pudo reprocesar el corte.', color: 'error' })
   } finally {
     reprocessingId.value = null
   }
+}
+
+async function onClose(cutoff: Cutoff) {
+  closingId.value = cutoff.id
+  try {
+    await closeCutoff(cutoff.id)
+    toast.add({
+      title: 'Corte cerrado',
+      description: `El corte #${cutoff.id} quedó cerrado; las relaciones sin pagar quedaron vencidas.`,
+      color: 'success'
+    })
+    await refresh()
+    await refreshActiveCutoff(cutoff.id)
+  } catch {
+    toast.add({ title: 'Error', description: 'No se pudo cerrar el corte.', color: 'error' })
+  } finally {
+    closingId.value = null
+  }
+}
+
+function canClose(cutoff: Cutoff | null | undefined) {
+  return !!cutoff && canManage.value && cutoff.status !== 'PROGRAMADO' && cutoff.status !== 'CERRADO'
 }
 
 function getCutoffItems(cutoff: Cutoff): DropdownMenuItem[] {
@@ -152,6 +187,14 @@ function getCutoffItems(cutoff: Cutoff): DropdownMenuItem[] {
       label: 'Reprocesar',
       icon: 'i-lucide-refresh-cw',
       onSelect: () => onReprocess(cutoff)
+    })
+  }
+
+  if (canClose(cutoff)) {
+    menuItems.push({
+      label: 'Cerrar corte',
+      icon: 'i-lucide-lock',
+      onSelect: () => onClose(cutoff)
     })
   }
 
@@ -262,7 +305,7 @@ function getCutoffItems(cutoff: Cutoff): DropdownMenuItem[] {
                   icon="i-lucide-ellipsis-vertical"
                   color="neutral"
                   variant="ghost"
-                  :loading="reprocessingId === cutoff.id"
+                  :loading="reprocessingId === cutoff.id || closingId === cutoff.id"
                   aria-label="Acciones"
                 />
               </UDropdownMenu>
@@ -288,34 +331,47 @@ function getCutoffItems(cutoff: Cutoff): DropdownMenuItem[] {
         <UIcon name="i-lucide-loader-circle" class="size-8 animate-spin text-muted" />
       </div>
 
-      <div v-else-if="!activeCutoff?.relations?.length" class="py-12 text-center text-sm text-muted">
-        Este corte no tiene relaciones generadas.
-      </div>
+      <template v-else>
+        <div v-if="canClose(activeCutoff)" class="mb-4 flex justify-end">
+          <UButton
+            label="Cerrar corte"
+            icon="i-lucide-lock"
+            color="error"
+            variant="soft"
+            :loading="!!activeCutoff && closingId === activeCutoff.id"
+            @click="activeCutoff && onClose(activeCutoff)"
+          />
+        </div>
 
-      <div v-else class="divide-y divide-default">
-        <div
-          v-for="relation in activeCutoff.relations"
-          :key="relation.id"
-          class="flex cursor-pointer items-center justify-between gap-3 py-3 hover:bg-elevated/50"
-          @click="openRelationDetail(relation)"
-        >
-          <div class="min-w-0">
-            <p class="truncate font-medium text-highlighted">
-              {{ relation.distributor?.business_name ?? `Distribuidora #${relation.distributor_id}` }}
-            </p>
-            <p class="text-xs text-muted">
-              {{ relation.relation_number }} · Ref: {{ relation.payment_reference ?? '—' }}
-            </p>
-          </div>
+        <div v-if="!activeCutoff?.relations?.length" class="py-12 text-center text-sm text-muted">
+          Este corte no tiene relaciones generadas.
+        </div>
 
-          <div class="flex items-center gap-3">
-            <span class="font-semibold text-highlighted">
-              {{ money.format(Number(relation.total_amount_due)) }}
-            </span>
-            <UBadge v-if="relation.status" variant="subtle" :label="relation.status" />
+        <div v-else class="divide-y divide-default">
+          <div
+            v-for="relation in activeCutoff.relations"
+            :key="relation.id"
+            class="flex cursor-pointer items-center justify-between gap-3 py-3 hover:bg-elevated/50"
+            @click="openRelationDetail(relation)"
+          >
+            <div class="min-w-0">
+              <p class="truncate font-medium text-highlighted">
+                {{ relation.distributor?.business_name ?? `Distribuidora #${relation.distributor_id}` }}
+              </p>
+              <p class="text-xs text-muted">
+                {{ relation.relation_number }} · Ref: {{ relation.payment_reference ?? '—' }}
+              </p>
+            </div>
+
+            <div class="flex items-center gap-3">
+              <span class="font-semibold text-highlighted">
+                {{ money.format(Number(relation.total_amount_due)) }}
+              </span>
+              <UBadge v-if="relation.status" variant="subtle" :label="relation.status" />
+            </div>
           </div>
         </div>
-      </div>
+      </template>
     </template>
   </UModal>
 

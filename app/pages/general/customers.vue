@@ -277,14 +277,14 @@ const selectedDetails = ref<Customer | null>(null)
       </div>
     </template>
 
-    <CustomerDetailsModal
+    <CustomersCustomerDetailsModal
       v-if="selectedDetails"
       :customer="selectedDetails"
       :open="true"
       @update:open="(open: boolean) => { if (!open) selectedDetails = null }"
     />
 
-    <VerifyCustomerModal
+    <CustomersVerifyCustomerModal
       v-if="selectedVerification"
       :customer="selectedVerification"
       :open="true"
@@ -292,7 +292,7 @@ const selectedDetails = ref<Customer | null>(null)
       @verified="refreshList(); selectedVerification = null"
     />
 
-    <ChangeCustomerRequestModal
+    <CustomersChangeCustomerRequestModal
       v-if="selectedChangeRequest"
       :customer="selectedChangeRequest"
       :open="true"

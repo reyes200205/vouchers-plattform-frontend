@@ -215,6 +215,29 @@ export interface InboxData {
   redemptions?: InboxSection<InboxRedemption>
 }
 
+// Fila de la tabla del apartado "Solicitudes de vale" (gerentes), separado
+// de la Bandeja de Aprobaciones y de "Vales emitidos" (cajera).
+export interface PendingVoucherRequest {
+  id: number
+  status: string
+  branch_id: number
+  branch_name: string | null
+  distributor_id: number
+  distributor_name: string | null
+  distributor_number: string | null
+  customer_name: string | null
+  customer_code: string | null
+  // Objeto completo del cliente (mismo shape que usan customers.vue y sus
+  // modales de verificar/detalles/solicitar cambio) para revisar sus datos
+  // y, si es su primer vale, verificarlo sin salir del modal de "Decidir".
+  customer: Customer | null
+  financial_product_name: string | null
+  requested_amount: string
+  is_pre_vale: boolean
+  rejection_reason: string | null
+  created_at: string
+}
+
 export interface InsuranceTier {
   min_amount: number | string
   max_amount: number | string
@@ -441,8 +464,8 @@ export interface Voucher {
   transferred_at: string | null
   payment_due_date: string | null
   notes: string | null
-  customer: (Pick<Customer, 'id' | 'customer_code'> & { person: Person | null }) | null
-  distributor?: { id: number, distributor_number: string } | null
+  customer: (Pick<Customer, 'id' | 'customer_code' | 'status' | 'verified_at'> & { person: Person | null }) | null
+  distributor?: { id: number, distributor_number: string, person: Person | null } | null
   financial_product?: { id: number, name: string, code: string } | null
   created_at: string
 }
@@ -526,6 +549,7 @@ export interface Cutoff {
   branch_id: number
   cutoff_type: string | null
   base_day_of_month: number | null
+  period_start: string | null
   base_time: string | null
   scheduled_at: string | null
   executed_at: string | null
