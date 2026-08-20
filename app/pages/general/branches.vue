@@ -83,51 +83,11 @@ function getRowItems(row: Row<Branch>) {
     }
   )
 
-  if (canManage.value) {
-    items.push(
-      {
-        type: 'separator'
-      },
-      {
-        label: 'Eliminar sucursal',
-        icon: 'i-lucide-trash',
-        color: 'error',
-        onSelect() {
-          toast.add({
-            title: 'Sucursal eliminada',
-            description: 'La sucursal ha sido eliminada con éxito.'
-          })
-        }
-      }
-    )
-  }
-
   return items
 }
 
 const columns = computed<TableColumn<Branch>[]>(() => {
   const list: TableColumn<Branch>[] = []
-
-  if (canManage.value) {
-    list.push({
-      id: 'select',
-      header: ({ table }) =>
-        h(UCheckbox, {
-          'modelValue': table.getIsSomePageRowsSelected()
-            ? 'indeterminate'
-            : table.getIsAllPageRowsSelected(),
-          'onUpdate:modelValue': (value: boolean | 'indeterminate') =>
-            table.toggleAllPageRowsSelected(!!value),
-          'ariaLabel': 'Select all'
-        }),
-      cell: ({ row }) =>
-        h(UCheckbox, {
-          'modelValue': row.getIsSelected(),
-          'onUpdate:modelValue': (value: boolean | 'indeterminate') => row.toggleSelected(!!value),
-          'ariaLabel': 'Select row'
-        })
-    })
-  }
 
   list.push(
     {
@@ -271,21 +231,6 @@ const pagination = ref({
         />
 
         <div class="flex flex-wrap items-center gap-1.5">
-          <BranchesDeleteModal v-if="canManage" :count="table?.tableApi?.getFilteredSelectedRowModel().rows.length">
-            <UButton
-              v-if="table?.tableApi?.getFilteredSelectedRowModel().rows.length"
-              label="Eliminar"
-              color="error"
-              variant="subtle"
-              icon="i-lucide-trash"
-            >
-              <template #trailing>
-                <UKbd>
-                  {{ table?.tableApi?.getFilteredSelectedRowModel().rows.length }}
-                </UKbd>
-              </template>
-            </UButton>
-          </BranchesDeleteModal>
 
           <USelect
             v-model="statusFilter"
@@ -350,12 +295,7 @@ const pagination = ref({
         }"
       />
 
-      <div class="flex items-center justify-between gap-3 border-t border-default pt-4 mt-auto">
-        <div class="text-sm text-muted">
-          {{ table?.tableApi?.getFilteredSelectedRowModel().rows.length || 0 }} de
-          {{ table?.tableApi?.getFilteredRowModel().rows.length || 0 }} fila(s) seleccionadas.
-        </div>
-
+      <div class="flex items-center justify-end gap-3 border-t border-default pt-4 mt-auto">
         <div class="flex items-center gap-1.5">
           <UPagination
             :default-page="(table?.tableApi?.getState().pagination.pageIndex || 0) + 1"
