@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
-import { useVouchers, type Voucher } from '~/composables/useVouchers'
+import { useVouchers } from '~/composables/useVouchers'
 import { customerFullName } from '~/composables/useCustomers'
 
 definePageMeta({
@@ -8,13 +8,24 @@ definePageMeta({
 })
 
 const { user, logout } = useAuth()
-const { listMyVouchers } = useVouchers()
+const { listMyVouchers, listMyVoucherRequests } = useVouchers()
 
 const loading = ref(true)
 const errorMessage = ref<string | null>(null)
-const vouchers = ref<Voucher[]>([])
+
+interface VoucherRow {
+  key: string
+  customerName: string
+  amount: number
+  status: string
+  createdAt: string | null
+}
+
+const rows = ref<VoucherRow[]>([])
 
 const statusLabels: Record<string, string> = {
+  PENDIENTE: 'Pendiente de aprobación',
+  RECHAZADO: 'Rechazado',
   BORRADOR: 'Borrador',
   APROBADO: 'Aprobado',
   TRANSFERIDO: 'Transferido',
@@ -33,8 +44,36 @@ async function loadVouchers() {
   errorMessage.value = null
 
   try {
-    const result = await listMyVouchers({ per_page: 20 })
-    vouchers.value = result.data
+    const [vouchersResult, requestsResult] = await Promise.all([
+      listMyVouchers({ per_page: 20 }),
+      listMyVoucherRequests({ per_page: 20 })
+    ])
+
+    const voucherRows: VoucherRow[] = vouchersResult.data.map(v => ({
+      key: `voucher-${v.id}`,
+      customerName: customerFullName(v.customer?.person),
+      amount: Number(v.amount),
+      status: v.status ?? 'BORRADOR',
+      createdAt: v.created_at
+    }))
+
+    // Las solicitudes ya aprobadas se materializaron en un Voucher (arriba); solo
+    // agregamos las que aun no tienen un vale real, para no duplicar la fila.
+    const requestRows: VoucherRow[] = requestsResult.data
+      .filter(r => r.status === 'PENDIENTE' || r.status === 'RECHAZADO')
+      .map(r => ({
+        key: `request-${r.id}`,
+        customerName: customerFullName(r.customer?.person),
+        amount: Number(r.requested_amount),
+        status: r.status,
+        createdAt: r.created_at
+      }))
+
+    rows.value = [...voucherRows, ...requestRows].sort((a, b) => {
+      const dateA = a.createdAt ? new Date(a.createdAt).getTime() : 0
+      const dateB = b.createdAt ? new Date(b.createdAt).getTime() : 0
+      return dateB - dateA
+    })
   } catch (e) {
     console.error(e)
     errorMessage.value = 'No se pudieron cargar tus vales.'
@@ -112,25 +151,25 @@ const cerrarSesion = async () => {
           <p v-else-if="errorMessage" class="state-text error">
             {{ errorMessage }}
           </p>
-          <p v-else-if="vouchers.length === 0" class="state-text">
+          <p v-else-if="rows.length === 0" class="state-text">
             Todavía no tienes vales emitidos.
           </p>
 
           <div v-else class="voucher-list">
-            <div v-for="voucher in vouchers" :key="voucher.id" class="voucher-item">
+            <div v-for="row in rows" :key="row.key" class="voucher-item">
               <div class="voucher-avatar">
                 👤
               </div>
               <div class="voucher-info">
                 <h3 class="voucher-name">
-                  {{ customerFullName(voucher.customer?.person) }}
+                  {{ row.customerName }}
                 </h3>
                 <p class="voucher-detail">
-                  ${{ Number(voucher.amount).toLocaleString('es-MX') }} · {{ voucher.total_fortnights }} quincenas
+                  ${{ row.amount.toLocaleString('es-MX') }}
                 </p>
               </div>
-              <span class="status-badge" :class="voucher.status?.toLowerCase()">
-                {{ statusLabels[voucher.status ?? ''] ?? voucher.status }}
+              <span class="status-badge" :class="row.status.toLowerCase()">
+                {{ statusLabels[row.status] ?? row.status }}
               </span>
             </div>
           </div>
@@ -356,14 +395,16 @@ const cerrarSesion = async () => {
 
 .status-badge.moroso,
 .status-badge.reclamado,
-.status-badge.cancelado {
+.status-badge.cancelado,
+.status-badge.rechazado {
   background-color: #fee2e2;
   color: #991b1b;
 }
 
 .status-badge.borrador,
 .status-badge.transferido,
-.status-badge.pago_parcial {
+.status-badge.pago_parcial,
+.status-badge.pendiente {
   background-color: #fef3c7;
   color: #92400e;
 }

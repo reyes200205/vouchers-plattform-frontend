@@ -11,7 +11,7 @@ definePageMeta({
 const route = useRoute()
 const { user } = useAuth()
 const { listBranchProducts } = useProducts()
-const { preIssueVoucher } = useVouchers()
+const { preIssueVoucher, getPreValeLimit } = useVouchers()
 
 const customerId = computed(() => {
   const raw = route.query.customerId as string | undefined
@@ -47,10 +47,28 @@ async function loadProducts() {
     return
   }
 
+  if (!customerId.value) {
+    errorMessage.value = 'No se encontró el cliente seleccionado.'
+    loading.value = false
+    return
+  }
+
   try {
-    const result = await listBranchProducts(branchId, { per_page: 50 })
+    // El prevale es exclusivo del primer vale de ESTE cliente (ver
+    // FinancialCalculationService::validatePreVale en el backend), no del estado de
+    // credito de la distribuidora; lo consultamos en vez de adivinar la regla aqui,
+    // para no ofrecer productos que el backend terminaria rechazando.
+    const [result, preValeLimit] = await Promise.all([
+      listBranchProducts(branchId, { per_page: 50 }),
+      getPreValeLimit(customerId.value)
+    ])
+
+    const maxAmount = preValeLimit.is_pre_vale && preValeLimit.max_amount !== null
+      ? preValeLimit.max_amount
+      : availableCredit.value
+
     products.value = result.data.filter(p =>
-      p.is_active && (unlimitedCredit.value || Number(p.principal_amount) <= availableCredit.value)
+      p.is_active && (unlimitedCredit.value || Number(p.principal_amount) <= maxAmount)
     )
     selectedProductId.value = products.value[0]?.id ?? null
   } catch (e) {

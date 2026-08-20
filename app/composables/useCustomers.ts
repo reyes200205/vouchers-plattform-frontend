@@ -32,9 +32,6 @@ export interface Customer {
   status: CustomerStatus | null
   verified_at: string | null
   verified_by_user_id: number | null
-  bank_account: string | null
-  bank_clabe: string | null
-  account_holder_name: string | null
   notes: string | null
   person: CustomerPerson | null
   branch: CustomerBranchRef | null
@@ -65,9 +62,6 @@ export interface CreateCustomerPersonPayload {
 
 export interface CreateCustomerPayload {
   person: CreateCustomerPersonPayload
-  bank_account?: string
-  bank_clabe?: string
-  account_holder_name?: string
   notes?: string
 }
 

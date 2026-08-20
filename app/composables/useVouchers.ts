@@ -107,10 +107,41 @@ interface VoucherRequestResponse {
   data: VoucherRequest
 }
 
+export interface VoucherRequestListParams {
+  status?: VoucherRequestStatus
+  per_page?: number
+  page?: number
+}
+
+interface VoucherRequestListResponse {
+  success: boolean
+  message: string
+  data: {
+    data: VoucherRequest[]
+    meta: {
+      current_page: number
+      last_page: number
+      per_page: number
+      total: number
+    }
+  }
+}
+
 export interface PreIssueVoucherPayload {
   customer_id: number
   financial_product_id: number
   notes?: string
+}
+
+export interface PreValeLimit {
+  is_pre_vale: boolean
+  max_amount: number | null
+}
+
+interface PreValeLimitResponse {
+  success: boolean
+  message: string
+  data: PreValeLimit
 }
 
 export function useVouchers() {
@@ -130,6 +161,15 @@ export function useVouchers() {
     return response.data
   }
 
+  async function listMyVoucherRequests(params: VoucherRequestListParams = {}) {
+    const response = await $fetch<VoucherRequestListResponse>(`${config.public.apiBase}/distributor/voucher-requests`, {
+      headers: authHeaders(),
+      query: params
+    })
+
+    return response.data
+  }
+
   async function preIssueVoucher(payload: PreIssueVoucherPayload) {
     const response = await $fetch<VoucherRequestResponse>(`${config.public.apiBase}/vouchers`, {
       method: 'POST',
@@ -140,5 +180,14 @@ export function useVouchers() {
     return response.data
   }
 
-  return { listMyVouchers, preIssueVoucher }
+  async function getPreValeLimit(customerId: number) {
+    const response = await $fetch<PreValeLimitResponse>(`${config.public.apiBase}/distributor/pre-vale-limit`, {
+      headers: authHeaders(),
+      query: { customer_id: customerId }
+    })
+
+    return response.data
+  }
+
+  return { listMyVouchers, listMyVoucherRequests, preIssueVoucher, getPreValeLimit }
 }
