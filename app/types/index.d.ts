@@ -265,6 +265,9 @@ export interface BranchSettings {
   payment_frequency_days: number | null
   payment_due_days: number | null
   insurance_rates: InsuranceTier[] | null
+  opening_commission_percentage: string | null
+  biweekly_interest_percentage: string | null
+  late_payment_penalty_amount: string | null
   auto_increase_threshold: string | null
   minimum_score_increase_percentage: string | null
   category_settings: Record<string, unknown> | null
@@ -305,6 +308,42 @@ export interface BankTransaction {
   reconciliation: BankTransactionReconciliation | null
 }
 
+export interface ReconciliationDistributorPayment {
+  id: number
+  cutoff_relation_id: number
+  distributor_id: number
+  amount: string
+  reported_reference: string | null
+  status: string | null
+}
+
+export interface Reconciliation {
+  id: number
+  distributor_payment_id: number
+  bank_transaction_id: number
+  reconciled_by_user_id: number | null
+  verified_by_user_id: number | null
+  verified_at: string | null
+  reconciled_at: string | null
+  reconciled_amount: string
+  amount_difference: string
+  status: ReconciliationStatus
+  notes: string | null
+  distributor_payment: ReconciliationDistributorPayment | null
+}
+
+export interface BankImportResult {
+  import: {
+    id: number
+    filename: string
+    row_count: number
+    error_count: number
+    errors_json: string | null
+    status: string
+  }
+  auto_matched: number
+}
+
 export interface PaginatedData<T> {
   data: T[]
   links: { url: string | null, label: string, active: boolean }[]
@@ -322,16 +361,164 @@ export interface CutoffRelationDistributor {
   business_name: string
 }
 
+export interface Person {
+  id: number
+  first_name: string | null
+  middle_name: string | null
+  last_name: string | null
+  second_last_name: string | null
+  curp: string | null
+  rfc: string | null
+  home_phone: string | null
+  mobile_phone: string | null
+  email: string | null
+  street: string | null
+  external_number: string | null
+  neighborhood: string | null
+  city: string | null
+  state: string | null
+  postal_code: string | null
+}
+
+export type CustomerStatus = 'EN_VERIFICACION' | 'ACTIVO' | 'BLOQUEADO' | 'MOROSO' | 'INACTIVO'
+
+export interface Customer {
+  id: number
+  customer_code: string
+  status: CustomerStatus
+  verified_at: string | null
+  verified_by_user_id: number | null
+  bank_account: string | null
+  bank_clabe: string | null
+  account_holder_name: string | null
+  notes: string | null
+  person: Person | null
+  branch: Branch | null
+  distributors: unknown[] | null
+  created_at: string | null
+  updated_at: string | null
+}
+
+export type CustomerChangeRequestStatus = 'PENDIENTE' | 'APROBADA' | 'RECHAZADA'
+export type CustomerChangeType = 'IDENTITY' | 'CONTACT' | 'EVIDENCE'
+
+export interface CustomerChangeRequest {
+  id: number
+  customer_id: number
+  change_type: CustomerChangeType | null
+  old_values: Record<string, string> | null
+  new_values: Record<string, string> | null
+  evidence: string[] | null
+  status: CustomerChangeRequestStatus | null
+  rejection_reason: string | null
+  applied_at: string | null
+  requested_by_user_id: number | null
+  approved_by_user_id: number | null
+  created_at: string | null
+  updated_at: string | null
+  customer: (Pick<Customer, 'id' | 'customer_code' | 'status'> & { person: Person | null }) | null
+}
+
+export type VoucherStatus = 'BORRADOR' | 'APROBADO' | 'TRANSFERIDO' | 'ACTIVO' | 'PAGO_PARCIAL' | 'PAGADO' | 'LIQUIDADO' | 'MOROSO' | 'RECLAMADO' | 'CANCELADO' | 'REVERSADO'
+
+export interface Voucher {
+  id: number
+  voucher_number: string
+  distributor_id: number
+  customer_id: number
+  financial_product_id: number
+  branch_id: number
+  status: VoucherStatus
+  amount: string
+  total_debt_amount: string
+  late_fee_amount_snapshot: string
+  fortnightly_payment_amount: string
+  total_fortnights: number
+  payments_made: number
+  current_balance: string
+  transfer_reference: string | null
+  issued_at: string | null
+  transferred_at: string | null
+  payment_due_date: string | null
+  notes: string | null
+  customer: (Pick<Customer, 'id' | 'customer_code'> & { person: Person | null }) | null
+  distributor?: { id: number, distributor_number: string } | null
+  financial_product?: { id: number, name: string, code: string } | null
+  created_at: string
+}
+
+export type PaymentMethod = 'EFECTIVO' | 'TRANSFERENCIA'
+
+export interface CustomerPayment {
+  id: number
+  voucher_id: number
+  customer_id: number
+  distributor_id: number
+  collected_by_user_id: number
+  payment_date: string | null
+  amount: string
+  payment_method: PaymentMethod | null
+  is_partial: boolean
+  affects_points: boolean
+  notes: string | null
+  reversed_at: string | null
+  reversed_by_user_id: number | null
+  reversal_reason: string | null
+  created_at: string
+  voucher?: {
+    id: number
+    voucher_number: string
+    status: VoucherStatus
+    current_balance: string
+  }
+}
+
+export type CutoffStatus = 'PROGRAMADO' | 'EJECUTADO' | 'CERRADO' | 'REPROCESADO'
+export type CutoffRelationStatus = 'GENERADA' | 'PAGADA' | 'PARCIAL' | 'VENCIDA' | 'CERRADA'
+
+export interface CutoffRelationItem {
+  id: number
+  cutoff_relation_id: number
+  voucher_id: number
+  customer_id: number
+  product_name_snapshot: string | null
+  payments_made: number
+  total_payments: number
+  is_late_payment: boolean
+  installment_number: number | null
+  accumulated_late_installments: number | null
+  commission_amount: string
+  payment_amount: string
+  late_fee_amount: string
+  line_total_amount: string
+  previous_paid_amount: string | null
+  origin_cutoff_id: number | null
+  origin_relation_id: number | null
+}
+
 export interface CutoffRelation {
   id: number
   cutoff_id: number
   distributor_id: number
+  previous_relation_id: number | null
   relation_number: string
   payment_reference: string | null
   payment_due_date: string | null
+  early_payment_start_date: string | null
+  early_payment_end_date: string | null
+  credit_limit_snapshot: string | null
+  available_credit_snapshot: string | null
+  points_snapshot: number | null
+  total_commission: string | null
+  total_payment: string | null
+  total_late_fees: string | null
+  total_carryover_received: string | null
   total_amount_due: string
-  status: string | null
+  status: CutoffRelationStatus | null
+  closed_by_carryover_at: string | null
+  generated_at: string | null
   distributor: CutoffRelationDistributor | null
+  items?: CutoffRelationItem[]
 }
 
 export interface Cutoff {
@@ -342,7 +529,10 @@ export interface Cutoff {
   base_time: string | null
   scheduled_at: string | null
   executed_at: string | null
-  status: string | null
+  status: CutoffStatus | null
+  config_snapshot_json: Record<string, unknown> | null
+  notes: string | null
+  created_at?: string
   relations_count?: number
   total_amount_due?: number
   relations?: CutoffRelation[]

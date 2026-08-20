@@ -10,6 +10,9 @@ const props = defineProps<{
   branchId: number | undefined
   insuranceTiers: InsuranceTier[] | null
   pointValueMxn?: string
+  defaultInterestPercentage?: string
+  defaultLateFeeAmount?: string
+  defaultCommissionPercentage?: string
 }>()
 
 const open = defineModel<boolean>('open', { default: false })
@@ -27,6 +30,9 @@ const schema = z.object({
     }
   }),
   insurance_amount: z.coerce.string().optional(),
+  company_commission_percentage: z.coerce.string().optional(),
+  fortnightly_interest_percentage: z.coerce.string().optional(),
+  late_fee_amount: z.coerce.string().optional(),
   is_active: z.boolean()
 })
 
@@ -44,6 +50,9 @@ const state = reactive<Partial<Schema>>({
   number_of_fortnights: undefined,
   category_id: undefined,
   insurance_amount: '',
+  company_commission_percentage: '',
+  fortnightly_interest_percentage: '',
+  late_fee_amount: '',
   is_active: true
 })
 
@@ -56,6 +65,9 @@ watch(open, () => {
     state.number_of_fortnights = props.product.number_of_fortnights
     state.category_id = String(props.product.category_id ?? '')
     state.insurance_amount = String(Number(props.product.insurance_amount))
+    state.company_commission_percentage = String(Number(props.product.company_commission_percentage))
+    state.fortnightly_interest_percentage = String(Number(props.product.fortnightly_interest_percentage))
+    state.late_fee_amount = String(Number(props.product.late_fee_amount))
     state.is_active = props.product.is_active
   } else if (props.cloneTemplate) {
     state.code = ''
@@ -65,6 +77,9 @@ watch(open, () => {
     state.number_of_fortnights = props.cloneTemplate.number_of_fortnights
     state.category_id = String(props.cloneTemplate.category_id ?? '')
     state.insurance_amount = String(Number(props.cloneTemplate.insurance_amount))
+    state.company_commission_percentage = String(Number(props.cloneTemplate.company_commission_percentage))
+    state.fortnightly_interest_percentage = String(Number(props.cloneTemplate.fortnightly_interest_percentage))
+    state.late_fee_amount = String(Number(props.cloneTemplate.late_fee_amount))
     state.is_active = true
   } else {
     state.code = ''
@@ -74,6 +89,9 @@ watch(open, () => {
     state.number_of_fortnights = undefined
     state.category_id = undefined
     state.insurance_amount = ''
+    state.company_commission_percentage = ''
+    state.fortnightly_interest_percentage = ''
+    state.late_fee_amount = ''
     state.is_active = true
   }
 }, { immediate: true })
@@ -114,7 +132,7 @@ const autoInsurance = computed(() => {
   const tier = props.insuranceTiers.find(t => {
     const min = Number(t.min_amount)
     const max = Number(t.max_amount)
-    return principal.value >= min && principal.value < max
+    return principal.value >= min && principal.value <= max
   })
   return tier ? Number(tier.insurance_amount) : 0
 })
@@ -123,6 +141,30 @@ const effectiveInsurance = computed(() => {
   const manual = Number(state.insurance_amount)
   if (state.insurance_amount && manual > 0) return manual
   return autoInsurance.value
+})
+
+const autoCommission = computed(() => props.defaultCommissionPercentage !== undefined ? Number(props.defaultCommissionPercentage) : null)
+
+const effectiveCommission = computed(() => {
+  const manual = Number(state.company_commission_percentage)
+  if (state.company_commission_percentage && manual > 0) return manual
+  return autoCommission.value
+})
+
+const autoInterest = computed(() => props.defaultInterestPercentage !== undefined ? Number(props.defaultInterestPercentage) : null)
+
+const effectiveInterest = computed(() => {
+  const manual = Number(state.fortnightly_interest_percentage)
+  if (state.fortnightly_interest_percentage && manual > 0) return manual
+  return autoInterest.value
+})
+
+const autoLateFee = computed(() => props.defaultLateFeeAmount !== undefined ? Number(props.defaultLateFeeAmount) : null)
+
+const effectiveLateFee = computed(() => {
+  const manual = Number(state.late_fee_amount)
+  if (state.late_fee_amount && manual > 0) return manual
+  return autoLateFee.value
 })
 
 async function onSubmit(event: FormSubmitEvent<Schema>) {
@@ -139,6 +181,9 @@ async function onSubmit(event: FormSubmitEvent<Schema>) {
 
   try {
     const insuranceAmount = event.data.insurance_amount ? String(Number(event.data.insurance_amount)) : undefined
+    const commissionPercentage = event.data.company_commission_percentage ? String(Number(event.data.company_commission_percentage)) : undefined
+    const interestPercentage = event.data.fortnightly_interest_percentage ? String(Number(event.data.fortnightly_interest_percentage)) : undefined
+    const lateFeeAmount = event.data.late_fee_amount ? String(Number(event.data.late_fee_amount)) : undefined
 
     if (props.product) {
       await updateProduct(props.branchId, props.product.id, {
@@ -149,6 +194,9 @@ async function onSubmit(event: FormSubmitEvent<Schema>) {
         principal_amount: event.data.principal_amount,
         number_of_fortnights: event.data.number_of_fortnights,
         insurance_amount: insuranceAmount,
+        company_commission_percentage: commissionPercentage,
+        fortnightly_interest_percentage: interestPercentage,
+        late_fee_amount: lateFeeAmount,
         is_active: event.data.is_active
       })
 
@@ -167,6 +215,9 @@ async function onSubmit(event: FormSubmitEvent<Schema>) {
         principal_amount: event.data.principal_amount,
         number_of_fortnights: event.data.number_of_fortnights,
         insurance_amount: insuranceAmount,
+        company_commission_percentage: commissionPercentage,
+        fortnightly_interest_percentage: interestPercentage,
+        late_fee_amount: lateFeeAmount,
         is_active: true
       })
 
@@ -199,7 +250,7 @@ async function onSubmit(event: FormSubmitEvent<Schema>) {
     v-model:open="open"
     :title="product ? 'Editar vale' : (cloneTemplate ? 'Usar vale del catálogo general' : 'Nuevo vale')"
     :description="product ? `Actualizar ${product.name}` : (cloneTemplate ? 'Cópialo en tu sucursal y ajústalo si es necesario' : 'Agrega un nuevo producto o vale a la sucursal')"
-    class="max-w-2xl"
+    :ui="{ content: 'max-w-3xl' }"
   >
     <template #body>
       <UForm
@@ -270,7 +321,7 @@ async function onSubmit(event: FormSubmitEvent<Schema>) {
           <div class="flex flex-col gap-1">
             <span class="text-xs uppercase text-muted">Comisión distribuidora</span>
             <span class="font-semibold text-highlighted">
-              {{ selectedCategory.commission_percentage }}%
+              {{ Number(selectedCategory.commission_percentage) }}%
               <span class="font-normal text-muted">({{ distributorMargin !== null ? `${money.format(distributorMargin)} / quincena` : '—' }})</span>
             </span>
           </div>
@@ -308,6 +359,83 @@ async function onSubmit(event: FormSubmitEvent<Schema>) {
           <p class="font-semibold text-highlighted">
             {{ money.format(effectiveInsurance) }}
           </p>
+        </div>
+
+        <div class="grid grid-cols-2 gap-4">
+          <UFormField
+            label="Comisión empresa (%)"
+            name="company_commission_percentage"
+            :description="autoCommission !== null && !state.company_commission_percentage
+              ? `Automático por defecto de sucursal: ${autoCommission}%. Déjalo vacío para usarlo.`
+              : 'Déjalo vacío para usar la comisión por defecto de la sucursal'"
+          >
+            <UInput
+              v-model="state.company_commission_percentage"
+              type="number"
+              min="0"
+              step="0.0001"
+              class="w-full"
+              placeholder="Automático"
+            />
+          </UFormField>
+
+          <UFormField
+            label="Interés quincenal (%)"
+            name="fortnightly_interest_percentage"
+            :description="autoInterest !== null && !state.fortnightly_interest_percentage
+              ? `Automático por defecto de sucursal: ${autoInterest}%. Déjalo vacío para usarlo.`
+              : 'Déjalo vacío para usar el interés por defecto de la sucursal'"
+          >
+            <UInput
+              v-model="state.fortnightly_interest_percentage"
+              type="number"
+              min="0"
+              step="0.0001"
+              class="w-full"
+              placeholder="Automático"
+            />
+          </UFormField>
+        </div>
+
+        <UFormField
+          label="Multa por atraso (MXN)"
+          name="late_fee_amount"
+          :description="autoLateFee !== null && !state.late_fee_amount
+            ? `Automático por defecto de sucursal: ${money.format(autoLateFee)}. Déjalo vacío para usarlo.`
+            : 'Déjalo vacío para usar la multa por defecto de la sucursal'"
+        >
+          <UInput
+            v-model="state.late_fee_amount"
+            type="number"
+            min="0"
+            step="0.01"
+            class="w-full"
+            placeholder="Automático"
+          />
+        </UFormField>
+
+        <div
+          v-if="effectiveCommission !== null || effectiveInterest !== null || effectiveLateFee !== null"
+          class="grid grid-cols-3 gap-3 rounded-lg border border-default bg-elevated/50 p-3 text-sm"
+        >
+          <div v-if="effectiveCommission !== null" class="flex flex-col gap-1">
+            <span class="text-xs uppercase text-muted">Comisión que se cobrará</span>
+            <p class="font-semibold text-highlighted">
+              {{ effectiveCommission }}%
+            </p>
+          </div>
+          <div v-if="effectiveInterest !== null" class="flex flex-col gap-1">
+            <span class="text-xs uppercase text-muted">Interés que se cobrará</span>
+            <p class="font-semibold text-highlighted">
+              {{ effectiveInterest }}%
+            </p>
+          </div>
+          <div v-if="effectiveLateFee !== null" class="flex flex-col gap-1">
+            <span class="text-xs uppercase text-muted">Multa que se cobrará</span>
+            <p class="font-semibold text-highlighted">
+              {{ money.format(effectiveLateFee) }}
+            </p>
+          </div>
         </div>
 
         <UFormField v-if="product" label="Activo" name="is_active">

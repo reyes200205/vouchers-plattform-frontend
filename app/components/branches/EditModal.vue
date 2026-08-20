@@ -94,7 +94,7 @@ async function onSubmit(event: FormSubmitEvent<Schema>) {
 </script>
 
 <template>
-  <UModal v-model:open="open" title="Editar Sucursal" description="Modifica los datos de la sucursal seleccionada">
+  <UModal v-model:open="open" title="Editar Sucursal" description="Modifica los datos de la sucursal seleccionada" :ui="{ content: 'max-w-xl' }">
     <template #body>
       <UForm
         :schema="schema"

@@ -107,6 +107,26 @@ interface VoucherRequestResponse {
   data: VoucherRequest
 }
 
+export interface VoucherRequestListParams {
+  status?: VoucherRequestStatus
+  per_page?: number
+  page?: number
+}
+
+interface VoucherRequestListResponse {
+  success: boolean
+  message: string
+  data: {
+    data: VoucherRequest[]
+    meta: {
+      current_page: number
+      last_page: number
+      per_page: number
+      total: number
+    }
+  }
+}
+
 export interface PreIssueVoucherPayload {
   customer_id: number
   financial_product_id: number
@@ -130,6 +150,15 @@ export function useVouchers() {
     return response.data
   }
 
+  async function listMyVoucherRequests(params: VoucherRequestListParams = {}) {
+    const response = await $fetch<VoucherRequestListResponse>(`${config.public.apiBase}/distributor/voucher-requests`, {
+      headers: authHeaders(),
+      query: params
+    })
+
+    return response.data
+  }
+
   async function preIssueVoucher(payload: PreIssueVoucherPayload) {
     const response = await $fetch<VoucherRequestResponse>(`${config.public.apiBase}/vouchers`, {
       method: 'POST',
@@ -140,5 +169,5 @@ export function useVouchers() {
     return response.data
   }
 
-  return { listMyVouchers, preIssueVoucher }
+  return { listMyVouchers, listMyVoucherRequests, preIssueVoucher }
 }

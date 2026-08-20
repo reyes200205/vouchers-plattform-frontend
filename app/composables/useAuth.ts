@@ -23,7 +23,11 @@ export interface AuthDistributor {
   unlimited_credit: boolean
   current_points: string
   can_issue_vouchers: boolean
-  category: { id: number, code: string, name: string } | null
+  // Monto maximo permitido para el proximo vale por la regla del pre-vale
+  // (50% del credito disponible + tolerancia), calculado por el backend.
+  // null significa que la regla no aplica en este momento.
+  pre_vale_max_amount: number | null
+  category: { id: number, code: string, name: string, commission_percentage: string } | null
 }
 
 interface AuthUser {

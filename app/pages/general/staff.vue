@@ -9,6 +9,9 @@ const { user } = useAuth()
 
 const canManage = computed(() => user.value?.permissions?.includes('staff.manage') ?? false)
 const isBranchManager = computed(() => user.value?.roles?.some(r => r.code === 'branch_manager') ?? false)
+// Debe coincidir con ListStaffService::BRANCH_MANAGER_ROLES del backend: los
+// roles que un gerente de sucursal puede crear/ver en su propia sucursal.
+const BRANCH_MANAGER_ROLE_CODES = ['cashier', 'coordinator', 'verifier']
 
 const { data: branches } = await useAsyncData<Branch[]>('staff-branches', () => listBranches(), { default: () => [] })
 
@@ -112,7 +115,7 @@ function getMemberItems(member: StaffMember) {
 const roleItems = computed(() => [
   { label: 'Todos los roles', value: undefined },
   ...Object.entries(roleLabels)
-    .filter(([code]) => !isBranchManager.value || code === 'cashier')
+    .filter(([code]) => !isBranchManager.value || BRANCH_MANAGER_ROLE_CODES.includes(code))
     .map(([code, label]) => ({ label, value: code }))
 ])
 

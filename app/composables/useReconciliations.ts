@@ -1,4 +1,4 @@
-import type { BankTransaction, Cutoff, CutoffRelation, PaginatedData } from '~/types'
+import type { BankImportResult, BankTransaction, Cutoff, CutoffRelation, PaginatedData, Reconciliation } from '~/types'
 
 interface ReconciliationsResponse {
   success: boolean
@@ -48,8 +48,25 @@ export function useReconciliations() {
     return response.data
   }
 
-  async function listCutoffs(page = 1) {
-    const response = await $fetch<CutoffsResponse>(`${config.public.apiBase}/cutoffs?page=${page}&per_page=50`, {
+  async function listCutoffs(params?: {
+    page?: number
+    status?: string
+    per_page?: number
+  }) {
+    const search = new URLSearchParams()
+    search.set('page', String(params?.page ?? 1))
+    search.set('per_page', String(params?.per_page ?? 50))
+    if (params?.status) search.set('status', params.status)
+
+    const response = await $fetch<CutoffsResponse>(`${config.public.apiBase}/cutoffs?${search.toString()}`, {
+      headers: { Authorization: `Bearer ${token.value}` }
+    })
+
+    return response.data
+  }
+
+  async function getCutoff(cutoffId: number): Promise<Cutoff> {
+    const response = await $fetch<CutoffResponse>(`${config.public.apiBase}/cutoffs/${cutoffId}`, {
       headers: { Authorization: `Bearer ${token.value}` }
     })
 
@@ -57,11 +74,28 @@ export function useReconciliations() {
   }
 
   async function listCutoffRelations(cutoffId: number): Promise<CutoffRelation[]> {
-    const response = await $fetch<CutoffResponse>(`${config.public.apiBase}/cutoffs/${cutoffId}`, {
+    const cutoff = await getCutoff(cutoffId)
+
+    return cutoff.relations ?? []
+  }
+
+  async function generateCutoff(branchId: number, payload: { period_start: string, period_end: string }): Promise<Cutoff> {
+    const response = await $fetch<CutoffResponse>(`${config.public.apiBase}/branches/${branchId}/cutoffs/generate`, {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${token.value}` },
+      body: payload
+    })
+
+    return response.data
+  }
+
+  async function reprocessCutoff(cutoffId: number): Promise<Cutoff> {
+    const response = await $fetch<CutoffResponse>(`${config.public.apiBase}/cutoffs/${cutoffId}/reprocess`, {
+      method: 'POST',
       headers: { Authorization: `Bearer ${token.value}` }
     })
 
-    return response.data.relations ?? []
+    return response.data
   }
 
   async function manualMatch(bankTransactionId: number, payload: ManualMatchPayload) {
@@ -72,5 +106,58 @@ export function useReconciliations() {
     })
   }
 
-  return { listBankTransactions, listCutoffs, listCutoffRelations, manualMatch }
+  async function listReconciliations(params?: {
+    pending_verification?: boolean
+    status?: string
+    page?: number
+  }) {
+    const search = new URLSearchParams()
+    if (params?.pending_verification) search.set('pending_verification', '1')
+    if (params?.status) search.set('status', params.status)
+    if (params?.page) search.set('page', String(params.page))
+    search.set('per_page', '15')
+
+    const response = await $fetch<{ success: boolean, message: string, data: PaginatedData<Reconciliation> }>(
+      `${config.public.apiBase}/reconciliations${search.toString() ? `?${search.toString()}` : ''}`,
+      { headers: { Authorization: `Bearer ${token.value}` } }
+    )
+
+    return response.data
+  }
+
+  async function verifyReconciliation(id: number) {
+    await $fetch(`${config.public.apiBase}/reconciliations/${id}/verify`, {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${token.value}` }
+    })
+  }
+
+  async function importBankDeposits(branchId: number, file: File) {
+    const formData = new FormData()
+    formData.append('file', file)
+
+    const response = await $fetch<{ success: boolean, message: string, data: BankImportResult }>(
+      `${config.public.apiBase}/branches/${branchId}/reconciliations/import`,
+      {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${token.value}` },
+        body: formData
+      }
+    )
+
+    return response.data
+  }
+
+  return {
+    listBankTransactions,
+    listCutoffs,
+    getCutoff,
+    listCutoffRelations,
+    generateCutoff,
+    reprocessCutoff,
+    manualMatch,
+    listReconciliations,
+    verifyReconciliation,
+    importBankDeposits
+  }
 }

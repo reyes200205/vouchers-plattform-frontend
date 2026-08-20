@@ -10,12 +10,24 @@ const { createCustomer } = useCustomers()
 
 const form = ref({
   nombre: '',
+  segundoNombre: '',
   apellidoPaterno: '',
   apellidoMaterno: '',
+  genero: '',
+  fechaNacimiento: '',
   telefono: '',
+  telefonoFijo: '',
+  correo: '',
   curp: '',
   rfc: '',
-  direccion: ''
+  calle: '',
+  numeroExterior: '',
+  colonia: '',
+  ciudad: '',
+  estado: '',
+  codigoPostal: '',
+  notasPersona: '',
+  notasCliente: ''
 })
 
 const saving = ref(false)
@@ -34,13 +46,25 @@ const guardarCliente = async () => {
     await createCustomer({
       person: {
         first_name: form.value.nombre.trim(),
+        middle_name: form.value.segundoNombre.trim() || undefined,
         last_name: form.value.apellidoPaterno.trim(),
         second_last_name: form.value.apellidoMaterno.trim() || undefined,
-        mobile_phone: form.value.telefono.trim() || undefined,
+        gender: (form.value.genero as 'M' | 'F' | 'OTHER') || undefined,
+        birth_date: form.value.fechaNacimiento || undefined,
         curp: form.value.curp.trim().toUpperCase(),
         rfc: form.value.rfc.trim() ? form.value.rfc.trim().toUpperCase() : undefined,
-        street: form.value.direccion.trim() || undefined
-      }
+        home_phone: form.value.telefonoFijo.trim() || undefined,
+        mobile_phone: form.value.telefono.trim() || undefined,
+        email: form.value.correo.trim() || undefined,
+        street: form.value.calle.trim() || undefined,
+        external_number: form.value.numeroExterior.trim() || undefined,
+        neighborhood: form.value.colonia.trim() || undefined,
+        city: form.value.ciudad.trim() || undefined,
+        state: form.value.estado.trim() || undefined,
+        postal_code: form.value.codigoPostal.trim() || undefined,
+        notes: form.value.notasPersona.trim() || undefined
+      },
+      notes: form.value.notasCliente.trim() || undefined
     })
 
     navigateTo('/distributor-portal/vales')
@@ -77,15 +101,31 @@ const volver = () => {
           {{ errorMessage }}
         </p>
 
-        <div class="input-group">
-          <label>Nombre(s) *</label>
-          <input
-            v-model="form.nombre"
-            type="text"
-            placeholder="Ej. María Elena"
-            required
-            class="app-input"
-          >
+        <p class="section-title">
+          Datos personales
+        </p>
+
+        <div class="input-row">
+          <div class="input-group">
+            <label>Nombre(s) *</label>
+            <input
+              v-model="form.nombre"
+              type="text"
+              placeholder="Ej. María Elena"
+              required
+              class="app-input"
+            >
+          </div>
+
+          <div class="input-group">
+            <label>Segundo nombre</label>
+            <input
+              v-model="form.segundoNombre"
+              type="text"
+              placeholder="Opcional"
+              class="app-input"
+            >
+          </div>
         </div>
 
         <div class="input-row">
@@ -111,16 +151,33 @@ const volver = () => {
           </div>
         </div>
 
-        <div class="input-group">
-          <label>Teléfono *</label>
-          <input
-            v-model="form.telefono"
-            type="tel"
-            placeholder="Ej. 8712345678"
-            maxlength="10"
-            required
-            class="app-input"
-          >
+        <div class="input-row">
+          <div class="input-group">
+            <label>Género</label>
+            <select v-model="form.genero" class="app-input">
+              <option value="">
+                Selecciona...
+              </option>
+              <option value="M">
+                Masculino
+              </option>
+              <option value="F">
+                Femenino
+              </option>
+              <option value="OTHER">
+                Otro
+              </option>
+            </select>
+          </div>
+
+          <div class="input-group">
+            <label>Fecha de nacimiento</label>
+            <input
+              v-model="form.fechaNacimiento"
+              type="date"
+              class="app-input"
+            >
+          </div>
         </div>
 
         <div class="input-group">
@@ -146,12 +203,130 @@ const volver = () => {
           >
         </div>
 
+        <p class="section-title">
+          Contacto
+        </p>
+
+        <div class="input-row">
+          <div class="input-group">
+            <label>Teléfono móvil *</label>
+            <input
+              v-model="form.telefono"
+              type="tel"
+              placeholder="Ej. 8712345678"
+              maxlength="10"
+              required
+              class="app-input"
+            >
+          </div>
+
+          <div class="input-group">
+            <label>Teléfono fijo</label>
+            <input
+              v-model="form.telefonoFijo"
+              type="tel"
+              placeholder="Opcional"
+              maxlength="10"
+              class="app-input"
+            >
+          </div>
+        </div>
+
         <div class="input-group">
-          <label>Dirección Completa</label>
+          <label>Correo electrónico</label>
+          <input
+            v-model="form.correo"
+            type="email"
+            placeholder="correo@ejemplo.com"
+            class="app-input"
+          >
+        </div>
+
+        <p class="section-title">
+          Domicilio
+        </p>
+
+        <div class="input-row">
+          <div class="input-group">
+            <label>Calle</label>
+            <input
+              v-model="form.calle"
+              type="text"
+              placeholder="Ej. Av. Constitución"
+              class="app-input"
+            >
+          </div>
+
+          <div class="input-group">
+            <label>Número exterior</label>
+            <input
+              v-model="form.numeroExterior"
+              type="text"
+              placeholder="Ej. 123"
+              class="app-input"
+            >
+          </div>
+        </div>
+
+        <div class="input-group">
+          <label>Colonia</label>
+          <input
+            v-model="form.colonia"
+            type="text"
+            placeholder="Ej. Centro"
+            class="app-input"
+          >
+        </div>
+
+        <div class="input-row">
+          <div class="input-group">
+            <label>Ciudad</label>
+            <input
+              v-model="form.ciudad"
+              type="text"
+              placeholder="Ej. Monterrey"
+              class="app-input"
+            >
+          </div>
+
+          <div class="input-group">
+            <label>Estado</label>
+            <input
+              v-model="form.estado"
+              type="text"
+              placeholder="Ej. Nuevo León"
+              class="app-input"
+            >
+          </div>
+        </div>
+
+        <div class="input-group">
+          <label>Código postal</label>
+          <input
+            v-model="form.codigoPostal"
+            type="text"
+            placeholder="Ej. 64000"
+            maxlength="10"
+            class="app-input"
+          >
+        </div>
+
+        <div class="input-group">
+          <label>Notas del domicilio / persona</label>
           <textarea
-            v-model="form.direccion"
-            placeholder="Calle, número, colonia y C.P."
-            rows="3"
+            v-model="form.notasPersona"
+            placeholder="Referencias, observaciones..."
+            rows="2"
+            class="app-input textarea"
+          />
+        </div>
+
+        <div class="input-group">
+          <label>Notas del cliente</label>
+          <textarea
+            v-model="form.notasCliente"
+            placeholder="Observaciones generales del cliente..."
+            rows="2"
             class="app-input textarea"
           />
         </div>
@@ -231,6 +406,17 @@ const volver = () => {
   font-size: 13px;
   font-weight: 600;
   margin: 0;
+}
+
+.section-title {
+  margin: 8px 0 -4px 0;
+  font-size: 13px;
+  font-weight: 800;
+  color: #002366;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+  border-bottom: 1px solid #e2e8f0;
+  padding-bottom: 6px;
 }
 
 .input-row {

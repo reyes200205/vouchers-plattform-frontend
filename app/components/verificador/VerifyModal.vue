@@ -28,16 +28,18 @@ const { submitVerification, uploadVerificationPhoto } = useApplications()
 const toast = useToast()
 const submitting = ref(false)
 
-// Foto de fachada: la toma el verificador durante la visita, con la cámara del
-// dispositivo (nunca la galería) usando getUserMedia. Al capturar se muestra una vista
-// previa local de inmediato (sin esperar la red) y en paralelo se sube al backend para
-// obtener la ruta que se enviará junto con el resultado de la verificación.
+// Foto de fachada: el verificador puede tomarla con la cámara del dispositivo
+// (getUserMedia) o subir una ya existente desde el dispositivo. En ambos casos se
+// muestra una vista previa local de inmediato (sin esperar la red) y en paralelo se
+// sube al backend para obtener la ruta que se enviará junto con el resultado de la
+// verificación.
 const frontPhotoPreviewUrl = ref<string | null>(null)
 const frontPhotoPath = ref<string | null>(null)
 const uploadingPhoto = ref(false)
 const cameraActive = ref(false)
 const cameraError = ref<string | null>(null)
 const videoEl = useTemplateRef('videoEl')
+const fileInputEl = useTemplateRef('fileInputEl')
 let mediaStream: MediaStream | null = null
 
 function stopCamera() {
@@ -86,6 +88,31 @@ async function openCamera() {
   }
 }
 
+async function uploadFrontPhoto(file: File) {
+  if (!props.application) return
+
+  if (frontPhotoPreviewUrl.value) URL.revokeObjectURL(frontPhotoPreviewUrl.value)
+  frontPhotoPreviewUrl.value = URL.createObjectURL(file)
+  frontPhotoPath.value = null
+  uploadingPhoto.value = true
+
+  try {
+    const result = await uploadVerificationPhoto(props.application.id, file, 'front_photo')
+    frontPhotoPath.value = result.path
+  } catch (e) {
+    console.error(e)
+    toast.add({
+      title: 'Error',
+      description: 'No se pudo subir la fotografía de fachada. Intenta de nuevo.',
+      color: 'error'
+    })
+    if (frontPhotoPreviewUrl.value) URL.revokeObjectURL(frontPhotoPreviewUrl.value)
+    frontPhotoPreviewUrl.value = null
+  } finally {
+    uploadingPhoto.value = false
+  }
+}
+
 function capturePhoto() {
   if (!videoEl.value || !props.application) return
 
@@ -99,31 +126,22 @@ function capturePhoto() {
   ctx.drawImage(video, 0, 0, canvas.width, canvas.height)
   stopCamera()
 
-  canvas.toBlob(async (blob) => {
-    if (!blob || !props.application) return
-
-    if (frontPhotoPreviewUrl.value) URL.revokeObjectURL(frontPhotoPreviewUrl.value)
-    frontPhotoPreviewUrl.value = URL.createObjectURL(blob)
-    frontPhotoPath.value = null
-    uploadingPhoto.value = true
-
-    try {
-      const file = new File([blob], `fachada-${Date.now()}.jpg`, { type: 'image/jpeg' })
-      const result = await uploadVerificationPhoto(props.application.id, file, 'front_photo')
-      frontPhotoPath.value = result.path
-    } catch (e) {
-      console.error(e)
-      toast.add({
-        title: 'Error',
-        description: 'No se pudo subir la fotografía de fachada. Intenta tomarla de nuevo.',
-        color: 'error'
-      })
-      if (frontPhotoPreviewUrl.value) URL.revokeObjectURL(frontPhotoPreviewUrl.value)
-      frontPhotoPreviewUrl.value = null
-    } finally {
-      uploadingPhoto.value = false
-    }
+  canvas.toBlob((blob) => {
+    if (!blob) return
+    const file = new File([blob], `fachada-${Date.now()}.jpg`, { type: 'image/jpeg' })
+    uploadFrontPhoto(file)
   }, 'image/jpeg', 0.9)
+}
+
+function triggerFileInput() {
+  fileInputEl.value?.click()
+}
+
+function onFileSelected(event: Event) {
+  const input = event.target as HTMLInputElement
+  const file = input.files?.[0]
+  input.value = ''
+  if (file) uploadFrontPhoto(file)
 }
 
 function resetPhotoState() {
@@ -246,8 +264,15 @@ async function onSubmit(event: FormSubmitEvent<Schema>) {
 
           <UFormField label="Fotografía de fachada" required>
             <div class="space-y-2">
-              <!-- Cámara en vivo: se usa getUserMedia directamente, nunca un selector de archivos,
-                   para garantizar que la foto se toma en el momento y no se sube desde la galería. -->
+              <input
+                ref="fileInputEl"
+                type="file"
+                accept="image/*"
+                class="hidden"
+                @change="onFileSelected"
+              >
+
+              <!-- Cámara en vivo con getUserMedia -->
               <div v-if="cameraActive" class="space-y-2">
                 <video
                   ref="videoEl"
@@ -301,14 +326,24 @@ async function onSubmit(event: FormSubmitEvent<Schema>) {
                   :description="cameraError"
                 />
 
-                <UButton
-                  :label="frontPhotoPreviewUrl ? 'Volver a tomar' : 'Abrir cámara'"
-                  icon="i-lucide-camera"
-                  color="neutral"
-                  variant="subtle"
-                  :loading="uploadingPhoto"
-                  @click="openCamera"
-                />
+                <div class="flex gap-2">
+                  <UButton
+                    :label="frontPhotoPreviewUrl ? 'Volver a tomar' : 'Tomar foto'"
+                    icon="i-lucide-camera"
+                    color="neutral"
+                    variant="subtle"
+                    :loading="uploadingPhoto"
+                    @click="openCamera"
+                  />
+                  <UButton
+                    :label="frontPhotoPreviewUrl ? 'Subir otra' : 'Subir foto'"
+                    icon="i-lucide-upload"
+                    color="neutral"
+                    variant="subtle"
+                    :loading="uploadingPhoto"
+                    @click="triggerFileInput"
+                  />
+                </div>
               </template>
             </div>
           </UFormField>

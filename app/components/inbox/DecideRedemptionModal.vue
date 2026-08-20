@@ -61,7 +61,7 @@ async function onSubmit(event: FormSubmitEvent<Schema>) {
 </script>
 
 <template>
-  <UModal v-model:open="open" title="Decidir canje" description="Aprobar o rechazar el canje de puntos">
+  <UModal v-model:open="open" title="Decidir canje" description="Aprobar o rechazar el canje de puntos" :ui="{ content: 'max-w-xl' }">
     <UButton
       label="Decidir"
       icon="i-lucide-clipboard-check"
