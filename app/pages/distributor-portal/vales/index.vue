@@ -53,13 +53,7 @@ const filteredContacts = computed(() => {
   })
 })
 
-function isSelectable(customer: Customer) {
-  return customer.status === 'ACTIVO' && Boolean(customer.verified_at)
-}
-
 const seleccionarContacto = (customer: Customer) => {
-  if (!isSelectable(customer)) return
-
   navigateTo({
     path: '/distributor-portal/configure_vale',
     query: {
@@ -124,7 +118,6 @@ const volver = () => {
             v-for="item in filteredContacts"
             :key="item.id"
             class="contact-item"
-            :class="{ disabled: !isSelectable(item) }"
             @click="seleccionarContacto(item)"
           >
             <div class="avatar-circle">

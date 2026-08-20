@@ -56,6 +56,9 @@ const { data: branchSettings } = await useAsyncData<BranchSettings | null>(
 
 const insuranceTiers = computed<InsuranceTier[] | null>(() => branchSettings.value?.insurance_rates ?? null)
 const pointValueMxn = computed(() => branchSettings.value?.point_value_mxn ?? undefined)
+const defaultInterestPercentage = computed(() => branchSettings.value?.biweekly_interest_percentage ?? undefined)
+const defaultLateFeeAmount = computed(() => branchSettings.value?.late_payment_penalty_amount ?? undefined)
+const defaultCommissionPercentage = computed(() => branchSettings.value?.opening_commission_percentage ?? undefined)
 
 const q = ref('')
 const page = ref(1)
@@ -270,7 +273,16 @@ function getProductItems(product: FinancialProduct) {
                 {{ product.number_of_fortnights }} quincenas
               </span>
               <span class="text-sm text-muted">
+                Comisión: {{ Number(product.company_commission_percentage) }}%
+              </span>
+              <span class="text-sm text-muted">
                 Seguro: {{ money.format(Number(product.insurance_amount)) }}
+              </span>
+              <span class="text-sm text-muted">
+                Interés: {{ Number(product.fortnightly_interest_percentage) }}%
+              </span>
+              <span class="text-sm text-muted">
+                Multa: {{ money.format(Number(product.late_fee_amount)) }}
               </span>
               <UBadge
                 v-if="product.is_active"
@@ -319,6 +331,9 @@ function getProductItems(product: FinancialProduct) {
     :branch-id="branchId"
     :insurance-tiers="insuranceTiers"
     :point-value-mxn="pointValueMxn"
+    :default-interest-percentage="defaultInterestPercentage"
+    :default-late-fee-amount="defaultLateFeeAmount"
+    :default-commission-percentage="defaultCommissionPercentage"
     @created="refresh()"
     @updated="refresh()"
   />

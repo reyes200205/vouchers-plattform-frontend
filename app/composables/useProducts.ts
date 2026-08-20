@@ -41,6 +41,9 @@ export interface ProductPayload {
   principal_amount: string
   number_of_fortnights: number
   insurance_amount?: string
+  company_commission_percentage?: string
+  fortnightly_interest_percentage?: string
+  late_fee_amount?: string
   is_active?: boolean
 }
 

@@ -71,7 +71,7 @@ const state = reactive<Partial<Schema>>({
 })
 
 const { decideApplication } = useInbox()
-const { listCategories } = useSettings()
+const { listBranchCategories } = useCategories()
 const toast = useToast()
 const submitting = ref(false)
 
@@ -84,8 +84,14 @@ const categoryItems = computed(() => {
 })
 
 onMounted(async () => {
+  // Las categorias son por sucursal (cada sucursal configura su propia
+  // comision), asi que solo deben listarse las de la sucursal de ESTA
+  // solicitud. Traer el catalogo global permitia elegir por error una
+  // categoria de otra sucursal, dejando a la distribuidora con una
+  // comision que no le corresponde.
   try {
-    categories.value = await listCategories()
+    const result = await listBranchCategories(props.application.branch_id)
+    categories.value = result.data.filter(c => c.is_active)
   } catch {
     // ignore, categories are optional for the form
   }

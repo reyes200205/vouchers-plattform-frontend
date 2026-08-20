@@ -250,6 +250,7 @@ export interface FinancialProduct {
   company_commission_percentage: string
   insurance_amount: string
   fortnightly_interest_percentage: string
+  late_fee_amount: string
   disbursement_method: string | null
   is_active: boolean
   created_at?: string
@@ -379,7 +380,7 @@ export interface Person {
   postal_code: string | null
 }
 
-export type CustomerStatus = 'PENDIENTE' | 'ACTIVO' | 'BLOQUEADO' | 'INACTIVO'
+export type CustomerStatus = 'EN_VERIFICACION' | 'ACTIVO' | 'BLOQUEADO' | 'MOROSO' | 'INACTIVO'
 
 export interface Customer {
   id: number

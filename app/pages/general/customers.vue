@@ -57,8 +57,9 @@ function fullName(customer: Customer) {
 
 const statusColors: Record<CustomerStatus, 'success' | 'warning' | 'error' | 'neutral'> = {
   ACTIVO: 'success',
-  PENDIENTE: 'warning',
+  EN_VERIFICACION: 'warning',
   BLOQUEADO: 'error',
+  MOROSO: 'error',
   INACTIVO: 'neutral'
 }
 
@@ -202,8 +203,9 @@ const selectedDetails = ref<Customer | null>(null)
             :items="[
               { label: 'Todos los estados', value: undefined },
               { label: 'Activo', value: 'ACTIVO' },
-              { label: 'Pendiente', value: 'PENDIENTE' },
+              { label: 'En verificación', value: 'EN_VERIFICACION' },
               { label: 'Bloqueado', value: 'BLOQUEADO' },
+              { label: 'Moroso', value: 'MOROSO' },
               { label: 'Inactivo', value: 'INACTIVO' }
             ]"
             placeholder="Estado"
