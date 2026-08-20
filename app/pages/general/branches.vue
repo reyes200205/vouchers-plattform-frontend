@@ -8,7 +8,6 @@ import type { Branch } from '~/types'
 const UButton = resolveComponent('UButton')
 const UBadge = resolveComponent('UBadge')
 const UDropdownMenu = resolveComponent('UDropdownMenu')
-const UCheckbox = resolveComponent('UCheckbox')
 
 const toast = useToast()
 const table = useTemplateRef('table')
@@ -231,7 +230,6 @@ const pagination = ref({
         />
 
         <div class="flex flex-wrap items-center gap-1.5">
-
           <USelect
             v-model="statusFilter"
             :items="[
