@@ -129,7 +129,7 @@ async function onSubmit(event: FormSubmitEvent<Schema>) {
     toast.add({
       title: 'Decisión registrada',
       description: decision.value === 'APROBADO'
-        ? 'El vale quedó activo. Ya puedes entregarle el dinero al cliente.'
+        ? 'El vale fue aprobado. Cuando el cliente se presente con el correo que ya recibió, entrégale el vale desde "Vales emitidos".'
         : 'La solicitud de vale fue rechazada.',
       color: 'success'
     })
@@ -241,7 +241,7 @@ const money = new Intl.NumberFormat('es-MX', { style: 'currency', currency: 'MXN
         <URadioGroup
           v-model="decision"
           :items="[
-            { label: 'Aprobar y entregar', value: 'APROBADO' },
+            { label: 'Aprobar', value: 'APROBADO' },
             { label: 'Rechazar', value: 'RECHAZADO' }
           ]"
         />
@@ -269,7 +269,7 @@ const money = new Intl.NumberFormat('es-MX', { style: 'currency', currency: 'MXN
             @click="open = false"
           />
           <UButton
-            :label="decision === 'APROBADO' ? 'Aprobar y entregar' : 'Rechazar'"
+            :label="decision === 'APROBADO' ? 'Aprobar' : 'Rechazar'"
             :color="decision === 'APROBADO' ? 'success' : 'error'"
             variant="solid"
             type="submit"

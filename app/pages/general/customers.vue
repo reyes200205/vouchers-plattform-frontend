@@ -299,31 +299,5 @@ const selectedDetails = ref<Customer | null>(null)
         @changed="selectedChangeRequest = null"
       />
     </template>
-<<<<<<< HEAD
-
-    <CustomersCustomerDetailsModal
-      v-if="selectedDetails"
-      :customer="selectedDetails"
-      :open="true"
-      @update:open="(open: boolean) => { if (!open) selectedDetails = null }"
-    />
-
-    <CustomersVerifyCustomerModal
-      v-if="selectedVerification"
-      :customer="selectedVerification"
-      :open="true"
-      @update:open="(open: boolean) => { if (!open) selectedVerification = null }"
-      @verified="refreshList(); selectedVerification = null"
-    />
-
-    <CustomersChangeCustomerRequestModal
-      v-if="selectedChangeRequest"
-      :customer="selectedChangeRequest"
-      :open="true"
-      @update:open="(open: boolean) => { if (!open) selectedChangeRequest = null }"
-      @changed="selectedChangeRequest = null"
-    />
-=======
->>>>>>> 5b480282d6104335ba42cf689da66fd670fc3abb
   </UDashboardPanel>
 </template>
