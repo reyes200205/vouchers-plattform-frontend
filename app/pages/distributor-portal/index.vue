@@ -139,6 +139,10 @@ const cerrarSesion = async () => {
             <span class="action-icon">👤</span>
             Nuevo cliente
           </button>
+          <button class="action-btn" @click="navigateTo('/distributor-portal/collection-relationship')">
+            <span class="action-icon">📄</span>
+            Estado de cuenta
+          </button>
         </div>
 
         <!-- LISTA DE VALES -->

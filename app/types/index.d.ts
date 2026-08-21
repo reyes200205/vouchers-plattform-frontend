@@ -299,7 +299,6 @@ export interface BranchSettings {
   pre_vale_max_percentage: string | null
   pre_vale_tolerance_amount: string | null
   point_value_mxn: string | null
-  voucher_expiration_days: number | null
 }
 
 export interface PointSettings {
@@ -382,7 +381,7 @@ export interface PaginatedData<T> {
 export interface CutoffRelationDistributor {
   id: number
   distributor_number: string
-  business_name: string
+  person: Person | null
 }
 
 export interface Person {
@@ -446,6 +445,8 @@ export interface CustomerChangeRequest {
 export type VoucherStatus = 'BORRADOR' | 'APROBADO' | 'TRANSFERIDO' | 'ACTIVO' | 'PAGO_PARCIAL' | 'PAGADO' | 'LIQUIDADO' | 'MOROSO' | 'RECLAMADO' | 'CANCELADO' | 'REVERSADO'
 
 export interface Voucher {
+  is_expired: any
+  expiration_date: boolean
   id: number
   voucher_number: string
   distributor_id: number
@@ -464,8 +465,6 @@ export interface Voucher {
   issued_at: string | null
   transferred_at: string | null
   payment_due_date: string | null
-  is_expired: boolean
-  expiration_date: string | null
   notes: string | null
   customer: (Pick<Customer, 'id' | 'customer_code' | 'status' | 'verified_at'> & { person: Person | null }) | null
   distributor?: { id: number, distributor_number: string, person: Person | null } | null
@@ -502,6 +501,12 @@ export interface CustomerPayment {
 export type CutoffStatus = 'PROGRAMADO' | 'EJECUTADO' | 'CERRADO' | 'REPROCESADO'
 export type CutoffRelationStatus = 'GENERADA' | 'PAGADA' | 'PARCIAL' | 'VENCIDA' | 'CERRADA'
 
+export interface CutoffRelationItemCustomer {
+  id: number
+  customer_code: string
+  person: Person | null
+}
+
 export interface CutoffRelationItem {
   id: number
   cutoff_relation_id: number
@@ -520,6 +525,7 @@ export interface CutoffRelationItem {
   previous_paid_amount: string | null
   origin_cutoff_id: number | null
   origin_relation_id: number | null
+  customer?: CutoffRelationItemCustomer | null
 }
 
 export interface CutoffRelation {

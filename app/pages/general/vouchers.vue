@@ -6,6 +6,7 @@ const { user } = useAuth()
 const { listVouchers, listPendingVoucherRequests } = useVouchers()
 
 const canApprove = computed(() => user.value?.permissions?.includes('vouchers.approve') ?? false)
+const canDisburse = computed(() => user.value?.permissions?.includes('vouchers.disburse') ?? false)
 
 const statusFilter = ref<VoucherStatus | undefined>(undefined)
 const page = ref(1)
@@ -57,6 +58,10 @@ function onRequestPageChange(nextPage: number) {
 
 async function onRequestDecided() {
   await Promise.all([refreshRequests(), refresh()])
+}
+
+async function onDisbursed() {
+  await refresh()
 }
 
 watch(error, (e) => {
@@ -288,15 +293,12 @@ function distributorName(voucher: { distributor?: { person?: { first_name: strin
                     {{ item.total_fortnights }} quincenas
                   </p>
                 </div>
-<<<<<<< HEAD
-=======
 
                 <DisburseVoucherModal
                   v-if="canDisburse && item.status === 'APROBADO' && !item.is_expired"
                   :item="item"
                   @disbursed="onDisbursed"
                 />
->>>>>>> 5b480282d6104335ba42cf689da66fd670fc3abb
               </div>
             </div>
           </div>

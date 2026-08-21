@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { customerFullName } from '~/composables/useCustomers'
 import type { CutoffRelation, CutoffRelationStatus } from '~/types'
 
 const props = defineProps<{
@@ -14,9 +15,16 @@ function fmtMoney(value: string | number | null | undefined): string {
   return money.format(Number(value))
 }
 
+// payment_due_date llega como fecha pura "YYYY-MM-DD" (sin hora), no como
+// timestamp. new Date('2026-10-30') la interpreta como medianoche UTC, y
+// toLocaleDateString la vuelve a mostrar en la hora LOCAL del navegador —
+// en México (UTC-6/-7) eso cae el día anterior a las 6pm, mostrando "29 oct"
+// en vez de "30 oct". Por eso aquí se arma la fecha con año/mes/día locales
+// en vez de dejar que Date la interprete como UTC.
 function fmtDate(value: string | null | undefined): string {
   if (!value) return '—'
-  return new Date(value).toLocaleDateString('es-MX', { day: '2-digit', month: 'short', year: 'numeric' })
+  const [year, month, day] = value.split('-').map(Number)
+  return new Date(year, month - 1, day).toLocaleDateString('es-MX', { day: '2-digit', month: 'short', year: 'numeric' })
 }
 
 const statusColors: Record<CutoffRelationStatus, 'success' | 'warning' | 'error' | 'info' | 'neutral'> = {
@@ -30,13 +38,21 @@ const statusColors: Record<CutoffRelationStatus, 'success' | 'warning' | 'error'
 function statusColor(status: CutoffRelationStatus | null | undefined) {
   return status ? (statusColors[status] ?? 'neutral') : 'neutral'
 }
+
+// Un item con origin_relation_id es deuda arrastrada de una relación
+// anterior sin pagar; sin origin es la quincena normal que le tocaba a este
+// periodo. Antes se veían igual en la tabla, sin forma de distinguir cuál
+// es cuál.
+function isCarryover(item: { origin_relation_id: number | null }): boolean {
+  return item.origin_relation_id !== null
+}
 </script>
 
 <template>
   <UModal
     v-model:open="open"
     :title="relation ? `Relación ${relation.relation_number}` : 'Relación'"
-    :description="relation?.distributor?.business_name ?? undefined"
+    :description="relation?.distributor?.person ? customerFullName(relation.distributor.person) : undefined"
     :ui="{ content: 'max-w-4xl' }"
   >
     <template #body>
@@ -47,7 +63,7 @@ function statusColor(status: CutoffRelationStatus | null | undefined) {
               Distribuidora
             </p>
             <p class="font-semibold text-highlighted">
-              {{ relation.distributor?.business_name ?? `#${relation.distributor_id}` }}
+              {{ relation.distributor?.person ? customerFullName(relation.distributor.person) : `#${relation.distributor_id}` }}
             </p>
             <p class="text-xs text-muted">
               {{ relation.distributor?.distributor_number }}
@@ -125,6 +141,12 @@ function statusColor(status: CutoffRelationStatus | null | undefined) {
               <thead>
                 <tr class="border-b border-default text-left text-xs uppercase text-muted">
                   <th class="py-2 pr-3">
+                    Concepto
+                  </th>
+                  <th class="py-2 pr-3">
+                    Cliente
+                  </th>
+                  <th class="py-2 pr-3">
                     Producto
                   </th>
                   <th class="py-2 pr-3">
@@ -143,6 +165,17 @@ function statusColor(status: CutoffRelationStatus | null | undefined) {
               </thead>
               <tbody>
                 <tr v-for="item in relation.items" :key="item.id" class="border-b border-default last:border-0">
+                  <td class="py-2 pr-3">
+                    <UBadge
+                      :color="isCarryover(item) ? 'warning' : 'neutral'"
+                      variant="subtle"
+                      size="sm"
+                      :label="isCarryover(item) ? `Arrastre #${item.origin_relation_id}` : `Quincena ${item.installment_number ?? '—'}`"
+                    />
+                  </td>
+                  <td class="py-2 pr-3">
+                    {{ item.customer?.person ? customerFullName(item.customer.person) : `Cliente #${item.customer_id}` }}
+                  </td>
                   <td class="py-2 pr-3">
                     <p class="font-medium text-highlighted">
                       {{ item.product_name_snapshot ?? `Vale #${item.voucher_id}` }}

@@ -1,13 +1,11 @@
 <script setup lang="ts">
 import type { TableColumn } from '@nuxt/ui'
-import type { Row } from '@tanstack/table-core'
 import type { Customer, CustomerStatus } from '~/types'
 
 const UBadge = resolveComponent('UBadge')
 const UDropdownMenu = resolveComponent('UDropdownMenu')
 const UButton = resolveComponent('UButton')
 
-const toast = useToast()
 const { user } = useAuth()
 const { listCustomers } = useCustomers()
 
@@ -299,7 +297,6 @@ const selectedDetails = ref<Customer | null>(null)
         @changed="selectedChangeRequest = null"
       />
     </template>
-<<<<<<< HEAD
 
     <CustomersCustomerDetailsModal
       v-if="selectedDetails"
@@ -323,7 +320,5 @@ const selectedDetails = ref<Customer | null>(null)
       @update:open="(open: boolean) => { if (!open) selectedChangeRequest = null }"
       @changed="selectedChangeRequest = null"
     />
-=======
->>>>>>> 5b480282d6104335ba42cf689da66fd670fc3abb
   </UDashboardPanel>
 </template>
