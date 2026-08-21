@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, onMounted, onUnmounted } from 'vue'
 
 const { login, roleHome } = useAuth()
 
@@ -10,8 +10,76 @@ const rememberMe = ref(false)
 const loading = ref(false)
 const errorMessage = ref('')
 
+// Cloudflare Turnstile setup
+const runtimeConfig = useRuntimeConfig()
+const siteKey = runtimeConfig.public.turnstileSiteKey
+const turnstileContainer = ref<HTMLElement | null>(null)
+const turnstileToken = ref('')
+let turnstileWidgetId: string | number | null = null
+let turnstileInterval: any = null
+
+// Inject Turnstile script header element dynamically
+useHead({
+  script: [
+    {
+      src: 'https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit',
+      async: true,
+      defer: true
+    }
+  ]
+})
+
+const initTurnstile = () => {
+  if (siteKey && window.turnstile && turnstileContainer.value) {
+    try {
+      turnstileWidgetId = window.turnstile.render(turnstileContainer.value, {
+        sitekey: siteKey,
+        callback: (token: string) => {
+          turnstileToken.value = token
+          errorMessage.value = ''
+        },
+        'expired-callback': () => {
+          turnstileToken.value = ''
+        },
+        'error-callback': () => {
+          turnstileToken.value = ''
+        }
+      })
+    } catch (e) {
+      console.warn('Turnstile render error:', e)
+    }
+  }
+}
+
+onMounted(() => {
+  if (window.turnstile) {
+    initTurnstile()
+  } else {
+    turnstileInterval = setInterval(() => {
+      if (window.turnstile) {
+        clearInterval(turnstileInterval)
+        initTurnstile()
+      }
+    }, 100)
+  }
+})
+
+onUnmounted(() => {
+  if (turnstileInterval) {
+    clearInterval(turnstileInterval)
+  }
+  if (turnstileWidgetId !== null && window.turnstile) {
+    window.turnstile.remove(turnstileWidgetId)
+  }
+})
+
 const handleSubmit = async () => {
   if (!username.value || !password.value) {
+    return
+  }
+
+  if (siteKey && !turnstileToken.value) {
+    errorMessage.value = 'Por favor, completa el captcha de seguridad.'
     return
   }
 
@@ -19,11 +87,38 @@ const handleSubmit = async () => {
   errorMessage.value = ''
 
   try {
-    const roleCode = await login(username.value, password.value)
+    const roleCode = await login(username.value, password.value, turnstileToken.value)
     await navigateTo(roleHome(roleCode))
-  } catch (error) {
-    errorMessage.value = 'Usuario o contraseña incorrectos.'
+  } catch (error: any) {
+    const responseData = error.data || error.response?._data
+    let msg = 'Usuario o contraseña incorrectos.'
+
+    if (responseData) {
+      if (responseData.errors) {
+        const firstErrorKey = Object.keys(responseData.errors)[0]
+        if (firstErrorKey && responseData.errors[firstErrorKey]?.[0]) {
+          msg = responseData.errors[firstErrorKey][0]
+        } else if (responseData.message) {
+          msg = responseData.message
+        }
+      } else if (responseData.message) {
+        msg = responseData.message
+      }
+    } else if (error.message && !error.message.includes('fetch') && !error.message.includes('Fetch')) {
+      msg = error.message
+    }
+
+    errorMessage.value = msg
     console.error('Error al iniciar sesión:', error)
+
+    if (turnstileWidgetId !== null && window.turnstile) {
+      try {
+        window.turnstile.reset(turnstileWidgetId)
+      } catch (e) {
+        console.warn('Turnstile reset ignored:', e)
+      }
+      turnstileToken.value = ''
+    }
   } finally {
     loading.value = false
   }
@@ -297,6 +392,11 @@ const handleSubmit = async () => {
             <p v-if="errorMessage" class="login-error">
               {{ errorMessage }}
             </p>
+
+            <!-- Cloudflare Turnstile CAPTCHA -->
+            <div v-if="siteKey" class="turnstile-wrapper">
+              <div ref="turnstileContainer"></div>
+            </div>
 
             <!-- Botón -->
             <button
@@ -1315,6 +1415,14 @@ const handleSubmit = async () => {
   .form-panel {
     padding: 65px;
   }
+}
+
+.turnstile-wrapper {
+  margin: 15px 0;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 65px;
 }
 
 /* =========================================================
