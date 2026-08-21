@@ -1151,7 +1151,8 @@ function useAuth() {
 		user.value = response.data.user;
 		return {
 			requiresOtp: false,
-			roleCode: primaryRole(response.data.user)?.code ?? null
+			roleCode: primaryRole(response.data.user)?.code ?? null,
+			requiresPasswordConfirmation: response.data.user.requires_password_confirmation
 		};
 	}
 	async function verifyMfa(challengeId, code) {
@@ -1164,7 +1165,10 @@ function useAuth() {
 		});
 		token.value = response.data.token;
 		user.value = response.data.user;
-		return primaryRole(response.data.user)?.code ?? null;
+		return {
+			roleCode: primaryRole(response.data.user)?.code ?? null,
+			requiresPasswordConfirmation: response.data.user.requires_password_confirmation
+		};
 	}
 	async function resendMfa(challengeId) {
 		return (await $fetch$2(`${config.public.apiBase}/auth/mfa/resend`, {
@@ -1196,6 +1200,31 @@ function useAuth() {
 	function roleHome(code) {
 		return code && ROLE_ROUTES[code] ? ROLE_ROUTES[code] : "/login";
 	}
+	async function confirmPassword() {
+		await $fetch$2(`${config.public.apiBase}/auth/confirm-password`, {
+			method: "POST",
+			headers: { Authorization: `Bearer ${token.value}` }
+		});
+		if (user.value) user.value = {
+			...user.value,
+			requires_password_confirmation: false
+		};
+	}
+	async function changePassword(currentPassword, password, passwordConfirmation) {
+		await $fetch$2(`${config.public.apiBase}/auth/change-password`, {
+			method: "POST",
+			headers: { Authorization: `Bearer ${token.value}` },
+			body: {
+				current_password: currentPassword,
+				password,
+				password_confirmation: passwordConfirmation
+			}
+		});
+		if (user.value) user.value = {
+			...user.value,
+			requires_password_confirmation: false
+		};
+	}
 	return {
 		token,
 		user,
@@ -1207,7 +1236,9 @@ function useAuth() {
 		resendMfa,
 		logout,
 		roleHome,
-		fetchMe
+		fetchMe,
+		confirmPassword,
+		changePassword
 	};
 }
 
@@ -14454,7 +14485,7 @@ var globalMiddleware = [
 	layout_global_default,
 	/* @__PURE__ */ defineNuxtRouteMiddleware((to) => {})
 ];
-var namedMiddleware = { "approvals-inbox-channel": () => import('../build/approvals-inbox-channel-B1Ef-HLw.mjs') };
+var namedMiddleware = { "approvals-inbox-channel": () => import('../build/approvals-inbox-channel-C38yzOSA.mjs') };
 //#endregion
 //#region virtual:nuxt:node_modules%2F.cache%2Fnuxt%2F.nuxt%2Froutes.mjs
 var virtual_nuxt_node_modules_2F_cache_2Fnuxt_2F_nuxt_2Froutes_default = [
@@ -14471,129 +14502,129 @@ var virtual_nuxt_node_modules_2F_cache_2Fnuxt_2F_nuxt_2Froutes_default = [
 	{
 		name: "registro-verificacion-coordinador-list",
 		path: "/registro-verificacion/coordinador/list",
-		component: () => import('../build/list-Blf37FE7.mjs')
+		component: () => import('../build/list-Cy0ZDWkm.mjs')
 	},
 	{
 		name: "registro-verificacion-verificador-dashboard_verificador",
 		path: "/registro-verificacion/verificador/dashboard_verificador",
-		component: () => import('../build/dashboard_verificador-DghGkEDo.mjs')
+		component: () => import('../build/dashboard_verificador-DfZcxCsU.mjs')
 	},
 	{
 		name: "distributor-portal-clientes",
 		path: "/distributor-portal/clientes",
 		meta: { layout: false },
-		component: () => import('../build/clientes-8gdGOsmh.mjs')
+		component: () => import('../build/clientes-BsIcQUnD.mjs')
 	},
 	{
 		name: "distributor-portal-collection-relationship",
 		path: "/distributor-portal/collection-relationship",
 		meta: { layout: "distributor-portal" },
-		component: () => import('../build/collection-relationship-DxvOPQZ4.mjs')
+		component: () => import('../build/collection-relationship-Cu3w4AZL.mjs')
 	},
 	{
 		name: "distributor-portal-configure_vale",
 		path: "/distributor-portal/configure_vale",
 		meta: { layout: false },
-		component: () => import('../build/configure_vale-CzdFQT0M.mjs')
+		component: () => import('../build/configure_vale-i_uD0wg0.mjs')
 	},
 	{
 		name: "distributor-portal-points",
 		path: "/distributor-portal/points",
 		meta: { layout: "distributor-portal" },
-		component: () => import('../build/points-DnGDq_Lr.mjs')
+		component: () => import('../build/points-EpMJiMF5.mjs')
 	},
 	{
 		name: "distributor-portal-vales",
 		path: "/distributor-portal/vales",
 		meta: { layout: false },
-		component: () => import('../build/vales-BRz4QaCP.mjs')
+		component: () => import('../build/vales-dd8dLJaI.mjs')
 	},
 	{
 		name: "general-branches",
 		path: "/general/branches",
-		component: () => import('../build/branches-IyAeVIJL.mjs')
+		component: () => import('../build/branches-C2KtaPg4.mjs')
 	},
 	{
 		name: "general-categories",
 		path: "/general/categories",
-		component: () => import('../build/categories-NX0CNx0z.mjs')
+		component: () => import('../build/categories-B95mm1TZ.mjs')
 	},
 	{
 		name: "general-customers",
 		path: "/general/customers",
-		component: () => import('../build/customers-Bw1PUxu8.mjs')
+		component: () => import('../build/customers-CwYimctM.mjs')
 	},
 	{
 		name: "general-cutoffs",
 		path: "/general/cutoffs",
-		component: () => import('../build/cutoffs-Fm8w2kEk.mjs')
+		component: () => import('../build/cutoffs-DCZkWNwT.mjs')
 	},
 	{
 		name: "general-inbox",
 		path: "/general/inbox",
 		meta: { "middleware": "approvals-inbox-channel" },
-		component: () => import('../build/inbox-Bx1TzQiw.mjs')
+		component: () => import('../build/inbox-nmm56rj0.mjs')
 	},
 	{
 		name: "general-logs",
 		path: "/general/logs",
-		component: () => import('../build/logs-XebtSAlG.mjs')
+		component: () => import('../build/logs-B_OTmHgB.mjs')
 	},
 	{
 		name: "general-products",
 		path: "/general/products",
-		component: () => import('../build/products-C7xM-PaY.mjs')
+		component: () => import('../build/products-DWrkQb6Q.mjs')
 	},
 	{
 		name: "general-reconciliations",
 		path: "/general/reconciliations",
-		component: () => import('../build/reconciliations-C47H7xxB.mjs')
+		component: () => import('../build/reconciliations-B08xSn7e.mjs')
 	},
 	{
 		name: "general-settings",
 		path: "/general/settings",
-		component: () => import('../build/settings-BwEZGig2.mjs')
+		component: () => import('../build/settings-BtuEp33t.mjs')
 	},
 	{
 		name: "general-staff",
 		path: "/general/staff",
-		component: () => import('../build/staff-CDLz2_MM.mjs')
+		component: () => import('../build/staff-Bq1vZoe1.mjs')
 	},
 	{
 		name: "general-voucher-requests",
 		path: "/general/voucher-requests",
-		component: () => import('../build/voucher-requests-Bc9i0aNc.mjs')
+		component: () => import('../build/voucher-requests-DzvEeOQH.mjs')
 	},
 	{
 		name: "general-vouchers",
 		path: "/general/vouchers",
-		component: () => import('../build/vouchers-CcVfKYuS.mjs')
+		component: () => import('../build/vouchers-Bvkfslrh.mjs')
 	},
 	{
 		name: "registro-verificacion-new",
 		path: "/registro-verificacion/new",
-		component: () => import('../build/new-CTrEC1tP.mjs')
+		component: () => import('../build/new-DDCCzRQ2.mjs')
 	},
 	{
 		name: "distributor-portal",
 		path: "/distributor-portal",
 		meta: { layout: "distributor-portal" },
-		component: () => import('../build/distributor-portal-eqe-0ex1.mjs')
+		component: () => import('../build/distributor-portal-D08MHX2x.mjs')
 	},
 	{
 		name: "general",
 		path: "/general",
-		component: () => import('../build/general-Bn017slP.mjs')
+		component: () => import('../build/general-BoLTtOZD.mjs')
 	},
 	{
 		name: "login",
 		path: "/login",
-		component: () => import('../build/login-Dg9qvPHX.mjs')
+		component: () => import('../build/login-CF8_GCUC.mjs')
 	},
 	{
 		name: "registro-verificacion",
 		path: "/registro-verificacion",
-		component: () => import('../build/registro-verificacion-BkgU_bce.mjs')
+		component: () => import('../build/registro-verificacion-CBx3-NuQ.mjs')
 	},
 	{
 		name: "index",
@@ -17560,8 +17591,8 @@ function resolveLayoutName(route, name) {
 var virtual_nuxt_node_modules_2F_cache_2Fnuxt_2F_nuxt_2Flayouts_default = {
 	default: defineAsyncComponent(() => import('../build/default-BA_2QT4E.mjs').then((m) => m.default || m)),
 	"distributor-portal": defineAsyncComponent(() => import('../build/distributor-portal-BxM0Kalw.mjs').then((m) => m.default || m)),
-	general: defineAsyncComponent(() => import('../build/general-Cj1Eh5Is.mjs').then((m) => m.default || m)),
-	"registro-verificacion": defineAsyncComponent(() => import('../build/registro-verificacion-CykJYs4H.mjs').then((m) => m.default || m))
+	general: defineAsyncComponent(() => import('../build/general-BOH4B16-.mjs').then((m) => m.default || m)),
+	"registro-verificacion": defineAsyncComponent(() => import('../build/registro-verificacion-D4AWGi1v.mjs').then((m) => m.default || m))
 };
 //#endregion
 //#region node_modules/.pnpm/nuxt@4.5.2_@babel+plugin-sy_8d3ee09fd7864d66cfa01977225356c6/node_modules/nuxt/dist/app/components/nuxt-layout.js
