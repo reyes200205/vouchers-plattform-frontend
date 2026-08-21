@@ -311,26 +311,6 @@ const volver = () => {
           >
         </div>
 
-        <div class="input-group">
-          <label>Notas del domicilio / persona</label>
-          <textarea
-            v-model="form.notasPersona"
-            placeholder="Referencias, observaciones..."
-            rows="2"
-            class="app-input textarea"
-          />
-        </div>
-
-        <div class="input-group">
-          <label>Notas del cliente</label>
-          <textarea
-            v-model="form.notasCliente"
-            placeholder="Observaciones generales del cliente..."
-            rows="2"
-            class="app-input textarea"
-          />
-        </div>
-
         <button type="submit" class="submit-btn" :disabled="saving">
           {{ saving ? 'Guardando…' : 'Guardar Cliente' }}
         </button>
@@ -392,7 +372,7 @@ const volver = () => {
 }
 
 .form-body {
-  padding: 20px 16px 40px 16px;
+ padding: 20px 16px 110px 16px; 
   display: flex;
   flex-direction: column;
   gap: 16px;
