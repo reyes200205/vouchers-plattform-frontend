@@ -88,6 +88,11 @@ export const ROLE_ROUTES: Record<string, string> = {
   'verifier': '/registro-verificacion/verificador/dashboard_verificador'
 }
 
+// Roles que deciden aprobaciones (Bandeja de Aprobaciones). En el canal
+// 'public' (fuera de VPN) se les oculta esa sección aunque tengan el
+// permiso inbox.view — deben entrar por la VPN para aprobar.
+export const APPROVAL_RESTRICTED_ROLES = ['general_manager', 'branch_manager']
+
 export function useAuth() {
   const config = useRuntimeConfig()
   const token = useCookie<string | null>('auth_token', { default: () => null })

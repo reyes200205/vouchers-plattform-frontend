@@ -1,6 +1,10 @@
 <script setup lang="ts">
 import type { CustomerChangeRequest, InboxData, PaginatedData } from '~/types'
 
+definePageMeta({
+  middleware: 'approvals-inbox-channel'
+})
+
 const { listInbox } = useInbox()
 const { listBranches } = useBranches()
 const { listCustomerChangeRequests } = useCustomers()
