@@ -1,7 +1,7 @@
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, onMounted, onUnmounted } from 'vue'
 
-const { login, roleHome } = useAuth()
+const { login, verifyMfa, resendMfa, roleHome } = useAuth()
 
 const username = ref('')
 const password = ref('')
@@ -10,8 +10,88 @@ const rememberMe = ref(false)
 const loading = ref(false)
 const errorMessage = ref('')
 
+// Segundo factor (OTP por correo): solo aplica a roles que lo requieren
+// (ej. super-admin). Cuando el backend responde requires_otp, se muestra
+// este paso en vez de navegar directo a la plataforma.
+const mfaStep = ref(false)
+const mfaChallengeId = ref('')
+const mfaMaskedEmail = ref('')
+const otpCode = ref('')
+const otpLoading = ref(false)
+const otpError = ref('')
+const resendLoading = ref(false)
+const resendMessage = ref('')
+
+// Cloudflare Turnstile setup
+const runtimeConfig = useRuntimeConfig()
+const siteKey = runtimeConfig.public.turnstileSiteKey
+const turnstileContainer = ref<HTMLElement | null>(null)
+const turnstileToken = ref('')
+let turnstileWidgetId: string | number | null = null
+let turnstileInterval: any = null
+
+// Inject Turnstile script header element dynamically
+useHead({
+  script: [
+    {
+      src: 'https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit',
+      async: true,
+      defer: true
+    }
+  ]
+})
+
+const initTurnstile = () => {
+  if (siteKey && window.turnstile && turnstileContainer.value) {
+    try {
+      turnstileWidgetId = window.turnstile.render(turnstileContainer.value, {
+        'sitekey': siteKey,
+        'callback': (token: string) => {
+          turnstileToken.value = token
+          errorMessage.value = ''
+        },
+        'expired-callback': () => {
+          turnstileToken.value = ''
+        },
+        'error-callback': () => {
+          turnstileToken.value = ''
+        }
+      })
+    } catch (e) {
+      console.warn('Turnstile render error:', e)
+    }
+  }
+}
+
+onMounted(() => {
+  if (window.turnstile) {
+    initTurnstile()
+  } else {
+    turnstileInterval = setInterval(() => {
+      if (window.turnstile) {
+        clearInterval(turnstileInterval)
+        initTurnstile()
+      }
+    }, 100)
+  }
+})
+
+onUnmounted(() => {
+  if (turnstileInterval) {
+    clearInterval(turnstileInterval)
+  }
+  if (turnstileWidgetId !== null && window.turnstile) {
+    window.turnstile.remove(turnstileWidgetId)
+  }
+})
+
 const handleSubmit = async () => {
   if (!username.value || !password.value) {
+    return
+  }
+
+  if (siteKey && !turnstileToken.value) {
+    errorMessage.value = 'Por favor, completa el captcha de seguridad.'
     return
   }
 
@@ -19,14 +99,89 @@ const handleSubmit = async () => {
   errorMessage.value = ''
 
   try {
-    const roleCode = await login(username.value, password.value)
-    await navigateTo(roleHome(roleCode))
-  } catch (error) {
-    errorMessage.value = 'Usuario o contraseña incorrectos.'
+    const result = await login(username.value, password.value, turnstileToken.value)
+
+    if (result.requiresOtp) {
+      mfaChallengeId.value = result.challengeId
+      mfaMaskedEmail.value = result.maskedEmail ?? ''
+      mfaStep.value = true
+      return
+    }
+
+    await navigateTo(roleHome(result.roleCode))
+  } catch (error: any) {
+    const responseData = error.data || error.response?._data
+    let msg = 'Usuario o contraseña incorrectos.'
+
+    if (responseData) {
+      if (responseData.errors) {
+        const firstErrorKey = Object.keys(responseData.errors)[0]
+        if (firstErrorKey && responseData.errors[firstErrorKey]?.[0]) {
+          msg = responseData.errors[firstErrorKey][0]
+        } else if (responseData.message) {
+          msg = responseData.message
+        }
+      } else if (responseData.message) {
+        msg = responseData.message
+      }
+    } else if (error.message && !error.message.includes('fetch') && !error.message.includes('Fetch')) {
+      msg = error.message
+    }
+
+    errorMessage.value = msg
     console.error('Error al iniciar sesión:', error)
+
+    if (turnstileWidgetId !== null && window.turnstile) {
+      try {
+        window.turnstile.reset(turnstileWidgetId)
+      } catch (e) {
+        console.warn('Turnstile reset ignored:', e)
+      }
+      turnstileToken.value = ''
+    }
   } finally {
     loading.value = false
   }
+}
+
+const handleVerifyOtp = async () => {
+  if (!otpCode.value) return
+
+  otpLoading.value = true
+  otpError.value = ''
+
+  try {
+    const roleCode = await verifyMfa(mfaChallengeId.value, otpCode.value)
+    await navigateTo(roleHome(roleCode))
+  } catch (error: any) {
+    const responseData = error.data || error.response?._data
+    otpError.value = responseData?.message ?? 'El código ingresado es incorrecto.'
+  } finally {
+    otpLoading.value = false
+  }
+}
+
+const handleResendOtp = async () => {
+  resendLoading.value = true
+  resendMessage.value = ''
+  otpError.value = ''
+
+  try {
+    await resendMfa(mfaChallengeId.value)
+    resendMessage.value = 'Se envió un nuevo código a tu correo.'
+  } catch {
+    otpError.value = 'No se pudo reenviar el código. Intenta de nuevo.'
+  } finally {
+    resendLoading.value = false
+  }
+}
+
+const backToLogin = () => {
+  mfaStep.value = false
+  otpCode.value = ''
+  otpError.value = ''
+  resendMessage.value = ''
+  password.value = ''
 }
 </script>
 
@@ -168,7 +323,7 @@ const handleSubmit = async () => {
 
         <div class="form-wrapper">
           <!-- Encabezado -->
-          <div class="form-header">
+          <div v-if="!mfaStep" class="form-header">
             <span>BIENVENIDO DE NUEVO</span>
 
             <h2>Iniciar sesión</h2>
@@ -178,8 +333,79 @@ const handleSubmit = async () => {
             </p>
           </div>
 
-          <!-- FORMULARIO -->
-          <form @submit.prevent="handleSubmit">
+          <div v-else class="form-header">
+            <span>VERIFICACIÓN REQUERIDA</span>
+
+            <h2>Ingresa tu código</h2>
+
+            <p>
+              Enviamos un código de verificación a
+              <strong v-if="mfaMaskedEmail">{{ mfaMaskedEmail }}</strong>
+              <span v-else>tu correo</span>.
+              Ingresa el código para completar tu inicio de sesión.
+            </p>
+          </div>
+
+          <!-- FORMULARIO DE VERIFICACIÓN OTP -->
+          <form v-if="mfaStep" @submit.prevent="handleVerifyOtp">
+            <div class="form-group">
+              <label for="otp-code">Código de verificación</label>
+
+              <div class="input-wrapper">
+                <input
+                  id="otp-code"
+                  v-model="otpCode"
+                  type="text"
+                  inputmode="numeric"
+                  autocomplete="one-time-code"
+                  maxlength="6"
+                  placeholder="000000"
+                  required
+                  style="padding-left: 16px; letter-spacing: 4px; text-align: center;"
+                >
+              </div>
+            </div>
+
+            <p v-if="otpError" class="login-error">
+              {{ otpError }}
+            </p>
+
+            <p v-if="resendMessage" class="login-error" style="background:#eafaf0; color:#1e7e42;">
+              {{ resendMessage }}
+            </p>
+
+            <button
+              type="submit"
+              class="login-button"
+              :disabled="otpLoading"
+            >
+              <span v-if="!otpLoading">Verificar código</span>
+              <span v-else>Verificando...</span>
+              <span v-if="!otpLoading" class="arrow">→</span>
+            </button>
+
+            <div style="display:flex; justify-content:space-between; margin-top:16px;">
+              <button
+                type="button"
+                class="forgot-password"
+                :disabled="resendLoading"
+                @click="handleResendOtp"
+              >
+                {{ resendLoading ? 'Enviando...' : 'Reenviar código' }}
+              </button>
+
+              <button
+                type="button"
+                class="forgot-password"
+                @click="backToLogin"
+              >
+                Volver al inicio de sesión
+              </button>
+            </div>
+          </form>
+
+          <!-- FORMULARIO DE LOGIN -->
+          <form v-else @submit.prevent="handleSubmit">
             <!-- Usuario -->
             <div class="form-group">
               <label for="username">
@@ -297,6 +523,11 @@ const handleSubmit = async () => {
             <p v-if="errorMessage" class="login-error">
               {{ errorMessage }}
             </p>
+
+            <!-- Cloudflare Turnstile CAPTCHA -->
+            <div v-if="siteKey" class="turnstile-wrapper">
+              <div ref="turnstileContainer" />
+            </div>
 
             <!-- Botón -->
             <button
@@ -1315,6 +1546,14 @@ const handleSubmit = async () => {
   .form-panel {
     padding: 65px;
   }
+}
+
+.turnstile-wrapper {
+  margin: 15px 0;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 65px;
 }
 
 /* =========================================================

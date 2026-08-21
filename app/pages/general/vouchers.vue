@@ -19,7 +19,7 @@ const { data, status, error, refresh } = await useAsyncData<PaginatedData<Vouche
   }),
   {
     watch: [statusFilter, page],
-    default: () => ({ data: [], meta: { current_page: 1, last_page: 1, per_page: 15, total: 0 } })
+    default: () => ({ data: [], links: [], meta: { current_page: 1, last_page: 1, per_page: 15, total: 0 } })
   }
 )
 
@@ -40,13 +40,13 @@ const {
   'pending-voucher-requests',
   () => {
     if (!canApprove.value) {
-      return Promise.resolve({ data: [], meta: { current_page: 1, last_page: 1, per_page: 15, total: 0 } })
+      return Promise.resolve({ data: [], links: [], meta: { current_page: 1, last_page: 1, per_page: 15, total: 0 } })
     }
     return listPendingVoucherRequests({ page: requestsPage.value })
   },
   {
     watch: [requestsPage],
-    default: () => ({ data: [], meta: { current_page: 1, last_page: 1, per_page: 15, total: 0 } })
+    default: () => ({ data: [], links: [], meta: { current_page: 1, last_page: 1, per_page: 15, total: 0 } })
   }
 )
 
@@ -67,7 +67,6 @@ async function onDisbursed() {
 
 watch(error, (e) => {
   if (e) {
-    // eslint-disable-next-line no-console
     console.error('[vouchers] No se pudieron cargar los vales:', e)
   }
 }, { immediate: true })
@@ -170,7 +169,9 @@ function distributorName(voucher: { distributor?: { person?: { first_name: strin
               <p class="truncate text-xs text-muted">
                 Distribuidora: {{ request.distributor_name || `#${request.distributor_id}` }}
                 <span v-if="request.distributor_number">({{ request.distributor_number }})</span>
-                <template v-if="request.financial_product_name"> · {{ request.financial_product_name }}</template>
+                <template v-if="request.financial_product_name">
+                  · {{ request.financial_product_name }}
+                </template>
               </p>
             </div>
 

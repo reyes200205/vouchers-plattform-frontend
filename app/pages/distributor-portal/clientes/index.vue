@@ -34,8 +34,13 @@ const saving = ref(false)
 const errorMessage = ref<string | null>(null)
 
 const guardarCliente = async () => {
-  if (form.value.curp.trim().length !== 18) {
-    errorMessage.value = 'La CURP debe tener exactamente 18 caracteres.'
+  if (form.value.curp.trim().length !== 18 || !isValidCurp(form.value.curp)) {
+    errorMessage.value = 'La CURP debe tener 18 caracteres y un formato válido.'
+    return
+  }
+
+  if (form.value.rfc.trim() && !isValidRfc(form.value.rfc)) {
+    errorMessage.value = 'El RFC capturado no tiene un formato válido.'
     return
   }
 
@@ -70,8 +75,7 @@ const guardarCliente = async () => {
     navigateTo('/distributor-portal/vales')
   } catch (e: unknown) {
     console.error(e)
-    const fetchError = e as { data?: { message?: string } }
-    errorMessage.value = fetchError?.data?.message || 'No se pudo registrar el cliente. Verifica los datos e intenta de nuevo.'
+    errorMessage.value = extractApiErrorMessage(e, 'No se pudo registrar el cliente. Verifica los datos e intenta de nuevo.')
   } finally {
     saving.value = false
   }
@@ -311,26 +315,6 @@ const volver = () => {
           >
         </div>
 
-        <div class="input-group">
-          <label>Notas del domicilio / persona</label>
-          <textarea
-            v-model="form.notasPersona"
-            placeholder="Referencias, observaciones..."
-            rows="2"
-            class="app-input textarea"
-          />
-        </div>
-
-        <div class="input-group">
-          <label>Notas del cliente</label>
-          <textarea
-            v-model="form.notasCliente"
-            placeholder="Observaciones generales del cliente..."
-            rows="2"
-            class="app-input textarea"
-          />
-        </div>
-
         <button type="submit" class="submit-btn" :disabled="saving">
           {{ saving ? 'Guardando…' : 'Guardar Cliente' }}
         </button>
@@ -392,7 +376,7 @@ const volver = () => {
 }
 
 .form-body {
-  padding: 20px 16px 40px 16px;
+ padding: 20px 16px 110px 16px;
   display: flex;
   flex-direction: column;
   gap: 16px;

@@ -299,7 +299,6 @@ export interface BranchSettings {
   pre_vale_max_percentage: string | null
   pre_vale_tolerance_amount: string | null
   point_value_mxn: string | null
-  voucher_expiration_days: number | null
 }
 
 export interface PointSettings {
@@ -382,7 +381,7 @@ export interface PaginatedData<T> {
 export interface CutoffRelationDistributor {
   id: number
   distributor_number: string
-  business_name: string
+  person: Person | null
 }
 
 export interface Person {
@@ -446,6 +445,8 @@ export interface CustomerChangeRequest {
 export type VoucherStatus = 'BORRADOR' | 'APROBADO' | 'TRANSFERIDO' | 'ACTIVO' | 'PAGO_PARCIAL' | 'PAGADO' | 'LIQUIDADO' | 'MOROSO' | 'RECLAMADO' | 'CANCELADO' | 'REVERSADO'
 
 export interface Voucher {
+  is_expired: any
+  expiration_date: boolean
   id: number
   voucher_number: string
   distributor_id: number
@@ -464,8 +465,6 @@ export interface Voucher {
   issued_at: string | null
   transferred_at: string | null
   payment_due_date: string | null
-  is_expired: boolean
-  expiration_date: string | null
   notes: string | null
   customer: (Pick<Customer, 'id' | 'customer_code' | 'status' | 'verified_at'> & { person: Person | null }) | null
   distributor?: { id: number, distributor_number: string, person: Person | null } | null
@@ -502,6 +501,12 @@ export interface CustomerPayment {
 export type CutoffStatus = 'PROGRAMADO' | 'EJECUTADO' | 'CERRADO' | 'REPROCESADO'
 export type CutoffRelationStatus = 'GENERADA' | 'PAGADA' | 'PARCIAL' | 'VENCIDA' | 'CERRADA'
 
+export interface CutoffRelationItemCustomer {
+  id: number
+  customer_code: string
+  person: Person | null
+}
+
 export interface CutoffRelationItem {
   id: number
   cutoff_relation_id: number
@@ -520,6 +525,7 @@ export interface CutoffRelationItem {
   previous_paid_amount: string | null
   origin_cutoff_id: number | null
   origin_relation_id: number | null
+  customer?: CutoffRelationItemCustomer | null
 }
 
 export interface CutoffRelation {
@@ -564,3 +570,57 @@ export interface Cutoff {
   total_amount_due?: number
   relations?: CutoffRelation[]
 }
+
+declare global {
+  interface Window {
+    turnstile?: {
+      render: (
+        container: string | HTMLElement,
+        options: {
+          sitekey: string
+          callback?: (token: string) => void
+          'expired-callback'?: () => void
+          'error-callback'?: () => void
+          [key: string]: any
+        }
+      ) => string | number
+      reset: (id?: string | number | null) => void
+      remove: (id?: string | number | null) => void
+    }
+  }
+}
+
+declare global {
+  interface Window {
+    turnstile?: {
+      render: (
+        container: string | HTMLElement,
+        options: {
+          sitekey: string
+          action?: string
+          cData?: string
+          callback?: (token: string) => void
+          'expired-callback'?: () => void
+          'timeout-callback'?: () => void
+          'error-callback'?: () => void
+          'unsupported-callback'?: () => void
+          theme?: 'light' | 'dark' | 'auto'
+          size?: 'normal' | 'flexible' | 'compact'
+          tabindex?: number
+          'response-field'?: boolean
+          'response-field-name'?: string
+          retry?: 'auto' | 'never'
+          'retry-interval'?: number
+          refresh?: 'auto' | 'manual' | 'never'
+          appearance?: 'always' | 'execute' | 'interaction-only'
+          execution?: 'render' | 'execute'
+          [key: string]: any
+        }
+      ) => string | number
+      reset: (widgetId?: string | number | null) => void
+      remove: (widgetId?: string | number | null) => void
+      getResponse: (widgetId?: string | number | null) => string | undefined
+    }
+  }
+}
+

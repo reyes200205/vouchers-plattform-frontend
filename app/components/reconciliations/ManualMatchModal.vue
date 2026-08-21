@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import * as z from 'zod'
 import type { FormSubmitEvent } from '@nuxt/ui'
+import { customerFullName } from '~/composables/useCustomers'
 import type { BankTransaction, CutoffRelation } from '~/types'
 
 const props = defineProps<{
@@ -45,7 +46,7 @@ const relationItems = computed(() => {
   return relations.value
     .filter(relation => eligibleStatuses.includes(relation.status ?? ''))
     .map(relation => ({
-      label: `${relation.distributor?.business_name ?? `Distribuidor ${relation.distributor_id}`} · ${relation.relation_number} · $${relation.total_amount_due}`,
+      label: `${relation.distributor?.person ? customerFullName(relation.distributor.person) : `Distribuidor ${relation.distributor_id}`} · ${relation.relation_number} · $${relation.total_amount_due}`,
       value: relation.id
     }))
 })

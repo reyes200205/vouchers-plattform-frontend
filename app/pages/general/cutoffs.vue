@@ -2,6 +2,7 @@
 import type { DropdownMenuItem } from '@nuxt/ui'
 import GenerateCutoffModal from '~/components/cutoffs/GenerateCutoffModal.vue'
 import RelationDetailModal from '~/components/cutoffs/RelationDetailModal.vue'
+import { customerFullName } from '~/composables/useCustomers'
 import type { Branch, Cutoff, CutoffRelation, CutoffStatus } from '~/types'
 
 const toast = useToast()
@@ -356,7 +357,7 @@ function getCutoffItems(cutoff: Cutoff): DropdownMenuItem[] {
           >
             <div class="min-w-0">
               <p class="truncate font-medium text-highlighted">
-                {{ relation.distributor?.business_name ?? `Distribuidora #${relation.distributor_id}` }}
+                {{ relation.distributor?.person ? customerFullName(relation.distributor.person) : `Distribuidora #${relation.distributor_id}` }}
               </p>
               <p class="text-xs text-muted">
                 {{ relation.relation_number }} · Ref: {{ relation.payment_reference ?? '—' }}

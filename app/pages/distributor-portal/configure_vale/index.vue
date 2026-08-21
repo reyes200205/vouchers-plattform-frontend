@@ -104,20 +104,21 @@ const selectedProduct = computed(() =>
   products.value.find(p => p.id === selectedProductId.value) ?? null
 )
 
-// Replica el calculo del backend (FinancialCalculationService) solo para mostrar
-// una vista previa; el monto final y oficial lo calcula y persiste el servidor.
-// La utilidad de la distribuidora (comisión de su categoría) no se le cobra al
-// cliente aparte: sale de lo que ya cobra la empresa, así que se resta del
-// total antes de dividir entre quincenas. El pago quincenal se redondea
-// siempre al piso, al peso entero (nunca a los centavos ni al más cercano).
+// Replica el calculo del backend (FinancialCalculationService::calculateVoucherSnapshot)
+// solo para mostrar una vista previa; el monto final y oficial lo calcula y
+// persiste el servidor. La comisión de categoría de la distribuidora (su
+// utilidad) NO se resta aquí: el cliente paga la quincena COMPLETA (con esa
+// comisión incluida) para que la distribuidora se la gane al cobrarle — solo
+// se le descuenta más adelante, a la distribuidora, en el corte de relación
+// (GenerateCutoffService), nunca en lo que se le muestra o cobra al cliente.
+// El pago quincenal se redondea siempre al piso, al peso entero (nunca a los
+// centavos ni al más cercano).
 function previewSnapshot(product: FinancialProduct) {
   const principal = Number(product.principal_amount)
   const commission = Math.round(principal * Number(product.company_commission_percentage) / 100 * 100) / 100
   const interestPerFortnight = Math.round(principal * Number(product.fortnightly_interest_percentage) / 100 * 100) / 100
   const interestTotal = Math.round(interestPerFortnight * product.number_of_fortnights * 100) / 100
-  const categoryCommissionRaw = user.value?.distributor?.category?.commission_percentage ?? 0
-  const distributorProfit = Math.round(principal * Number(categoryCommissionRaw) / 100 * 100) / 100
-  const totalDebt = Math.round((principal + commission + Number(product.insurance_amount) + interestTotal - distributorProfit) * 100) / 100
+  const totalDebt = Math.round((principal + commission + Number(product.insurance_amount) + interestTotal) * 100) / 100
   const fortnightlyPayment = Math.floor(totalDebt / product.number_of_fortnights)
 
   return { totalDebt, fortnightlyPayment }

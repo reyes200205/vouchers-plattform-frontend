@@ -71,7 +71,7 @@ const links = computed(() => {
     })
   }
 
-  if (hasPermission('branches.manage')) {
+  if (hasAnyPermission(['branches.manage', 'branches.view'])) {
     items.push({
       label: 'Sucursales',
       icon: 'i-lucide-store',
@@ -142,6 +142,17 @@ const links = computed(() => {
       label: 'Personal',
       icon: 'i-lucide-user-cog',
       to: '/general/staff',
+      onSelect: () => {
+        open.value = false
+      }
+    })
+  }
+
+  if (hasPermission('audit-logs.view')) {
+    items.push({
+      label: 'Bitácora',
+      icon: 'i-lucide-history',
+      to: '/general/logs',
       onSelect: () => {
         open.value = false
       }

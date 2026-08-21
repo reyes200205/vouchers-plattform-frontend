@@ -8,6 +8,10 @@ export default defineNuxtConfig({
     '@vueuse/nuxt'
   ],
 
+  colorMode: {
+    preference: 'light'
+  },
+
   devtools: {
     enabled: true
   },
@@ -17,7 +21,8 @@ export default defineNuxtConfig({
   runtimeConfig: {
     public: {
       apiBase: 'http://127.0.0.1:8000/api/v1',
-      version: pkg.version
+      version: pkg.version,
+      turnstileSiteKey: process.env.NUXT_PUBLIC_TURNSTILE_SITE_KEY || '1x00000000000000000000AA'
     }
   },
 
@@ -28,6 +33,19 @@ export default defineNuxtConfig({
   },
 
   compatibilityDate: '2026-06-30',
+
+  typescript: {
+    tsConfig: {
+      compilerOptions: {
+        types: ['node']
+      }
+    },
+    nodeTsConfig: {
+      compilerOptions: {
+        types: ['node']
+      }
+    }
+  },
 
   eslint: {
     config: {

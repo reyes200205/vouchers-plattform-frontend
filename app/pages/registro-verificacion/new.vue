@@ -23,8 +23,8 @@ const schema = z.object({
   second_last_name: z.string().optional(),
   gender: z.string().optional(),
   birth_date: z.string().optional(),
-  curp: z.string().optional(),
-  rfc: z.string().optional(),
+  curp: z.string().optional().refine(value => !value || (value.length === 18 && isValidCurp(value)), 'CURP inválida (18 caracteres, formato oficial)'),
+  rfc: z.string().optional().refine(value => !value || isValidRfc(value), 'RFC con formato inválido'),
   home_phone: z.string().optional(),
   mobile_phone: z.string().optional(),
   email: z.union([z.string().email('Correo inválido'), z.literal('')]).optional(),
@@ -199,12 +199,12 @@ async function onSubmit(event: FormSubmitEvent<Schema>) {
       color: 'success'
     })
 
-    await router.push('/registro-verificacion/list')
+    await router.push('/registro-verificacion/coordinador/list')
   } catch (e) {
     console.error(e)
     toast.add({
       title: 'Error',
-      description: 'No se pudo registrar la solicitud. Verifica los datos e intenta de nuevo.',
+      description: extractApiErrorMessage(e, 'No se pudo registrar la solicitud. Verifica los datos e intenta de nuevo.'),
       color: 'error'
     })
   } finally {

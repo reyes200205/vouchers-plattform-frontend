@@ -1,13 +1,11 @@
 <script setup lang="ts">
 import type { TableColumn } from '@nuxt/ui'
-import type { Row } from '@tanstack/table-core'
 import type { Customer, CustomerStatus } from '~/types'
 
 const UBadge = resolveComponent('UBadge')
 const UDropdownMenu = resolveComponent('UDropdownMenu')
 const UButton = resolveComponent('UButton')
 
-const toast = useToast()
 const { user } = useAuth()
 const { listCustomers } = useCustomers()
 

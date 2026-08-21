@@ -147,6 +147,8 @@ export interface SubmitVerificationPayload {
   verification_longitude?: number
   distance_meters?: number
   front_photo: string
+  id_with_person_photo?: string
+  proof_of_address_photo?: string
 }
 
 export type VerificationPhotoType = 'front_photo' | 'id_with_person_photo' | 'proof_of_address_photo'

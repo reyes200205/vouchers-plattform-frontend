@@ -13,7 +13,6 @@ const schema = z.object({
   amount: z.coerce.string().min(1, 'Requerido').refine(v => Number(v) > 0, 'El monto debe ser mayor a 0'),
   payment_date: z.string().optional(),
   payment_method: z.enum(['EFECTIVO', 'TRANSFERENCIA']),
-  affects_points: z.boolean(),
   notes: z.string().max(255, 'Muy largo').optional()
 })
 
@@ -42,7 +41,6 @@ const state = reactive<Partial<Schema>>({
   amount: defaultAmount(),
   payment_date: new Date().toISOString().slice(0, 10),
   payment_method: 'EFECTIVO',
-  affects_points: true,
   notes: undefined
 })
 
@@ -51,7 +49,6 @@ watch(open, (isOpen) => {
   state.amount = defaultAmount()
   state.payment_date = new Date().toISOString().slice(0, 10)
   state.payment_method = 'EFECTIVO'
-  state.affects_points = true
   state.notes = undefined
 })
 
@@ -77,7 +74,6 @@ async function onSubmit(event: FormSubmitEvent<Schema>) {
       amount: event.data.amount,
       payment_date: event.data.payment_date || undefined,
       payment_method: event.data.payment_method,
-      affects_points: event.data.affects_points,
       notes: event.data.notes || undefined
     })
 
@@ -135,6 +131,11 @@ async function onSubmit(event: FormSubmitEvent<Schema>) {
             </span>
           </p>
 
+          <p class="mt-1 text-xs text-muted">
+            Esto queda como bitácora informativa: no actualiza el saldo del vale ni otorga puntos a la distribuidora
+            directamente — eso se calcula cuando se concilia el corte de la distribuidora.
+          </p>
+
           <p v-if="!isOverdue" class="text-xs text-muted">
             Saldo actual: ${{ Number(item.current_balance).toLocaleString('es-MX') }} · Pago quincenal sugerido:
             ${{ fortnightlyAmount.toLocaleString('es-MX') }}
@@ -178,10 +179,6 @@ async function onSubmit(event: FormSubmitEvent<Schema>) {
             ]"
             class="w-full"
           />
-        </UFormField>
-
-        <UFormField label="Cuenta para puntos de la distribuidora" name="affects_points">
-          <UToggle v-model="state.affects_points" aria-label="Cuenta para puntos" />
         </UFormField>
 
         <UFormField label="Notas" name="notes">

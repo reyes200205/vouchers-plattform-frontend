@@ -11,7 +11,6 @@ export interface RecordPaymentPayload {
   amount: string
   payment_date?: string
   payment_method?: PaymentMethod
-  affects_points?: boolean
   notes?: string
 }
 

@@ -162,7 +162,7 @@ async function onVerify(item: Reconciliation) {
             accept=".csv,.txt,.xls,.xlsx"
             class="hidden"
             @change="onImportFileSelected"
-          />
+          >
         </template>
       </UDashboardNavbar>
 

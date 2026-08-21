@@ -277,7 +277,12 @@ async function onSubmit(event: FormSubmitEvent<Schema>) {
       >
         <div class="grid grid-cols-2 gap-4">
           <UFormField required label="Código" name="code">
-            <UInput v-model="state.code" class="w-full" uppercase placeholder="Ej. COBRE" />
+            <UInput
+              v-model="state.code"
+              class="w-full"
+              uppercase
+              placeholder="Ej. COBRE"
+            />
           </UFormField>
 
           <UFormField required label="Nombre" name="name">
@@ -285,7 +290,12 @@ async function onSubmit(event: FormSubmitEvent<Schema>) {
           </UFormField>
         </div>
 
-        <UFormField required label="Comisión distribuidora (%)" name="commission_percentage" description="Utilidad de la distribuidora por quincena sobre el principal del vale.">
+        <UFormField
+          required
+          label="Comisión distribuidora (%)"
+          name="commission_percentage"
+          description="Utilidad de la distribuidora por quincena sobre el principal del vale."
+        >
           <UInput
             v-model="state.commission_percentage"
             type="number"
