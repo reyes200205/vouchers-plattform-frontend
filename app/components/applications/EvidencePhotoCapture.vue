@@ -1,15 +1,15 @@
 <script setup lang="ts">
-import type { VerificationPhotoType } from '~/composables/useApplications'
-
+// Compartido entre el alta del coordinador (documentos de identificación) y la
+// visita del verificador (evidencia fotográfica) — ambos suben una imagen a
+// Spaces y solo necesitan el path resultante. Quién sube qué lo decide el
+// caller a través del prop `upload`, no este componente.
 const props = defineProps<{
-  applicationId: number
-  type: VerificationPhotoType
   label: string
+  upload: (file: File) => Promise<{ path: string }>
 }>()
 
 const path = defineModel<string | null>({ default: null })
 
-const { uploadVerificationPhoto } = useApplications()
 const toast = useToast()
 
 const previewUrl = ref<string | null>(null)
@@ -73,7 +73,7 @@ async function uploadPhoto(file: File) {
   uploading.value = true
 
   try {
-    const result = await uploadVerificationPhoto(props.applicationId, file, props.type)
+    const result = await props.upload(file)
     path.value = result.path
   } catch (e) {
     console.error(e)
@@ -104,7 +104,7 @@ function capturePhoto() {
 
   canvas.toBlob((blob) => {
     if (!blob) return
-    const file = new File([blob], `${props.type}-${Date.now()}.jpg`, { type: 'image/jpeg' })
+    const file = new File([blob], `evidence-${Date.now()}.jpg`, { type: 'image/jpeg' })
     uploadPhoto(file)
   }, 'image/jpeg', 0.9)
 }
