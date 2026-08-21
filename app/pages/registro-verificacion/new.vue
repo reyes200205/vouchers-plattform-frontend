@@ -199,7 +199,7 @@ async function onSubmit(event: FormSubmitEvent<Schema>) {
       color: 'success'
     })
 
-    await router.push('/registro-verificacion/list')
+    await router.push('/registro-verificacion/coordinador/list')
   } catch (e) {
     console.error(e)
     toast.add({
