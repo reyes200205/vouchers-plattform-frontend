@@ -1,0 +1,1 @@
+var e=/^[A-Z]{4}\d{6}[HM][A-Z]{5}[A-Z0-9]\d$/,t=/^[A-ZÑ&]{3,4}\d{6}[A-Z0-9]{3}$/;function n(t){return e.test(t.trim().toUpperCase())}function r(e){return t.test(e.trim().toUpperCase())}function i(e,t){let n=e?.data;return(n?.errors?Object.values(n.errors)[0]?.[0]:void 0)||n?.message||t}export{n,r,i as t};
