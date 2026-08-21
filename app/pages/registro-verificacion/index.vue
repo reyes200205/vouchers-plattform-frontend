@@ -182,7 +182,7 @@ const columns: TableColumn<Application>[] = [
                 label="Ver bandeja completa"
                 variant="subtle"
                 icon="i-lucide-inbox"
-                to="/registro-verificacion/list"
+                to="/registro-verificacion/coordinador/list"
               />
             </div>
           </template>

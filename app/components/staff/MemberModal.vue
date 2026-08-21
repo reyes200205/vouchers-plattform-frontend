@@ -29,9 +29,17 @@ const schema = z.object({
   curp: z.string().max(18, 'CURP inválida').optional().superRefine((value, ctx) => {
     if (!props.member && (!value || value.length !== 18)) {
       ctx.addIssue({ code: 'custom', message: 'CURP inválida (18 caracteres)' })
+      return
+    }
+    if (value && !isValidCurp(value)) {
+      ctx.addIssue({ code: 'custom', message: 'CURP con formato inválido' })
     }
   }),
-  rfc: z.string().max(13, 'RFC inválido').optional(),
+  rfc: z.string().max(13, 'RFC inválido').optional().superRefine((value, ctx) => {
+    if (value && !isValidRfc(value)) {
+      ctx.addIssue({ code: 'custom', message: 'RFC con formato inválido' })
+    }
+  }),
   home_phone: z.string().max(20, 'Muy largo').optional(),
   mobile_phone: z.string().max(20, 'Muy largo').optional(),
   email: z.string().email('Correo inválido').max(150, 'Muy largo').optional(),
@@ -258,12 +266,9 @@ async function onSubmit(event: FormSubmitEvent<Schema>) {
 
     open.value = false
   } catch (e: unknown) {
-    const message = e instanceof Error && 'data' in e
-      ? JSON.stringify((e as { data?: { message?: string } }).data?.message ?? '')
-      : ''
     toast.add({
       title: 'Error',
-      description: message || 'No se pudo guardar el personal. Verifica los datos e intenta de nuevo.',
+      description: extractApiErrorMessage(e, 'No se pudo guardar el personal. Verifica los datos e intenta de nuevo.'),
       color: 'error'
     })
   } finally {

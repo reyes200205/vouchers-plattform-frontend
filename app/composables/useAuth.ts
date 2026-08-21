@@ -39,7 +39,25 @@ interface AuthUser {
   permissions: string[]
 }
 
+interface LoginSuccessData {
+  user: AuthUser
+  token: string
+  requires_otp?: false
+}
+
+interface LoginOtpChallengeData {
+  requires_otp: true
+  challenge_id: string
+  masked_email: string | null
+}
+
 interface LoginResponse {
+  success: boolean
+  message: string
+  data: LoginSuccessData | LoginOtpChallengeData
+}
+
+interface MfaVerifyResponse {
   success: boolean
   message: string
   data: {
@@ -48,14 +66,26 @@ interface LoginResponse {
   }
 }
 
+interface MfaResendResponse {
+  success: boolean
+  message: string
+  data: {
+    masked_email: string | null
+  }
+}
+
+export type LoginResult
+  = | { requiresOtp: false, roleCode: string | null }
+    | { requiresOtp: true, challengeId: string, maskedEmail: string | null }
+
 export const ROLE_ROUTES: Record<string, string> = {
-  administrator: '/general',
-  general_manager: '/general',
-  branch_manager: '/general',
-  cashier: '/general',
-  distributor: '/distributor-portal',
-  coordinator: '/registro-verificacion',
-  verifier: '/registro-verificacion/verificador/dashboard_verificador'
+  'super-admin': '/general',
+  'general_manager': '/general',
+  'branch_manager': '/general',
+  'cashier': '/general',
+  'distributor': '/distributor-portal',
+  'coordinator': '/registro-verificacion',
+  'verifier': '/registro-verificacion/verificador/dashboard_verificador'
 }
 
 export function useAuth() {
@@ -72,16 +102,49 @@ export function useAuth() {
   const roleName = computed(() => primaryRole(user.value)?.name ?? null)
   const isLoggedIn = computed(() => Boolean(token.value))
 
-  async function login(username: string, password: string) {
+  async function login(username: string, password: string, turnstileToken?: string): Promise<LoginResult> {
     const response = await $fetch<LoginResponse>(`${config.public.apiBase}/auth/login`, {
       method: 'POST',
-      body: { username, password }
+      body: {
+        username,
+        password,
+        'cf-turnstile-response': turnstileToken
+      }
+    })
+
+    if (response.data.requires_otp) {
+      return {
+        requiresOtp: true,
+        challengeId: response.data.challenge_id,
+        maskedEmail: response.data.masked_email
+      }
+    }
+
+    token.value = response.data.token
+    user.value = response.data.user
+
+    return { requiresOtp: false, roleCode: primaryRole(response.data.user)?.code ?? null }
+  }
+
+  async function verifyMfa(challengeId: string, code: string) {
+    const response = await $fetch<MfaVerifyResponse>(`${config.public.apiBase}/auth/mfa/verify`, {
+      method: 'POST',
+      body: { challenge_id: challengeId, code }
     })
 
     token.value = response.data.token
     user.value = response.data.user
 
     return primaryRole(response.data.user)?.code ?? null
+  }
+
+  async function resendMfa(challengeId: string) {
+    const response = await $fetch<MfaResendResponse>(`${config.public.apiBase}/auth/mfa/resend`, {
+      method: 'POST',
+      body: { challenge_id: challengeId }
+    })
+
+    return response.data.masked_email
   }
 
   async function logout() {
@@ -118,5 +181,5 @@ export function useAuth() {
     return code && ROLE_ROUTES[code] ? ROLE_ROUTES[code] : '/login'
   }
 
-  return { token, user, roleCode, roleName, isLoggedIn, login, logout, roleHome, fetchMe }
+  return { token, user, roleCode, roleName, isLoggedIn, login, verifyMfa, resendMfa, logout, roleHome, fetchMe }
 }

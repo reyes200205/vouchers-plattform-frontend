@@ -50,7 +50,7 @@ const roleLabels: Record<string, string> = {
   verifier: 'Verificador',
   branch_manager: 'Gerente de Sucursal',
   cashier: 'Cajera',
-  administrator: 'Administrador',
+  'super-admin': 'Super Administrador',
   general_manager: 'Gerente General',
   distributor: 'Distribuidora'
 }

@@ -24,150 +24,26 @@ const state = reactive<Partial<Schema>>({
   notes: ''
 })
 
-const { submitVerification, uploadVerificationPhoto } = useApplications()
+const { submitVerification } = useApplications()
 const toast = useToast()
 const submitting = ref(false)
 
-// Foto de fachada: el verificador puede tomarla con la cámara del dispositivo
-// (getUserMedia) o subir una ya existente desde el dispositivo. En ambos casos se
-// muestra una vista previa local de inmediato (sin esperar la red) y en paralelo se
-// sube al backend para obtener la ruta que se enviará junto con el resultado de la
-// verificación.
-const frontPhotoPreviewUrl = ref<string | null>(null)
 const frontPhotoPath = ref<string | null>(null)
-const uploadingPhoto = ref(false)
-const cameraActive = ref(false)
-const cameraError = ref<string | null>(null)
-const videoEl = useTemplateRef('videoEl')
-const fileInputEl = useTemplateRef('fileInputEl')
-let mediaStream: MediaStream | null = null
+const idWithPersonPhotoPath = ref<string | null>(null)
+const proofOfAddressPhotoPath = ref<string | null>(null)
 
-function stopCamera() {
-  mediaStream?.getTracks().forEach(track => track.stop())
-  mediaStream = null
-  cameraActive.value = false
-  if (videoEl.value) videoEl.value.srcObject = null
-}
-
-async function openCamera() {
-  cameraError.value = null
-
-  // navigator.mediaDevices solo existe en contextos seguros (https:// o localhost/127.0.0.1).
-  // Si falta, el navegador ni siquiera llega a mostrar el diálogo de permisos.
-  if (!window.isSecureContext || !navigator.mediaDevices?.getUserMedia) {
-    cameraError.value = 'Este sitio no está en un contexto seguro (HTTPS o localhost), así que el navegador bloquea el acceso a la cámara sin siquiera pedir permiso. Abre la app por HTTPS o desde localhost para poder tomar la foto.'
-    return
-  }
-
-  try {
-    mediaStream = await navigator.mediaDevices.getUserMedia({
-      video: { facingMode: 'environment' },
-      audio: false
-    })
-    cameraActive.value = true
-
-    await nextTick()
-    if (videoEl.value) {
-      videoEl.value.srcObject = mediaStream
-      await videoEl.value.play()
-    }
-  } catch (e) {
-    console.error(e)
-    cameraActive.value = false
-
-    const name = e instanceof DOMException ? e.name : null
-    if (name === 'NotAllowedError') {
-      cameraError.value = 'El navegador ya tiene bloqueado el permiso de cámara para este sitio (no te va a volver a preguntar). Entra a la configuración del sitio en tu navegador, permite "Cámara" manualmente y recarga la página.'
-    } else if (name === 'NotFoundError' || name === 'OverconstrainedError') {
-      cameraError.value = 'No se encontró ninguna cámara disponible en este dispositivo.'
-    } else if (name === 'NotReadableError') {
-      cameraError.value = 'La cámara ya está siendo usada por otra aplicación o pestaña. Ciérrala e intenta de nuevo.'
-    } else {
-      cameraError.value = 'No se pudo acceder a la cámara. Revisa los permisos del navegador e intenta de nuevo.'
-    }
-  }
-}
-
-async function uploadFrontPhoto(file: File) {
-  if (!props.application) return
-
-  if (frontPhotoPreviewUrl.value) URL.revokeObjectURL(frontPhotoPreviewUrl.value)
-  frontPhotoPreviewUrl.value = URL.createObjectURL(file)
-  frontPhotoPath.value = null
-  uploadingPhoto.value = true
-
-  try {
-    const result = await uploadVerificationPhoto(props.application.id, file, 'front_photo')
-    frontPhotoPath.value = result.path
-  } catch (e) {
-    console.error(e)
-    toast.add({
-      title: 'Error',
-      description: 'No se pudo subir la fotografía de fachada. Intenta de nuevo.',
-      color: 'error'
-    })
-    if (frontPhotoPreviewUrl.value) URL.revokeObjectURL(frontPhotoPreviewUrl.value)
-    frontPhotoPreviewUrl.value = null
-  } finally {
-    uploadingPhoto.value = false
-  }
-}
-
-function capturePhoto() {
-  if (!videoEl.value || !props.application) return
-
-  const video = videoEl.value
-  const canvas = document.createElement('canvas')
-  canvas.width = video.videoWidth
-  canvas.height = video.videoHeight
-  const ctx = canvas.getContext('2d')
-  if (!ctx) return
-
-  ctx.drawImage(video, 0, 0, canvas.width, canvas.height)
-  stopCamera()
-
-  canvas.toBlob((blob) => {
-    if (!blob) return
-    const file = new File([blob], `fachada-${Date.now()}.jpg`, { type: 'image/jpeg' })
-    uploadFrontPhoto(file)
-  }, 'image/jpeg', 0.9)
-}
-
-function triggerFileInput() {
-  fileInputEl.value?.click()
-}
-
-function onFileSelected(event: Event) {
-  const input = event.target as HTMLInputElement
-  const file = input.files?.[0]
-  input.value = ''
-  if (file) uploadFrontPhoto(file)
-}
-
-function resetPhotoState() {
-  stopCamera()
-  cameraError.value = null
-  if (frontPhotoPreviewUrl.value) URL.revokeObjectURL(frontPhotoPreviewUrl.value)
-  frontPhotoPreviewUrl.value = null
-  frontPhotoPath.value = null
-  uploadingPhoto.value = false
-}
+const frontPhotoRef = useTemplateRef('frontPhotoRef')
+const idWithPersonPhotoRef = useTemplateRef('idWithPersonPhotoRef')
+const proofOfAddressPhotoRef = useTemplateRef('proofOfAddressPhotoRef')
 
 watch(() => props.application, () => {
   state.result = undefined
   state.visit_date = new Date().toISOString().slice(0, 10)
   state.notes = ''
-  resetPhotoState()
+  frontPhotoRef.value?.reset()
+  idWithPersonPhotoRef.value?.reset()
+  proofOfAddressPhotoRef.value?.reset()
 }, { immediate: true })
-
-watch(open, (isOpen) => {
-  if (!isOpen) stopCamera()
-})
-
-onBeforeUnmount(() => {
-  stopCamera()
-  if (frontPhotoPreviewUrl.value) URL.revokeObjectURL(frontPhotoPreviewUrl.value)
-})
 
 const applicantName = computed(() => {
   const p = props.application?.applicant
@@ -175,12 +51,21 @@ const applicantName = computed(() => {
   return [p.first_name, p.last_name].filter(Boolean).join(' ')
 })
 
+const missingEvidence = computed(() => {
+  const missing: string[] = []
+  if (!frontPhotoPath.value) missing.push('la fotografía de fachada')
+  if (!idWithPersonPhotoPath.value) missing.push('la foto del solicitante con su INE')
+  if (!proofOfAddressPhotoPath.value) missing.push('la foto del comprobante de domicilio')
+  return missing
+})
+
 async function onSubmit(event: FormSubmitEvent<Schema>) {
   if (!props.application) return
-  if (!frontPhotoPath.value) {
+
+  if (missingEvidence.value.length > 0) {
     toast.add({
-      title: 'Falta la fotografía de fachada',
-      description: 'Toma la foto de la fachada antes de registrar la verificación.',
+      title: 'Falta evidencia fotográfica',
+      description: `Toma o sube ${missingEvidence.value.join(', ')} antes de registrar la verificación.`,
       color: 'warning'
     })
     return
@@ -193,7 +78,9 @@ async function onSubmit(event: FormSubmitEvent<Schema>) {
       result: event.data.result,
       visit_date: event.data.visit_date,
       notes: event.data.notes || undefined,
-      front_photo: frontPhotoPath.value
+      front_photo: frontPhotoPath.value!,
+      id_with_person_photo: idWithPersonPhotoPath.value!,
+      proof_of_address_photo: proofOfAddressPhotoPath.value!
     })
 
     toast.add({
@@ -263,89 +150,33 @@ async function onSubmit(event: FormSubmitEvent<Schema>) {
           </UFormField>
 
           <UFormField label="Fotografía de fachada" required>
-            <div class="space-y-2">
-              <input
-                ref="fileInputEl"
-                type="file"
-                accept="image/*"
-                class="hidden"
-                @change="onFileSelected"
-              >
+            <VerificadorEvidencePhotoCapture
+              ref="frontPhotoRef"
+              v-model="frontPhotoPath"
+              :application-id="application.id"
+              type="front_photo"
+              label="Fotografía de fachada"
+            />
+          </UFormField>
 
-              <!-- Cámara en vivo con getUserMedia -->
-              <div v-if="cameraActive" class="space-y-2">
-                <video
-                  ref="videoEl"
-                  autoplay
-                  playsinline
-                  muted
-                  class="w-full max-w-xs rounded-lg border border-default bg-black aspect-video object-cover"
-                />
-                <div class="flex gap-2">
-                  <UButton
-                    label="Capturar"
-                    icon="i-lucide-camera"
-                    color="primary"
-                    variant="solid"
-                    @click="capturePhoto"
-                  />
-                  <UButton
-                    label="Cancelar"
-                    color="neutral"
-                    variant="subtle"
-                    @click="stopCamera"
-                  />
-                </div>
-              </div>
+          <UFormField label="Solicitante sosteniendo su INE" required>
+            <VerificadorEvidencePhotoCapture
+              ref="idWithPersonPhotoRef"
+              v-model="idWithPersonPhotoPath"
+              :application-id="application.id"
+              type="id_with_person_photo"
+              label="Solicitante con su INE"
+            />
+          </UFormField>
 
-              <template v-else>
-                <div
-                  v-if="frontPhotoPreviewUrl"
-                  class="relative w-full max-w-xs overflow-hidden rounded-lg border border-default"
-                >
-                  <img :src="frontPhotoPreviewUrl" alt="Vista previa de la fachada" class="w-full h-40 object-cover">
-                  <div v-if="uploadingPhoto" class="absolute inset-0 flex items-center justify-center bg-black/40">
-                    <UIcon name="i-lucide-loader-circle" class="size-6 text-white animate-spin" />
-                  </div>
-                  <UBadge
-                    v-else-if="frontPhotoPath"
-                    color="success"
-                    variant="solid"
-                    size="sm"
-                    class="absolute bottom-2 right-2"
-                  >
-                    Subida
-                  </UBadge>
-                </div>
-
-                <UAlert
-                  v-if="cameraError"
-                  color="error"
-                  variant="subtle"
-                  icon="i-lucide-triangle-alert"
-                  :description="cameraError"
-                />
-
-                <div class="flex gap-2">
-                  <UButton
-                    :label="frontPhotoPreviewUrl ? 'Volver a tomar' : 'Tomar foto'"
-                    icon="i-lucide-camera"
-                    color="neutral"
-                    variant="subtle"
-                    :loading="uploadingPhoto"
-                    @click="openCamera"
-                  />
-                  <UButton
-                    :label="frontPhotoPreviewUrl ? 'Subir otra' : 'Subir foto'"
-                    icon="i-lucide-upload"
-                    color="neutral"
-                    variant="subtle"
-                    :loading="uploadingPhoto"
-                    @click="triggerFileInput"
-                  />
-                </div>
-              </template>
-            </div>
+          <UFormField label="Comprobante de domicilio" required>
+            <VerificadorEvidencePhotoCapture
+              ref="proofOfAddressPhotoRef"
+              v-model="proofOfAddressPhotoPath"
+              :application-id="application.id"
+              type="proof_of_address_photo"
+              label="Comprobante de domicilio"
+            />
           </UFormField>
 
           <UFormField label="Resultado" name="result">
