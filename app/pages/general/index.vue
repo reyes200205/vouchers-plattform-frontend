@@ -7,7 +7,7 @@ const { user } = useAuth()
 
 const { isNotificationsSlideoverOpen } = useDashboard()
 
-// El endpoint de estadísticas (platform.view) solo lo tienen administrator y
+// El endpoint de estadísticas (platform.view) solo lo tienen super-admin y
 // general_manager. branch_manager, coordinator y cashier también aterrizan en
 // /general al entrar (ver ROLE_ROUTES en useAuth.ts), así que sin este check
 // disparaban un 403 en cada login y veían el panel de estadísticas vacío.

@@ -49,14 +49,16 @@ function getRowItems(row: Row<Branch>) {
     })
   }
 
-  items.push({
-    label: 'Configuración',
-    icon: 'i-lucide-settings',
-    onSelect() {
-      selectedBranch.value = row.original
-      isSettingsOpen.value = true
-    }
-  })
+  if (user.value?.permissions?.includes('branch-settings.view')) {
+    items.push({
+      label: 'Configuración',
+      icon: 'i-lucide-settings',
+      onSelect() {
+        selectedBranch.value = row.original
+        isSettingsOpen.value = true
+      }
+    })
+  }
 
   items.push(
     {

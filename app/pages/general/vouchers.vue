@@ -19,7 +19,7 @@ const { data, status, error, refresh } = await useAsyncData(
   }),
   {
     watch: [statusFilter, page],
-    default: () => ({ data: [], meta: { current_page: 1, last_page: 1, per_page: 15, total: 0 } })
+    default: () => ({ data: [], links: [], meta: { current_page: 1, last_page: 1, per_page: 15, total: 0 } })
   }
 )
 
@@ -39,13 +39,13 @@ const {
   'pending-voucher-requests',
   () => {
     if (!canApprove.value) {
-      return Promise.resolve({ data: [], meta: { current_page: 1, last_page: 1, per_page: 15, total: 0 } })
+      return Promise.resolve({ data: [], links: [], meta: { current_page: 1, last_page: 1, per_page: 15, total: 0 } })
     }
     return listPendingVoucherRequests({ page: requestsPage.value })
   },
   {
     watch: [requestsPage],
-    default: () => ({ data: [], meta: { current_page: 1, last_page: 1, per_page: 15, total: 0 } })
+    default: () => ({ data: [], links: [], meta: { current_page: 1, last_page: 1, per_page: 15, total: 0 } })
   }
 )
 
