@@ -49,7 +49,7 @@ interface LoginResponse {
 }
 
 export const ROLE_ROUTES: Record<string, string> = {
-  administrator: '/general',
+  'super-admin': '/general',
   general_manager: '/general',
   branch_manager: '/general',
   cashier: '/general',
@@ -72,10 +72,14 @@ export function useAuth() {
   const roleName = computed(() => primaryRole(user.value)?.name ?? null)
   const isLoggedIn = computed(() => Boolean(token.value))
 
-  async function login(username: string, password: string) {
+  async function login(username: string, password: string, turnstileToken?: string) {
     const response = await $fetch<LoginResponse>(`${config.public.apiBase}/auth/login`, {
       method: 'POST',
-      body: { username, password }
+      body: {
+        username,
+        password,
+        'cf-turnstile-response': turnstileToken
+      }
     })
 
     token.value = response.data.token
