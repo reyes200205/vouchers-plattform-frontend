@@ -46,6 +46,27 @@ function statusColor(status: CutoffRelationStatus | null | undefined) {
 function isCarryover(item: { origin_relation_id: number | null }): boolean {
   return item.origin_relation_id !== null
 }
+
+// La normal (sin arrastre) que se le suma al saldo arrastrado en esta misma
+// relación, si trae ambos -- para el desglose informativo de abajo. El
+// arrastre en sí ya viene sumado en relation.total_carryover_received.
+const normalPortion = computed(() => {
+  const due = Number(props.relation?.total_amount_due ?? 0)
+  const carryover = Number(props.relation?.total_carryover_received ?? 0)
+  return due - carryover
+})
+
+const carryoverPortion = computed(() => Number(props.relation?.total_carryover_received ?? 0))
+
+const hasCarryover = computed(() => carryoverPortion.value > 0)
+
+// Solo informativo: cuánta comisión se perdió en total por atraso, sumando
+// lo que cada vale hubiera ganado (commission_forfeited_amount, calculado en
+// el backend). No afecta ningún total real -- total_commission ya refleja lo
+// que la distribuidora sí se queda (0 en los vales atrasados).
+const totalCommissionForfeited = computed(() => {
+  return (props.relation?.items ?? []).reduce((sum, item) => sum + Number(item.commission_forfeited_amount ?? 0), 0)
+})
 </script>
 
 <template>
@@ -127,6 +148,17 @@ function isCarryover(item: { origin_relation_id: number | null }): boolean {
           </p>
         </div>
 
+        <div v-if="hasCarryover" class="rounded-lg border border-warning/40 bg-warning/10 p-4 text-sm">
+          <p class="mb-1 text-xs font-medium uppercase text-warning">
+            Desglose del adeudo
+          </p>
+          <p class="text-muted">
+            {{ fmtMoney(normalPortion) }} de quincena normal + {{ fmtMoney(carryoverPortion) }} de saldo arrastrado
+            <span v-if="Number(relation.total_late_fees ?? 0) > 0">(incluye {{ fmtMoney(relation.total_late_fees) }} de recargo por atraso)</span>
+            = <span class="font-semibold text-highlighted">{{ fmtMoney(relation.total_amount_due) }}</span> total a pagar.
+          </p>
+        </div>
+
         <div>
           <p class="mb-2 text-sm font-semibold text-highlighted">
             Vales incluidos
@@ -170,7 +202,7 @@ function isCarryover(item: { origin_relation_id: number | null }): boolean {
                       :color="isCarryover(item) ? 'warning' : 'neutral'"
                       variant="subtle"
                       size="sm"
-                      :label="isCarryover(item) ? `Arrastre #${item.origin_relation_id}` : `Quincena ${item.installment_number ?? '—'}`"
+                      :label="isCarryover(item) ? `Arrastre Quincena ${item.installment_number ?? '—'} (rel. #${item.origin_relation_id})` : `Quincena ${item.installment_number ?? '—'}`"
                     />
                   </td>
                   <td class="py-2 pr-3">
@@ -189,6 +221,9 @@ function isCarryover(item: { origin_relation_id: number | null }): boolean {
                   </td>
                   <td class="py-2 pr-3">
                     {{ fmtMoney(item.commission_amount) }}
+                    <p v-if="item.is_late_payment && Number(item.commission_forfeited_amount ?? 0) > 0" class="text-xs text-error">
+                      Perdida por atraso: {{ fmtMoney(item.commission_forfeited_amount) }}
+                    </p>
                   </td>
                   <td class="py-2 pr-3">
                     {{ fmtMoney(item.late_fee_amount) }}
@@ -217,6 +252,9 @@ function isCarryover(item: { origin_relation_id: number | null }): boolean {
             </p>
             <p class="font-semibold text-highlighted">
               {{ fmtMoney(relation.total_commission) }}
+            </p>
+            <p v-if="totalCommissionForfeited > 0" class="text-xs text-error">
+              Se perdieron {{ fmtMoney(totalCommissionForfeited) }} por atraso
             </p>
           </div>
           <div>

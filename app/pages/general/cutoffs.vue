@@ -31,29 +31,47 @@ function branchName(branchId: number) {
   return branches.value.find(b => b.id === branchId)?.name ?? `Sucursal ${branchId}`
 }
 
+const shortDate = new Intl.DateTimeFormat('es-MX', { day: '2-digit', month: 'short' })
+
+// cutoff.period_start llega como fecha pura "YYYY-MM-DD" (sin hora): hay que
+// armarla con año/mes/día locales en vez de dejar que Date la interprete
+// como medianoche UTC, o se corre un día para atrás en México (mismo bug ya
+// corregido en RelationDetailModal/ManualMatchModal). cutoff.scheduled_at
+// (el fin del periodo) sí es un datetime ISO completo con offset, así que
+// ese se puede pasar directo a Date.
+function fmtPeriodStart(value: string | null | undefined): string {
+  if (!value) return '?'
+  const [year, month, day] = value.split('-').map(Number)
+  return shortDate.format(new Date(year, month - 1, day))
+}
+
+function fmtPeriodEnd(value: string | null | undefined): string {
+  if (!value) return '?'
+  return shortDate.format(new Date(value))
+}
+
 const statusFilter = ref<CutoffStatus | undefined>(undefined)
 const page = ref(1)
 
 const { data: cutoffsData, status, refresh } = await useAsyncData(
   'cutoffs',
-  () => listCutoffs({ page: page.value, status: statusFilter.value }),
+  () => listCutoffs({ page: page.value, status: statusFilter.value, branch_id: selectedBranchId.value }),
   {
-    watch: [page, statusFilter],
+    watch: [page, statusFilter, selectedBranchId],
     default: () => ({ data: [], links: [], meta: { current_page: 1, last_page: 1, per_page: 50, total: 0 } })
   }
 )
 
-const items = computed(() => {
-  const list = cutoffsData.value.data ?? []
-  // El listado del backend solo se filtra por sucursal para branch_manager
-  // (server-side, vía activeBusinessBranchIds()). Para general_manager viene
-  // sin filtrar (es un rol global), así que el selector de sucursal se aplica
-  // aquí en cliente para ambos roles sin duplicar lógica de permisos.
-  if (selectedBranchId.value) {
-    return list.filter(c => c.branch_id === selectedBranchId.value)
-  }
-  return list
+// El filtro por sucursal ahora lo aplica el backend (branch_id): para un rol
+// global (general_manager) ve cualquier sucursal que seleccione, no solo la
+// suya -- antes esto se filtraba en cliente sobre un listado que el backend
+// ya venía recortando a la sucursal del usuario sin importar su rol, así que
+// elegir otra sucursal en el selector nunca mostraba nada.
+watch(selectedBranchId, () => {
+  page.value = 1
 })
+
+const items = computed(() => cutoffsData.value.data ?? [])
 const meta = computed(() => cutoffsData.value.meta)
 
 const money = new Intl.NumberFormat('es-MX', { style: 'currency', currency: 'MXN' })
@@ -278,7 +296,7 @@ function getCutoffItems(cutoff: Cutoff): DropdownMenuItem[] {
 
               <div class="min-w-0">
                 <p class="truncate font-semibold text-highlighted">
-                  Corte #{{ cutoff.id }} · {{ branchName(cutoff.branch_id) }}
+                  Corte #{{ cutoff.id }} · {{ branchName(cutoff.branch_id) }} · {{ fmtPeriodStart(cutoff.period_start) }} – {{ fmtPeriodEnd(cutoff.scheduled_at) }}
                 </p>
                 <p class="text-xs text-muted">
                   {{ cutoff.cutoff_type ?? 'PAGOS' }} · Ejecutado {{ fmtDate(cutoff.executed_at) }}

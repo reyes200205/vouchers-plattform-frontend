@@ -110,7 +110,22 @@ const cerrarSesion = async () => {
         </h1>
       </div>
       <button class="logout-btn" @click="cerrarSesion">
-        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          width="16"
+          height="16"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2.5"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+        ><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" /><polyline points="16 17 21 12 16 7" /><line
+          x1="21"
+          y1="12"
+          x2="9"
+          y2="12"
+        /></svg>
         Salir
       </button>
     </header>
@@ -118,12 +133,12 @@ const cerrarSesion = async () => {
     <div class="content-body">
       <!-- TARJETA DE CRÉDITO PRINCIPAL -->
       <div class="credit-card">
-        <div class="card-glass-glow"></div>
+        <div class="card-glass-glow" />
         <div class="credit-header">
           <span class="credit-label">CRÉDITO DISPONIBLE</span>
           <span class="badge-category">{{ categoryName }}</span>
         </div>
-        
+
         <div class="credit-value">
           {{ unlimitedCredit ? 'Ilimitado' : `$${availableCredit.toLocaleString('es-MX')}` }}
         </div>
@@ -149,12 +164,14 @@ const cerrarSesion = async () => {
       <!-- LISTA DE VALES -->
       <section class="vouchers-section">
         <div class="section-header">
-          <h2 class="section-label">Mis Vales Emitidos</h2>
+          <h2 class="section-label">
+            Mis Vales Emitidos
+          </h2>
           <span v-if="!loading && rows.length" class="counter-badge">{{ rows.length }}</span>
         </div>
 
         <p v-if="loading" class="state-text">
-          <span class="spinner"></span> Cargando vales…
+          <span class="spinner" /> Cargando vales…
         </p>
         <p v-else-if="errorMessage" class="state-text error">
           {{ errorMessage }}
@@ -182,7 +199,6 @@ const cerrarSesion = async () => {
             </span>
           </div>
         </div>
-<<<<<<< HEAD
 
         <!-- ACCIONES -->
         <div class="actions-row">
@@ -233,10 +249,7 @@ const cerrarSesion = async () => {
             </div>
           </div>
         </section>
-      </div>
-=======
       </section>
->>>>>>> b44dd6bd9060dca966d87ca292dbc82bf62396c7
     </div>
   </div>
 </template>

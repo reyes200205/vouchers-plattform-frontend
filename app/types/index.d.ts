@@ -344,6 +344,7 @@ export interface Reconciliation {
   id: number
   distributor_payment_id: number
   bank_transaction_id: number
+  original_cutoff_relation_id: number | null
   reconciled_by_user_id: number | null
   verified_by_user_id: number | null
   verified_at: string | null
@@ -351,6 +352,8 @@ export interface Reconciliation {
   reconciled_amount: string
   amount_difference: string
   status: ReconciliationStatus
+  is_retroactive_correction: boolean
+  waived_late_fees_total: string | null
   notes: string | null
   distributor_payment: ReconciliationDistributorPayment | null
 }
@@ -445,27 +448,42 @@ export interface CustomerChangeRequest {
 export type VoucherStatus = 'BORRADOR' | 'APROBADO' | 'TRANSFERIDO' | 'ACTIVO' | 'PAGO_PARCIAL' | 'PAGADO' | 'LIQUIDADO' | 'MOROSO' | 'RECLAMADO' | 'CANCELADO' | 'REVERSADO'
 
 export interface Voucher {
-  is_expired: any
-  expiration_date: boolean
   id: number
   voucher_number: string
   distributor_id: number
   customer_id: number
   financial_product_id: number
+  voucher_request_id: number | null
   branch_id: number
   status: VoucherStatus
+  is_pre_vale: boolean
   amount: string
-  total_debt_amount: string
+  company_commission_percentage_snapshot: string
+  company_commission_amount: string
+  insurance_amount_snapshot: string
+  interest_percentage_snapshot: string
+  interest_amount: string
+  distributor_profit_percentage_snapshot: string
+  distributor_profit_amount: string
   late_fee_amount_snapshot: string
+  total_debt_amount: string
   fortnightly_payment_amount: string
   total_fortnights: number
   payments_made: number
   current_balance: string
   transfer_reference: string | null
+  authorized_number: string | null
   issued_at: string | null
   transferred_at: string | null
   payment_due_date: string | null
+  is_canceled: boolean
+  is_expired: boolean
+  expiration_date: string | null
+  canceled_at: string | null
   notes: string | null
+  created_by_user_id: number | null
+  approved_by_user_id: number | null
+  disbursed_by_user_id: number | null
   customer: (Pick<Customer, 'id' | 'customer_code' | 'status' | 'verified_at'> & { person: Person | null }) | null
   distributor?: { id: number, distributor_number: string, person: Person | null } | null
   financial_product?: { id: number, name: string, code: string } | null
@@ -525,6 +543,7 @@ export interface CutoffRelationItem {
   previous_paid_amount: string | null
   origin_cutoff_id: number | null
   origin_relation_id: number | null
+  commission_forfeited_amount?: string | null
   customer?: CutoffRelationItemCustomer | null
 }
 

@@ -40,13 +40,43 @@ const state = reactive<Partial<Schema>>({
   notes: undefined
 })
 
-const eligibleStatuses = ['GENERADA', 'PARCIAL', 'VENCIDA']
+// GENERADA/PARCIAL/VENCIDA es el flujo normal. CERRADA (su deuda ya se
+// arrastro a un corte mas nuevo) y PAGADA-con-multa tambien se dejan elegir:
+// puede que el deposito real si haya llegado a tiempo y la multa se haya
+// aplicado solo porque nunca se registro -- el gerente decide, con la fecha
+// real del deposito, si corresponde corregirla (ver RetroactiveReconciliationService
+// en el backend). Una PAGADA sin multa no tiene nada que corregir.
+const eligibleStatuses = ['GENERADA', 'PARCIAL', 'VENCIDA', 'CERRADA']
+
+function requiereCorreccion(relation: CutoffRelation): boolean {
+  return relation.status === 'CERRADA' || Number(relation.total_late_fees ?? 0) > 0
+}
+
+const shortDate = new Intl.DateTimeFormat('es-MX', { day: '2-digit', month: 'short' })
+
+// cutoff.period_start llega como fecha pura "YYYY-MM-DD" (sin hora): hay que
+// armarla con año/mes/día locales en vez de dejar que Date la interprete
+// como medianoche UTC, o se corre un día para atrás en México (mismo bug ya
+// corregido en RelationDetailModal/VoucherDetailModal). cutoff.scheduled_at
+// (el fin del periodo) sí es un datetime ISO completo con offset, así que
+// ese se puede pasar directo a Date.
+function fmtPeriodStart(value: string | null | undefined): string {
+  if (!value) return '?'
+  const [year, month, day] = value.split('-').map(Number)
+  return shortDate.format(new Date(year, month - 1, day))
+}
+
+function fmtPeriodEnd(value: string | null | undefined): string {
+  if (!value) return '?'
+  return shortDate.format(new Date(value))
+}
 
 const relationItems = computed(() => {
   return relations.value
-    .filter(relation => eligibleStatuses.includes(relation.status ?? ''))
+    .filter(relation => eligibleStatuses.includes(relation.status ?? '') || (relation.status === 'PAGADA' && Number(relation.total_late_fees ?? 0) > 0))
     .map(relation => ({
-      label: `${relation.distributor?.person ? customerFullName(relation.distributor.person) : `Distribuidor ${relation.distributor_id}`} · ${relation.relation_number} · $${relation.total_amount_due}`,
+      label: `${relation.distributor?.person ? customerFullName(relation.distributor.person) : `Distribuidor ${relation.distributor_id}`} · ${relation.relation_number} · ${relation.payment_reference} · $${relation.total_amount_due}`
+        + (requiereCorreccion(relation) ? ' · ⚠ requiere corrección' : ''),
       value: relation.id
     }))
 })
@@ -67,7 +97,7 @@ watch(open, async (isOpen) => {
     cutoffItems.value = page.data
       .filter(cutoff => (cutoff.relations_count ?? 0) > 0)
       .map(cutoff => ({
-        label: `Corte #${cutoff.id} · ${cutoff.status ?? 'SIN ESTADO'} · ${cutoff.relations_count} relaciones`,
+        label: `Corte #${cutoff.id} · ${fmtPeriodStart(cutoff.period_start)} – ${fmtPeriodEnd(cutoff.scheduled_at)} · ${cutoff.status ?? 'SIN ESTADO'} · ${cutoff.relations_count} relaciones`,
         value: cutoff.id
       }))
   } catch {
@@ -184,6 +214,9 @@ async function onSubmit(event: FormSubmitEvent<Schema>) {
             :disabled="!state.cutoff_id"
             class="w-full"
           />
+          <p class="mt-1 text-xs text-muted">
+            Las marcadas "⚠ requiere corrección" ya tienen multa aplicada o ya se arrastraron a un corte más nuevo — si el depósito real llegó a tiempo según el banco, el gerente podrá quitarle la multa al aprobar.
+          </p>
         </UFormField>
 
         <UFormField label="Monto conciliado (MXN)" name="amount">
