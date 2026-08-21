@@ -268,5 +268,14 @@ export function useVouchers() {
     return response.data
   }
 
-  return { listMyVouchers, listMyVoucherRequests, preIssueVoucher }
+  return {
+    listVouchers,
+    disburseVoucher,
+    listPendingVoucherRequests,
+    approveVoucherRequest,
+    rejectVoucherRequest,
+    listMyVouchers,
+    listMyVoucherRequests,
+    preIssueVoucher
+  }
 }

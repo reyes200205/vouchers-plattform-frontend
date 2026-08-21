@@ -26,7 +26,7 @@ const links = computed(() => {
     }, {
       label: 'Distribuidores',
       icon: 'i-lucide-users',
-      to: '/registro-verificacion/list',
+      to: '/registro-verificacion/coordinador/list',
       onSelect: () => { open.value = false }
     })
   } else if (isVerifier) {
