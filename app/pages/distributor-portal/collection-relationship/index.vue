@@ -8,12 +8,14 @@ definePageMeta({
   layout: 'distributor-portal'
 })
 
-const { listMyRelations } = useDistributorRelations()
+const { listMyRelations, downloadMyRelationPdf } = useDistributorRelations()
+const toast = useToast()
 
 const loading = ref(true)
 const errorMessage = ref<string | null>(null)
 const relations = ref<CutoffRelation[]>([])
 const selectedRelationId = ref<number | null>(null)
+const downloadingPdf = ref(false)
 
 const money = new Intl.NumberFormat('es-MX', { style: 'currency', currency: 'MXN' })
 
@@ -93,6 +95,24 @@ function relationPeriodLabel(relation: CutoffRelation): string {
 const volver = () => {
   navigateTo('/distributor-portal')
 }
+
+async function onDownloadPdf() {
+  if (!selectedRelation.value) return
+
+  downloadingPdf.value = true
+  try {
+    await downloadMyRelationPdf(selectedRelation.value.id, `estado-de-cuenta-${selectedRelation.value.relation_number}.pdf`)
+  } catch (e) {
+    console.error(e)
+    toast.add({
+      title: 'Error',
+      description: 'No se pudo descargar el estado de cuenta. Intenta de nuevo.',
+      color: 'error'
+    })
+  } finally {
+    downloadingPdf.value = false
+  }
+}
 </script>
 
 <template>
@@ -101,6 +121,17 @@ const volver = () => {
     <header class="top-navbar">
       <button type="button" class="back-btn" @click="volver">←</button>
       <h1 class="nav-title">Estado de cuenta</h1>
+      <button
+        v-if="selectedRelation"
+        type="button"
+        class="download-icon-btn"
+        :disabled="downloadingPdf"
+        title="Descargar PDF"
+        @click="onDownloadPdf"
+      >
+        <span v-if="downloadingPdf" class="spinner-icon"></span>
+        <span v-else>⬇</span>
+      </button>
     </header>
 
     <div class="content-body">
@@ -207,10 +238,15 @@ const volver = () => {
   height: 56px;
   display: flex;
   align-items: center;
+  justify-content: space-between;
   padding: 0 16px;
   position: sticky;
   top: 0;
   z-index: 10;
+}
+
+.top-navbar .nav-title {
+  flex: 1;
 }
 
 .back-btn {
@@ -336,6 +372,41 @@ const volver = () => {
 .status-chip.cerrada {
   background-color: #e2e8f0;
   color: #475569;
+}
+
+.download-icon-btn {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  border: 1px solid rgba(255, 255, 255, 0.5);
+  background: none;
+  color: #ffffff;
+  font-size: 15px;
+  line-height: 1;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.download-icon-btn:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+
+.spinner-icon {
+  width: 14px;
+  height: 14px;
+  border: 2px solid rgba(255, 255, 255, 0.4);
+  border-top-color: #ffffff;
+  border-radius: 50%;
+  display: inline-block;
+  animation: spin 0.7s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
 }
 
 /* LISTA */
