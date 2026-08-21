@@ -159,6 +159,14 @@ export interface VerificationPhotoUploadResult {
   url: string
 }
 
+export type ApplicationDocumentType = 'id_front' | 'id_back' | 'proof_of_address'
+
+export interface ApplicationDocumentUploadResult {
+  type: ApplicationDocumentType
+  path: string
+  url: string
+}
+
 export interface ApplicationListParams {
   branch_id?: number
   status?: ApplicationStatus
@@ -190,6 +198,12 @@ interface VerificationPhotoResponse {
   success: boolean
   message: string
   data: VerificationPhotoUploadResult
+}
+
+interface ApplicationDocumentResponse {
+  success: boolean
+  message: string
+  data: ApplicationDocumentUploadResult
 }
 
 export function useApplications() {
@@ -261,7 +275,21 @@ export function useApplications() {
     return response.data
   }
 
-  return { listApplications, getApplication, createApplication, assignVerifier, submitVerification, uploadVerificationPhoto }
+  async function uploadApplicationDocument(file: File, type: ApplicationDocumentType) {
+    const formData = new FormData()
+    formData.append('type', type)
+    formData.append('document', file)
+
+    const response = await $fetch<ApplicationDocumentResponse>(`${config.public.apiBase}/applications/documents`, {
+      method: 'POST',
+      headers: authHeaders(),
+      body: formData
+    })
+
+    return response.data
+  }
+
+  return { listApplications, getApplication, createApplication, assignVerifier, submitVerification, uploadVerificationPhoto, uploadApplicationDocument }
 }
 
 export function applicantFullName(person: ApplicationPerson | null | undefined): string {
