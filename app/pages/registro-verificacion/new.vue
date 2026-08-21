@@ -5,7 +5,7 @@ import type { FormSubmitEvent } from '@nuxt/ui'
 const { roleCode, user } = useAuth()
 const isCoordinator = computed(() => roleCode.value === 'coordinator')
 
-const { createApplication } = useApplications()
+const { createApplication, uploadApplicationDocument } = useApplications()
 const toast = useToast()
 const router = useRouter()
 
@@ -126,11 +126,9 @@ function removeVehicle(index: number) {
 
 // La fotografía de fachada la toma el verificador durante la visita de campo
 // (ver components/verificador/VerifyModal.vue), no se captura en el alta.
-const documentFields = [
-  { key: 'id_front', label: 'INE (frontal)' },
-  { key: 'id_back', label: 'INE (reverso)' },
-  { key: 'proof_of_address', label: 'Comprobante de domicilio' }
-]
+const idFrontPath = ref<string | null>(null)
+const idBackPath = ref<string | null>(null)
+const proofOfAddressPath = ref<string | null>(null)
 
 const submitting = ref(false)
 
@@ -188,9 +186,9 @@ async function onSubmit(event: FormSubmitEvent<Schema>) {
         .filter(v => v.brand || v.model || v.year || v.plates)
         .map(v => ({ brand: v.brand || null, model: v.model || null, year: v.year || null, plates: v.plates || null })),
       requested_credit_limit: data.requested_credit_limit ?? null,
-      id_front_path: null,
-      id_back_path: null,
-      proof_of_address_path: null
+      id_front_path: idFrontPath.value,
+      id_back_path: idBackPath.value,
+      proof_of_address_path: proofOfAddressPath.value
     })
 
     toast.add({
@@ -531,18 +529,27 @@ async function onSubmit(event: FormSubmitEvent<Schema>) {
             </h3>
           </template>
 
-          <UAlert
-            color="neutral"
-            variant="subtle"
-            icon="i-lucide-info"
-            title="Subida de archivos pendiente"
-            description="El backend aún no expone un endpoint para subir archivos. Estos campos se habilitarán cuando esté disponible; por ahora la solicitud se envía sin documentos adjuntos."
-            class="mb-4"
-          />
-
           <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <UFormField v-for="doc in documentFields" :key="doc.key" :label="doc.label">
-              <UInput type="file" disabled class="w-full" />
+            <UFormField label="INE (frontal)">
+              <ApplicationsEvidencePhotoCapture
+                v-model="idFrontPath"
+                :upload="file => uploadApplicationDocument(file, 'id_front')"
+                label="INE (frontal)"
+              />
+            </UFormField>
+            <UFormField label="INE (reverso)">
+              <ApplicationsEvidencePhotoCapture
+                v-model="idBackPath"
+                :upload="file => uploadApplicationDocument(file, 'id_back')"
+                label="INE (reverso)"
+              />
+            </UFormField>
+            <UFormField label="Comprobante de domicilio">
+              <ApplicationsEvidencePhotoCapture
+                v-model="proofOfAddressPath"
+                :upload="file => uploadApplicationDocument(file, 'proof_of_address')"
+                label="Comprobante de domicilio"
+              />
             </UFormField>
           </div>
         </UCard>

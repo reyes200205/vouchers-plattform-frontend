@@ -8,7 +8,7 @@ const version = config.public.version
 
 const open = ref(false)
 
-const { user } = useAuth()
+const { user, roleCode } = useAuth()
 const { counts } = useInbox()
 
 const inboxCount = ref(0)
@@ -21,10 +21,18 @@ const hasAnyPermission = (permissions: string[]) => {
   return permissions.some(p => hasPermission(p))
 }
 
+// Gerente general / gerente de sucursal solo aprueban desde el canal VPN;
+// en el build público se les oculta la Bandeja de Aprobaciones.
+const canViewApprovalsInbox = computed(() => {
+  if (!hasPermission('inbox.view')) return false
+  if (config.public.channel === 'vpn') return true
+  return !APPROVAL_RESTRICTED_ROLES.includes(roleCode.value ?? '')
+})
+
 onMounted(async () => {
   // Antes se pedía siempre, para cualquier rol (incluida la cajera, que no
   // tiene inbox.view) — eso disparaba una petición que siempre regresaba 403.
-  if (!hasPermission('inbox.view')) {
+  if (!canViewApprovalsInbox.value) {
     return
   }
 
@@ -48,7 +56,7 @@ const links = computed(() => {
     }
   })
 
-  if (hasPermission('inbox.view')) {
+  if (canViewApprovalsInbox.value) {
     items.push({
       label: 'Bandeja de Aprobaciones',
       icon: 'i-lucide-inbox',

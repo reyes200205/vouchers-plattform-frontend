@@ -55,8 +55,30 @@ export function useDistributorRelations() {
     return response.data
   }
 
+  /**
+   * El endpoint requiere el Bearer token (no es un link público), así que no
+   * se puede simplemente apuntar un <a href> a la URL: se descarga como blob
+   * y se dispara la descarga con un enlace temporal en memoria.
+   */
+  async function downloadMyRelationPdf(relationId: number, fileName: string): Promise<void> {
+    const blob = await $fetch<Blob>(
+      `${config.public.apiBase}/distributor/relations/${relationId}/pdf`,
+      { headers: authHeaders(), responseType: 'blob' }
+    )
+
+    const url = URL.createObjectURL(blob)
+    const link = document.createElement('a')
+    link.href = url
+    link.download = fileName
+    document.body.appendChild(link)
+    link.click()
+    link.remove()
+    URL.revokeObjectURL(url)
+  }
+
   return {
     listMyRelations,
-    getMyRelation
+    getMyRelation,
+    downloadMyRelationPdf
   }
 }

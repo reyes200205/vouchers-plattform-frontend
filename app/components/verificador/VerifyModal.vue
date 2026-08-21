@@ -24,7 +24,7 @@ const state = reactive<Partial<Schema>>({
   notes: ''
 })
 
-const { submitVerification } = useApplications()
+const { submitVerification, uploadVerificationPhoto } = useApplications()
 const toast = useToast()
 const submitting = ref(false)
 
@@ -150,31 +150,28 @@ async function onSubmit(event: FormSubmitEvent<Schema>) {
           </UFormField>
 
           <UFormField label="Fotografía de fachada" required>
-            <VerificadorEvidencePhotoCapture
+            <ApplicationsEvidencePhotoCapture
               ref="frontPhotoRef"
               v-model="frontPhotoPath"
-              :application-id="application.id"
-              type="front_photo"
+              :upload="file => uploadVerificationPhoto(application!.id, file, 'front_photo')"
               label="Fotografía de fachada"
             />
           </UFormField>
 
           <UFormField label="Solicitante sosteniendo su INE" required>
-            <VerificadorEvidencePhotoCapture
+            <ApplicationsEvidencePhotoCapture
               ref="idWithPersonPhotoRef"
               v-model="idWithPersonPhotoPath"
-              :application-id="application.id"
-              type="id_with_person_photo"
+              :upload="file => uploadVerificationPhoto(application!.id, file, 'id_with_person_photo')"
               label="Solicitante con su INE"
             />
           </UFormField>
 
           <UFormField label="Comprobante de domicilio" required>
-            <VerificadorEvidencePhotoCapture
+            <ApplicationsEvidencePhotoCapture
               ref="proofOfAddressPhotoRef"
               v-model="proofOfAddressPhotoPath"
-              :application-id="application.id"
-              type="proof_of_address_photo"
+              :upload="file => uploadVerificationPhoto(application!.id, file, 'proof_of_address_photo')"
               label="Comprobante de domicilio"
             />
           </UFormField>

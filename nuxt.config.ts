@@ -22,7 +22,10 @@ export default defineNuxtConfig({
     public: {
       apiBase: 'http://127.0.0.1:8000/api/v1',
       version: pkg.version,
-      turnstileSiteKey: process.env.NUXT_PUBLIC_TURNSTILE_SITE_KEY || '1x00000000000000000000AA'
+      turnstileSiteKey: process.env.NUXT_PUBLIC_TURNSTILE_SITE_KEY || '1x00000000000000000000AA',
+      // 'vpn' | 'public' — distingue el build interno (VPN) del público.
+      // Ver ROLE_ROUTES / APPROVAL_RESTRICTED_ROLES en useAuth.ts.
+      channel: process.env.NUXT_PUBLIC_CHANNEL || 'public'
     }
   },
 

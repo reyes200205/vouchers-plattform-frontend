@@ -37,6 +37,9 @@ interface AuthUser {
   distributor: AuthDistributor | null
   roles: AuthRole[]
   permissions: string[]
+  // true mientras el usuario nunca haya confirmado ni cambiado la contrasena
+  // temporal (CURP) que se le asigna al darlo de alta como distribuidora.
+  requires_password_confirmation: boolean
 }
 
 interface LoginSuccessData {
@@ -75,7 +78,7 @@ interface MfaResendResponse {
 }
 
 export type LoginResult
-  = | { requiresOtp: false, roleCode: string | null }
+  = | { requiresOtp: false, roleCode: string | null, requiresPasswordConfirmation: boolean }
     | { requiresOtp: true, challengeId: string, maskedEmail: string | null }
 
 export const ROLE_ROUTES: Record<string, string> = {
@@ -87,6 +90,11 @@ export const ROLE_ROUTES: Record<string, string> = {
   'coordinator': '/registro-verificacion',
   'verifier': '/registro-verificacion/verificador/dashboard_verificador'
 }
+
+// Roles que deciden aprobaciones (Bandeja de Aprobaciones). En el canal
+// 'public' (fuera de VPN) se les oculta esa sección aunque tengan el
+// permiso inbox.view — deben entrar por la VPN para aprobar.
+export const APPROVAL_RESTRICTED_ROLES = ['general_manager', 'branch_manager']
 
 export function useAuth() {
   const config = useRuntimeConfig()
@@ -123,7 +131,11 @@ export function useAuth() {
     token.value = response.data.token
     user.value = response.data.user
 
-    return { requiresOtp: false, roleCode: primaryRole(response.data.user)?.code ?? null }
+    return {
+      requiresOtp: false,
+      roleCode: primaryRole(response.data.user)?.code ?? null,
+      requiresPasswordConfirmation: response.data.user.requires_password_confirmation
+    }
   }
 
   async function verifyMfa(challengeId: string, code: string) {
@@ -135,7 +147,10 @@ export function useAuth() {
     token.value = response.data.token
     user.value = response.data.user
 
-    return primaryRole(response.data.user)?.code ?? null
+    return {
+      roleCode: primaryRole(response.data.user)?.code ?? null,
+      requiresPasswordConfirmation: response.data.user.requires_password_confirmation
+    }
   }
 
   async function resendMfa(challengeId: string) {
@@ -181,5 +196,34 @@ export function useAuth() {
     return code && ROLE_ROUTES[code] ? ROLE_ROUTES[code] : '/login'
   }
 
-  return { token, user, roleCode, roleName, isLoggedIn, login, verifyMfa, resendMfa, logout, roleHome, fetchMe }
+  // El usuario decide QUEDARSE con la contrasena temporal (CURP) que se le
+  // asigno al darlo de alta: no cambia el hash, solo apaga la bandera que
+  // obliga a mostrar el modal de primer login.
+  async function confirmPassword() {
+    await $fetch(`${config.public.apiBase}/auth/confirm-password`, {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${token.value}` }
+    })
+
+    if (user.value) user.value = { ...user.value, requires_password_confirmation: false }
+  }
+
+  // El usuario decide CAMBIAR la contrasena temporal por una propia.
+  // currentPassword es la contrasena con la que acaba de iniciar sesion
+  // (el CURP), la pide el backend para confirmar identidad antes de cambiarla.
+  async function changePassword(currentPassword: string, password: string, passwordConfirmation: string) {
+    await $fetch(`${config.public.apiBase}/auth/change-password`, {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${token.value}` },
+      body: {
+        current_password: currentPassword,
+        password,
+        password_confirmation: passwordConfirmation
+      }
+    })
+
+    if (user.value) user.value = { ...user.value, requires_password_confirmation: false }
+  }
+
+  return { token, user, roleCode, roleName, isLoggedIn, login, verifyMfa, resendMfa, logout, roleHome, fetchMe, confirmPassword, changePassword }
 }

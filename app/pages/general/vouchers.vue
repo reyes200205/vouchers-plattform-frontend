@@ -1,8 +1,7 @@
 <script setup lang="ts">
 import type { VoucherStatus } from '~/composables/useVouchers'
-import type { Voucher } from '~/types'
+import type { PaginatedData, PendingVoucherRequest, Voucher as VoucherRecord } from '~/types'
 
-const toast = useToast()
 const { user } = useAuth()
 const { listVouchers, listPendingVoucherRequests } = useVouchers()
 
@@ -12,7 +11,7 @@ const canDisburse = computed(() => user.value?.permissions?.includes('vouchers.d
 const statusFilter = ref<VoucherStatus | undefined>(undefined)
 const page = ref(1)
 
-const { data, status, error, refresh } = await useAsyncData(
+const { data, status, error, refresh } = await useAsyncData<PaginatedData<VoucherRecord>>(
   'vouchers',
   () => listVouchers({
     status: statusFilter.value,
@@ -25,18 +24,19 @@ const { data, status, error, refresh } = await useAsyncData(
 )
 
 // Solicitudes de vale pendientes (distribuidoras) que la cajera puede
-// aprobar/rechazar desde esta misma pantalla — antes vivía en un apartado
-// separado ("Solicitudes de vale"), pero como la cajera hace todo el flujo
-// en un solo paso (aprobar y luego entregar), tenerlo junto a "Vales
-// emitidos" evita que tenga que buscar al mismo cliente/distribuidora en
-// dos pantallas distintas.
+// aprobar/rechazar desde esta misma pantalla. Aprobar solo crea el vale
+// (estado APROBADO) y le manda un correo al cliente con los datos — la
+// entrega del dinero es un segundo paso separado, cuando el cliente se
+// presenta en persona con la cajera (botón "Entregar vale" más abajo).
+// Tenerlo junto a "Vales emitidos" evita que la cajera tenga que buscar al
+// mismo cliente/distribuidora en dos pantallas distintas.
 const requestsPage = ref(1)
 
 const {
   data: requestsData,
   status: requestsStatus,
   refresh: refreshRequests
-} = await useAsyncData(
+} = await useAsyncData<PaginatedData<PendingVoucherRequest>>(
   'pending-voucher-requests',
   () => {
     if (!canApprove.value) {
@@ -313,7 +313,7 @@ function distributorName(voucher: { distributor?: { person?: { first_name: strin
                   </p>
                 </div>
 
-                <DisburseVoucherModal
+                <ProductsDisburseVoucherModal
                   v-if="canDisburse && item.status === 'APROBADO' && !item.is_expired"
                   :item="item"
                   @disbursed="onDisbursed"
