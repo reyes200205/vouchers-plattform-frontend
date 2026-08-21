@@ -180,7 +180,7 @@ async function onSubmit(event: FormSubmitEvent<Schema>) {
                 <p class="text-xs text-muted">
                   {{ detail.branch?.name }}
                   <span v-if="detail.coordinator?.person"> · Coordinador: {{ applicantFullName(detail.coordinator.person) }}</span>
-                  <span v-if="detail.assignedVerifier?.username"> · Verificador: {{ detail.assignedVerifier.username }}</span>
+                  <span v-if="detail.assigned_verifier?.username"> · Verificador: {{ detail.assigned_verifier.username }}</span>
                 </p>
               </div>
               <UBadge color="warning" variant="subtle" class="capitalize">

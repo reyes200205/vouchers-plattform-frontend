@@ -98,6 +98,15 @@ export function useReconciliations() {
     return response.data
   }
 
+  async function closeCutoff(cutoffId: number): Promise<Cutoff> {
+    const response = await $fetch<CutoffResponse>(`${config.public.apiBase}/cutoffs/${cutoffId}/close`, {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${token.value}` }
+    })
+
+    return response.data
+  }
+
   async function manualMatch(bankTransactionId: number, payload: ManualMatchPayload) {
     await $fetch(`${config.public.apiBase}/reconciliations/bank-transactions/${bankTransactionId}/manual-match`, {
       method: 'POST',
@@ -155,6 +164,7 @@ export function useReconciliations() {
     listCutoffRelations,
     generateCutoff,
     reprocessCutoff,
+    closeCutoff,
     manualMatch,
     listReconciliations,
     verifyReconciliation,

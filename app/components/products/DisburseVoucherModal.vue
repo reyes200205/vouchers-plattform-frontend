@@ -28,6 +28,8 @@ const state = reactive<Partial<Schema>>({
 const { disburseVoucher } = useVouchers()
 const toast = useToast()
 
+const isCustomerVerified = computed(() => Boolean(props.item.customer?.verified_at))
+
 async function onSubmit(event: FormSubmitEvent<Schema>) {
   submitting.value = true
 
@@ -69,6 +71,27 @@ async function onSubmit(event: FormSubmitEvent<Schema>) {
     />
 
     <template #body>
+      <UAlert
+        v-if="!isCustomerVerified"
+        color="warning"
+        variant="subtle"
+        icon="i-lucide-shield-alert"
+        title="Cliente sin verificar"
+        description="Antes de entregar este vale es necesario validar la identidad del cliente con sus documentos, desde la sección Clientes."
+        class="mb-4"
+      >
+        <template #actions>
+          <UButton
+            label="Ir a Clientes"
+            icon="i-lucide-arrow-right"
+            color="warning"
+            variant="solid"
+            size="xs"
+            to="/general/customers"
+          />
+        </template>
+      </UAlert>
+
       <UForm
         :schema="schema"
         :state="state"
@@ -119,6 +142,7 @@ async function onSubmit(event: FormSubmitEvent<Schema>) {
             variant="solid"
             type="submit"
             :loading="submitting"
+            :disabled="!isCustomerVerified"
           />
         </div>
       </UForm>

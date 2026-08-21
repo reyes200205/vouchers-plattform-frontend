@@ -1,6 +1,10 @@
 <script setup lang="ts">
-import type { DropdownMenuItem } from '@nuxt/ui'
+import type { DropdownMenuItem, TableColumn } from '@nuxt/ui'
 import type { Branch, StaffMember } from '~/types'
+
+const UBadge = resolveComponent('UBadge')
+const UDropdownMenu = resolveComponent('UDropdownMenu')
+const UButton = resolveComponent('UButton')
 
 const toast = useToast()
 const { listStaff, updateStaff } = useStaff()
@@ -123,6 +127,90 @@ const branchItems = computed(() => [
   { label: 'Todas las sucursales', value: undefined },
   ...branches.value.map(b => ({ label: b.name, value: b.id.toString() }))
 ])
+
+const columns = computed<TableColumn<StaffMember>[]>(() => {
+  const list: TableColumn<StaffMember>[] = [
+    {
+      accessorKey: 'person',
+      header: 'Personal',
+      cell: ({ row }) => {
+        const member = row.original
+        const firstName = member.person?.first_name ?? ''
+        const lastName = member.person?.last_name ?? ''
+        const fullName = `${firstName} ${lastName}`.trim() || 'Sin nombre'
+
+        return h('div', { class: 'min-w-0 py-1' }, [
+          h('p', { class: 'truncate font-semibold text-highlighted text-sm' }, fullName),
+          h('p', { class: 'truncate text-xs text-muted font-normal' }, `@${member.username}`)
+        ])
+      }
+    },
+    {
+      id: 'role',
+      header: 'Rol',
+      cell: ({ row }) => {
+        const member = row.original
+        const role = memberRole(member)
+        const code = role?.code ?? ''
+        const label = roleLabels[code] ?? code
+        return h(UBadge, {
+          color: 'primary',
+          variant: 'subtle',
+          label
+        })
+      }
+    },
+    {
+      id: 'branch',
+      header: 'Sucursal',
+      cell: ({ row }) => {
+        const member = row.original
+        const role = memberRole(member)
+        return h('span', { class: 'text-sm text-muted' }, branchName(role?.branch_id))
+      }
+    },
+    {
+      accessorKey: 'is_active',
+      header: 'Estado',
+      cell: ({ row }) => {
+        const member = row.original
+        return h(UBadge, {
+          color: member.is_active ? 'success' : 'error',
+          variant: 'subtle',
+          label: member.is_active ? 'Activo' : 'Inactivo'
+        })
+      }
+    }
+  ]
+
+  if (canManage.value) {
+    list.push({
+      id: 'actions',
+      cell: ({ row }) => {
+        return h(
+          'div',
+          { class: 'text-right' },
+          h(
+            UDropdownMenu,
+            {
+              content: { align: 'end' },
+              items: getMemberItems(row.original)
+            },
+            () =>
+              h(UButton, {
+                'icon': 'i-lucide-ellipsis-vertical',
+                'color': 'neutral',
+                'variant': 'ghost',
+                'aria-label': 'Acciones'
+              })
+          )
+        )
+      }
+    })
+  }
+
+  return list
+})
 </script>
 
 <template>
@@ -182,7 +270,7 @@ const branchItems = computed(() => [
         />
       </div>
 
-      <div v-else class="flex h-full flex-col overflow-y-auto">
+      <template v-else>
         <div v-if="filteredItems.length === 0" class="flex flex-col items-center justify-center py-16 text-center">
           <UIcon name="i-lucide-users" class="size-12 text-dimmed" />
           <p class="mt-2 text-sm text-muted">
@@ -190,68 +278,29 @@ const branchItems = computed(() => [
           </p>
         </div>
 
-        <div v-else class="divide-y divide-default">
-          <div v-for="member in filteredItems" :key="member.id" class="flex items-center justify-between gap-3 px-6 py-4">
-            <div class="flex min-w-0 items-center gap-3">
-              <UAvatar
-                :alt="`${member.person?.first_name ?? ''} ${member.person?.last_name ?? ''}`"
-                icon="i-lucide-user"
-                size="lg"
-              />
+        <UTable
+          v-else
+          class="shrink-0"
+          :data="filteredItems"
+          :columns="(columns as any)"
+          :ui="{
+            base: 'table-fixed border-separate border-spacing-0',
+            thead: '[&>tr]:bg-elevated/50 [&>tr]:after:content-none',
+            tbody: '[&>tr]:last:[&>td]:border-b-0',
+            th: 'py-2 first:rounded-l-lg last:rounded-r-lg border-y border-default first:border-l last:border-r',
+            td: 'border-b border-default',
+            separator: 'h-0'
+          }"
+        />
 
-              <div class="min-w-0">
-                <p class="truncate font-semibold text-highlighted">
-                  {{ member.person?.first_name }} {{ member.person?.last_name }}
-                </p>
-                <p class="text-xs text-muted">
-                  @{{ member.username }}
-                </p>
-              </div>
-            </div>
-
-            <div class="flex items-center gap-3">
-              <UBadge
-                color="primary"
-                variant="subtle"
-                :label="roleLabels[memberRole(member)?.code ?? ''] ?? memberRole(member)?.code"
-              />
-              <span class="text-sm text-muted">{{ branchName(memberRole(member)?.branch_id) }}</span>
-              <UBadge
-                v-if="member.is_active"
-                color="success"
-                variant="subtle"
-                label="Activo"
-              />
-              <UBadge
-                v-else
-                color="error"
-                variant="subtle"
-                label="Inactivo"
-              />
-
-              <UDropdownMenu
-                v-if="canManage"
-                :items="getMemberItems(member)"
-              >
-                <UButton
-                  icon="i-lucide-ellipsis-vertical"
-                  color="neutral"
-                  variant="ghost"
-                  aria-label="Acciones"
-                />
-              </UDropdownMenu>
-            </div>
-          </div>
-        </div>
-
-        <div v-if="meta.last_page > 1" class="flex justify-end px-6 py-3 mt-auto">
+        <div class="flex items-center justify-end gap-3 border-t border-default pt-4 mt-auto">
           <UPagination
             v-model:page="page"
-            :total="meta.total"
-            :items-per-page="meta.per_page"
+            :total="meta?.total ?? 0"
+            :items-per-page="meta?.per_page ?? 15"
           />
         </div>
-      </div>
+      </template>
     </template>
   </UDashboardPanel>
 
