@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { ref, onMounted, onUnmounted } from 'vue'
 
-const { login, roleHome } = useAuth()
+const { login, verifyMfa, resendMfa, roleHome } = useAuth()
 
 const username = ref('')
 const password = ref('')
@@ -9,6 +9,18 @@ const showPassword = ref(false)
 const rememberMe = ref(false)
 const loading = ref(false)
 const errorMessage = ref('')
+
+// Segundo factor (OTP por correo): solo aplica a roles que lo requieren
+// (ej. super-admin). Cuando el backend responde requires_otp, se muestra
+// este paso en vez de navegar directo a la plataforma.
+const mfaStep = ref(false)
+const mfaChallengeId = ref('')
+const mfaMaskedEmail = ref('')
+const otpCode = ref('')
+const otpLoading = ref(false)
+const otpError = ref('')
+const resendLoading = ref(false)
+const resendMessage = ref('')
 
 // Cloudflare Turnstile setup
 const runtimeConfig = useRuntimeConfig()
@@ -33,8 +45,8 @@ const initTurnstile = () => {
   if (siteKey && window.turnstile && turnstileContainer.value) {
     try {
       turnstileWidgetId = window.turnstile.render(turnstileContainer.value, {
-        sitekey: siteKey,
-        callback: (token: string) => {
+        'sitekey': siteKey,
+        'callback': (token: string) => {
           turnstileToken.value = token
           errorMessage.value = ''
         },
@@ -87,8 +99,16 @@ const handleSubmit = async () => {
   errorMessage.value = ''
 
   try {
-    const roleCode = await login(username.value, password.value, turnstileToken.value)
-    await navigateTo(roleHome(roleCode))
+    const result = await login(username.value, password.value, turnstileToken.value)
+
+    if (result.requiresOtp) {
+      mfaChallengeId.value = result.challengeId
+      mfaMaskedEmail.value = result.maskedEmail ?? ''
+      mfaStep.value = true
+      return
+    }
+
+    await navigateTo(roleHome(result.roleCode))
   } catch (error: any) {
     const responseData = error.data || error.response?._data
     let msg = 'Usuario o contraseña incorrectos.'
@@ -122,6 +142,46 @@ const handleSubmit = async () => {
   } finally {
     loading.value = false
   }
+}
+
+const handleVerifyOtp = async () => {
+  if (!otpCode.value) return
+
+  otpLoading.value = true
+  otpError.value = ''
+
+  try {
+    const roleCode = await verifyMfa(mfaChallengeId.value, otpCode.value)
+    await navigateTo(roleHome(roleCode))
+  } catch (error: any) {
+    const responseData = error.data || error.response?._data
+    otpError.value = responseData?.message ?? 'El código ingresado es incorrecto.'
+  } finally {
+    otpLoading.value = false
+  }
+}
+
+const handleResendOtp = async () => {
+  resendLoading.value = true
+  resendMessage.value = ''
+  otpError.value = ''
+
+  try {
+    await resendMfa(mfaChallengeId.value)
+    resendMessage.value = 'Se envió un nuevo código a tu correo.'
+  } catch {
+    otpError.value = 'No se pudo reenviar el código. Intenta de nuevo.'
+  } finally {
+    resendLoading.value = false
+  }
+}
+
+const backToLogin = () => {
+  mfaStep.value = false
+  otpCode.value = ''
+  otpError.value = ''
+  resendMessage.value = ''
+  password.value = ''
 }
 </script>
 
@@ -263,7 +323,7 @@ const handleSubmit = async () => {
 
         <div class="form-wrapper">
           <!-- Encabezado -->
-          <div class="form-header">
+          <div v-if="!mfaStep" class="form-header">
             <span>BIENVENIDO DE NUEVO</span>
 
             <h2>Iniciar sesión</h2>
@@ -273,8 +333,79 @@ const handleSubmit = async () => {
             </p>
           </div>
 
-          <!-- FORMULARIO -->
-          <form @submit.prevent="handleSubmit">
+          <div v-else class="form-header">
+            <span>VERIFICACIÓN REQUERIDA</span>
+
+            <h2>Ingresa tu código</h2>
+
+            <p>
+              Enviamos un código de verificación a
+              <strong v-if="mfaMaskedEmail">{{ mfaMaskedEmail }}</strong>
+              <span v-else>tu correo</span>.
+              Ingresa el código para completar tu inicio de sesión.
+            </p>
+          </div>
+
+          <!-- FORMULARIO DE VERIFICACIÓN OTP -->
+          <form v-if="mfaStep" @submit.prevent="handleVerifyOtp">
+            <div class="form-group">
+              <label for="otp-code">Código de verificación</label>
+
+              <div class="input-wrapper">
+                <input
+                  id="otp-code"
+                  v-model="otpCode"
+                  type="text"
+                  inputmode="numeric"
+                  autocomplete="one-time-code"
+                  maxlength="6"
+                  placeholder="000000"
+                  required
+                  style="padding-left: 16px; letter-spacing: 4px; text-align: center;"
+                >
+              </div>
+            </div>
+
+            <p v-if="otpError" class="login-error">
+              {{ otpError }}
+            </p>
+
+            <p v-if="resendMessage" class="login-error" style="background:#eafaf0; color:#1e7e42;">
+              {{ resendMessage }}
+            </p>
+
+            <button
+              type="submit"
+              class="login-button"
+              :disabled="otpLoading"
+            >
+              <span v-if="!otpLoading">Verificar código</span>
+              <span v-else>Verificando...</span>
+              <span v-if="!otpLoading" class="arrow">→</span>
+            </button>
+
+            <div style="display:flex; justify-content:space-between; margin-top:16px;">
+              <button
+                type="button"
+                class="forgot-password"
+                :disabled="resendLoading"
+                @click="handleResendOtp"
+              >
+                {{ resendLoading ? 'Enviando...' : 'Reenviar código' }}
+              </button>
+
+              <button
+                type="button"
+                class="forgot-password"
+                @click="backToLogin"
+              >
+                Volver al inicio de sesión
+              </button>
+            </div>
+          </form>
+
+          <!-- FORMULARIO DE LOGIN -->
+          <form v-else @submit.prevent="handleSubmit">
             <!-- Usuario -->
             <div class="form-group">
               <label for="username">
@@ -395,7 +526,7 @@ const handleSubmit = async () => {
 
             <!-- Cloudflare Turnstile CAPTCHA -->
             <div v-if="siteKey" class="turnstile-wrapper">
-              <div ref="turnstileContainer"></div>
+              <div ref="turnstileContainer" />
             </div>
 
             <!-- Botón -->
