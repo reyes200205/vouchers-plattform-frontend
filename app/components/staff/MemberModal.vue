@@ -56,12 +56,18 @@ const schema = z.object({
     }
   }),
   role_code: z.string().min(1, 'Selecciona un rol'),
-  branch_id: z.any().optional().superRefine((value, ctx) => {
-    if (!value || Number(value) < 1) {
-      ctx.addIssue({ code: 'custom', message: 'Selecciona una sucursal' })
-    }
-  }),
+  branch_id: z.any().optional(),
   is_active: z.boolean()
+}).superRefine((data, ctx) => {
+  if (data.role_code !== 'general_manager') {
+    if (!data.branch_id || Number(data.branch_id) < 1) {
+      ctx.addIssue({
+        path: ['branch_id'],
+        code: 'custom',
+        message: 'Selecciona una sucursal'
+      })
+    }
+  }
 })
 
 type Schema = z.output<typeof schema>
@@ -76,12 +82,18 @@ const branchManagerBranchId = computed(() => {
 })
 
 const isBranchManager = computed(() => user.value?.roles?.some(r => r.code === 'branch_manager') ?? false)
+const isSuperAdmin = computed(() => user.value?.roles?.some(r => r.code === 'super-admin') ?? false)
 
 const roles = ref<SystemRole[]>([])
 const roleItems = computed(() => {
+  const allowedRoles = [...STAFF_ROLE_CODES]
+  if (isSuperAdmin.value) {
+    allowedRoles.push('general_manager')
+  }
+
   const available = isBranchManager.value
     ? roles.value.filter(r => BRANCH_MANAGER_ROLE_CODES.includes(r.code))
-    : roles.value.filter(r => STAFF_ROLE_CODES.includes(r.code))
+    : roles.value.filter(r => allowedRoles.includes(r.code))
 
   return available.map(r => ({
     label: r.description || r.code,
@@ -174,6 +186,12 @@ watch(() => props.member, (member) => {
     state.is_active = true
   }
 }, { immediate: true })
+
+watch(() => state.role_code, (newRole) => {
+  if (newRole === 'general_manager') {
+    state.branch_id = undefined
+  }
+})
 
 watch(open, async (isOpen) => {
   if (isOpen && roles.value.length === 0) {
@@ -396,11 +414,11 @@ async function onSubmit(event: FormSubmitEvent<Schema>) {
           />
         </UFormField>
 
-        <UFormField required label="Sucursal" name="branch_id">
+        <UFormField :required="state.role_code !== 'general_manager'" label="Sucursal" name="branch_id">
           <USelect
             v-model="state.branch_id"
             :items="branchItems"
-            :disabled="isBranchManager"
+            :disabled="isBranchManager || state.role_code === 'general_manager'"
             placeholder="Seleccionar sucursal..."
             class="w-full"
           />
