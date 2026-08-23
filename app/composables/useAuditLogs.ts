@@ -13,6 +13,7 @@ export interface AuditLogItem {
   module: string
   description: string
   extra_data: any
+  old_data: Record<string, any> | null
   ip_address: string | null
   user_agent: string | null
   created_at: string
@@ -22,8 +23,12 @@ export interface AuditLogListParams {
   page?: number
   per_page?: number
   search?: string
+  event_type?: string
   level?: string
   module?: string
+  branch_id?: number
+  user_role?: string
+  user_id?: number
 }
 
 interface AuditLogListResponse {

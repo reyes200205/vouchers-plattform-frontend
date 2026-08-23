@@ -23,9 +23,21 @@ const schema = z.object({
   first_name: z.string().min(2, 'Muy corto').max(100, 'Muy largo'),
   middle_name: z.string().max(100, 'Muy largo').optional(),
   last_name: z.string().min(2, 'Muy corto').max(100, 'Muy largo'),
-  second_last_name: z.string().max(100, 'Muy largo').optional(),
-  gender: z.string().optional(),
-  birth_date: z.string().optional(),
+  second_last_name: z.string().max(100, 'Muy largo').optional().superRefine((value, ctx) => {
+    if (!props.member && !value) {
+      ctx.addIssue({ code: 'custom', message: 'Requerido' })
+    }
+  }),
+  gender: z.string().optional().superRefine((value, ctx) => {
+    if (!props.member && !value) {
+      ctx.addIssue({ code: 'custom', message: 'Selecciona un género' })
+    }
+  }),
+  birth_date: z.string().optional().superRefine((value, ctx) => {
+    if (!props.member && !value) {
+      ctx.addIssue({ code: 'custom', message: 'Requerido' })
+    }
+  }),
   curp: z.string().max(18, 'CURP inválida').optional().superRefine((value, ctx) => {
     if (!props.member && (!value || value.length !== 18)) {
       ctx.addIssue({ code: 'custom', message: 'CURP inválida (18 caracteres)' })
@@ -36,19 +48,49 @@ const schema = z.object({
     }
   }),
   rfc: z.string().max(13, 'RFC inválido').optional().superRefine((value, ctx) => {
+    if (!props.member && !value) {
+      ctx.addIssue({ code: 'custom', message: 'Requerido' })
+      return
+    }
     if (value && !isValidRfc(value)) {
       ctx.addIssue({ code: 'custom', message: 'RFC con formato inválido' })
     }
   }),
-  home_phone: z.string().max(20, 'Muy largo').optional(),
-  mobile_phone: z.string().max(20, 'Muy largo').optional(),
-  email: z.string().email('Correo inválido').max(150, 'Muy largo').optional(),
-  street: z.string().max(150, 'Muy largo').optional(),
-  external_number: z.string().max(30, 'Muy largo').optional(),
-  neighborhood: z.string().max(120, 'Muy largo').optional(),
-  city: z.string().max(120, 'Muy largo').optional(),
-  state: z.string().max(120, 'Muy largo').optional(),
-  postal_code: z.string().max(10, 'Muy largo').optional(),
+  mobile_phone: z.string().max(20, 'Muy largo').optional().superRefine((value, ctx) => {
+    if (!props.member && !value) {
+      ctx.addIssue({ code: 'custom', message: 'Requerido' })
+    }
+  }),
+  street: z.string().max(150, 'Muy largo').optional().superRefine((value, ctx) => {
+    if (!props.member && !value) {
+      ctx.addIssue({ code: 'custom', message: 'Requerido' })
+    }
+  }),
+  external_number: z.string().max(30, 'Muy largo').optional().superRefine((value, ctx) => {
+    if (!props.member && !value) {
+      ctx.addIssue({ code: 'custom', message: 'Requerido' })
+    }
+  }),
+  neighborhood: z.string().max(120, 'Muy largo').optional().superRefine((value, ctx) => {
+    if (!props.member && !value) {
+      ctx.addIssue({ code: 'custom', message: 'Requerido' })
+    }
+  }),
+  city: z.string().max(120, 'Muy largo').optional().superRefine((value, ctx) => {
+    if (!props.member && !value) {
+      ctx.addIssue({ code: 'custom', message: 'Requerido' })
+    }
+  }),
+  state: z.string().max(120, 'Muy largo').optional().superRefine((value, ctx) => {
+    if (!props.member && !value) {
+      ctx.addIssue({ code: 'custom', message: 'Requerido' })
+    }
+  }),
+  postal_code: z.string().max(10, 'Muy largo').optional().superRefine((value, ctx) => {
+    if (!props.member && !value) {
+      ctx.addIssue({ code: 'custom', message: 'Requerido' })
+    }
+  }),
   username: z.string().email('Correo inválido').max(80, 'Muy largo'),
   password: z.string().optional().superRefine((value, ctx) => {
     if (!props.member && (!value || value.length < 8)) {
@@ -56,12 +98,18 @@ const schema = z.object({
     }
   }),
   role_code: z.string().min(1, 'Selecciona un rol'),
-  branch_id: z.any().optional().superRefine((value, ctx) => {
-    if (!value || Number(value) < 1) {
-      ctx.addIssue({ code: 'custom', message: 'Selecciona una sucursal' })
-    }
-  }),
+  branch_id: z.any().optional(),
   is_active: z.boolean()
+}).superRefine((data, ctx) => {
+  if (data.role_code !== 'general_manager') {
+    if (!data.branch_id || Number(data.branch_id) < 1) {
+      ctx.addIssue({
+        path: ['branch_id'],
+        code: 'custom',
+        message: 'Selecciona una sucursal'
+      })
+    }
+  }
 })
 
 type Schema = z.output<typeof schema>
@@ -76,12 +124,18 @@ const branchManagerBranchId = computed(() => {
 })
 
 const isBranchManager = computed(() => user.value?.roles?.some(r => r.code === 'branch_manager') ?? false)
+const isSuperAdmin = computed(() => user.value?.roles?.some(r => r.code === 'super-admin') ?? false)
 
 const roles = ref<SystemRole[]>([])
 const roleItems = computed(() => {
+  const allowedRoles = [...STAFF_ROLE_CODES]
+  if (isSuperAdmin.value) {
+    allowedRoles.push('general_manager')
+  }
+
   const available = isBranchManager.value
     ? roles.value.filter(r => BRANCH_MANAGER_ROLE_CODES.includes(r.code))
-    : roles.value.filter(r => STAFF_ROLE_CODES.includes(r.code))
+    : roles.value.filter(r => allowedRoles.includes(r.code))
 
   return available.map(r => ({
     label: r.description || r.code,
@@ -109,9 +163,7 @@ const state = reactive<Partial<Schema>>({
   birth_date: '',
   curp: '',
   rfc: '',
-  home_phone: '',
   mobile_phone: '',
-  email: '',
   street: '',
   external_number: '',
   neighborhood: '',
@@ -135,9 +187,7 @@ watch(() => props.member, (member) => {
     state.birth_date = member.person?.birth_date || ''
     state.curp = member.person?.curp || ''
     state.rfc = member.person?.rfc || ''
-    state.home_phone = member.person?.home_phone || ''
     state.mobile_phone = member.person?.mobile_phone || ''
-    state.email = member.person?.email || ''
     state.street = member.person?.street || ''
     state.external_number = member.person?.external_number || ''
     state.neighborhood = member.person?.neighborhood || ''
@@ -158,9 +208,7 @@ watch(() => props.member, (member) => {
     state.birth_date = ''
     state.curp = ''
     state.rfc = ''
-    state.home_phone = ''
     state.mobile_phone = ''
-    state.email = ''
     state.street = ''
     state.external_number = ''
     state.neighborhood = ''
@@ -174,6 +222,12 @@ watch(() => props.member, (member) => {
     state.is_active = true
   }
 }, { immediate: true })
+
+watch(() => state.role_code, (newRole) => {
+  if (newRole === 'general_manager') {
+    state.branch_id = undefined
+  }
+})
 
 watch(open, async (isOpen) => {
   if (isOpen && roles.value.length === 0) {
@@ -202,9 +256,8 @@ async function onSubmit(event: FormSubmitEvent<Schema>) {
         birth_date: event.data.birth_date || null,
         curp: event.data.curp || null,
         rfc: event.data.rfc || null,
-        home_phone: event.data.home_phone || null,
         mobile_phone: event.data.mobile_phone || null,
-        email: event.data.email || null,
+        email: event.data.username,
         street: event.data.street || null,
         external_number: event.data.external_number || null,
         neighborhood: event.data.neighborhood || null,
@@ -229,9 +282,8 @@ async function onSubmit(event: FormSubmitEvent<Schema>) {
         birth_date: event.data.birth_date || undefined,
         curp: event.data.curp || '',
         rfc: event.data.rfc || undefined,
-        home_phone: event.data.home_phone || undefined,
         mobile_phone: event.data.mobile_phone || undefined,
-        email: event.data.email || undefined,
+        email: event.data.username,
         street: event.data.street || undefined,
         external_number: event.data.external_number || undefined,
         neighborhood: event.data.neighborhood || undefined,
@@ -265,7 +317,16 @@ async function onSubmit(event: FormSubmitEvent<Schema>) {
     }
 
     open.value = false
-  } catch (e: unknown) {
+  } catch (e: any) {
+    const apiErrors = e?.data?.errors
+    if ((e?.status === 422 || e?.statusCode === 422) && apiErrors) {
+      const formattedErrors = Object.entries(apiErrors).map(([field, messages]) => ({
+        name: field,
+        message: (messages as string[])[0] || 'Dato inválido'
+      }))
+      formRef.value?.setErrors(formattedErrors)
+    }
+
     toast.add({
       title: 'Error',
       description: extractApiErrorMessage(e, 'No se pudo guardar el personal. Verifica los datos e intenta de nuevo.'),
@@ -275,6 +336,8 @@ async function onSubmit(event: FormSubmitEvent<Schema>) {
     submitting.value = false
   }
 }
+
+const formRef = ref<any>(null)
 </script>
 
 <template>
@@ -282,10 +345,11 @@ async function onSubmit(event: FormSubmitEvent<Schema>) {
     v-model:open="open"
     :title="member ? 'Editar personal' : 'Nuevo miembro'"
     :description="member ? `Actualizar a ${member.username}` : 'Agrega un nuevo miembro al personal'"
-    :ui="{ content: 'max-w-4xl' }"
+    :ui="{ content: 'max-w-5xl' }"
   >
     <template #body>
       <UForm
+        ref="formRef"
         :schema="schema"
         :state="state"
         class="space-y-4"
@@ -301,13 +365,13 @@ async function onSubmit(event: FormSubmitEvent<Schema>) {
           <UFormField required label="Apellido paterno" name="last_name">
             <UInput v-model="state.last_name" class="w-full" />
           </UFormField>
-          <UFormField label="Apellido materno" name="second_last_name">
+          <UFormField :required="!member" label="Apellido materno" name="second_last_name">
             <UInput v-model="state.second_last_name" class="w-full" />
           </UFormField>
         </div>
 
         <div class="grid grid-cols-2 gap-4">
-          <UFormField label="Género" name="gender">
+          <UFormField :required="!member" label="Género" name="gender">
             <USelect
               v-model="state.gender"
               :items="[
@@ -319,7 +383,7 @@ async function onSubmit(event: FormSubmitEvent<Schema>) {
               class="w-full"
             />
           </UFormField>
-          <UFormField label="Fecha de nacimiento" name="birth_date">
+          <UFormField :required="!member" label="Fecha de nacimiento" name="birth_date">
             <UInput v-model="state.birth_date" type="date" class="w-full" />
           </UFormField>
           <UFormField
@@ -334,40 +398,34 @@ async function onSubmit(event: FormSubmitEvent<Schema>) {
               placeholder="18 caracteres"
             />
           </UFormField>
-          <UFormField label="RFC" name="rfc">
+          <UFormField :required="!member" label="RFC" name="rfc">
             <UInput v-model="state.rfc" class="w-full" uppercase />
           </UFormField>
         </div>
 
         <div class="grid grid-cols-2 gap-4">
-          <UFormField label="Teléfono de casa" name="home_phone">
-            <UInput v-model="state.home_phone" class="w-full" />
-          </UFormField>
-          <UFormField label="Celular" name="mobile_phone">
+          <UFormField :required="!member" label="Celular" name="mobile_phone">
             <UInput v-model="state.mobile_phone" class="w-full" />
-          </UFormField>
-          <UFormField label="Correo" name="email">
-            <UInput v-model="state.email" type="email" class="w-full" />
           </UFormField>
         </div>
 
         <div class="grid grid-cols-2 gap-4">
-          <UFormField label="Calle" name="street">
+          <UFormField :required="!member" label="Calle" name="street">
             <UInput v-model="state.street" class="w-full" />
           </UFormField>
-          <UFormField label="Número exterior" name="external_number">
+          <UFormField :required="!member" label="Número exterior" name="external_number">
             <UInput v-model="state.external_number" class="w-full" />
           </UFormField>
-          <UFormField label="Colonia" name="neighborhood">
+          <UFormField :required="!member" label="Colonia" name="neighborhood">
             <UInput v-model="state.neighborhood" class="w-full" />
           </UFormField>
-          <UFormField label="C.P." name="postal_code">
+          <UFormField :required="!member" label="C.P." name="postal_code">
             <UInput v-model="state.postal_code" class="w-full" />
           </UFormField>
-          <UFormField label="Ciudad" name="city">
+          <UFormField :required="!member" label="Ciudad" name="city">
             <UInput v-model="state.city" class="w-full" />
           </UFormField>
-          <UFormField label="Estado" name="state">
+          <UFormField :required="!member" label="Estado" name="state">
             <UInput v-model="state.state" class="w-full" />
           </UFormField>
         </div>
@@ -396,18 +454,18 @@ async function onSubmit(event: FormSubmitEvent<Schema>) {
           />
         </UFormField>
 
-        <UFormField required label="Sucursal" name="branch_id">
+        <UFormField :required="state.role_code !== 'general_manager'" label="Sucursal" name="branch_id">
           <USelect
             v-model="state.branch_id"
             :items="branchItems"
-            :disabled="isBranchManager"
+            :disabled="isBranchManager || state.role_code === 'general_manager'"
             placeholder="Seleccionar sucursal..."
             class="w-full"
           />
         </UFormField>
 
         <UFormField v-if="member" label="Activo" name="is_active">
-          <UToggle v-model="state.is_active" aria-label="Activo" />
+          <USwitch v-model="state.is_active" aria-label="Activo" />
         </UFormField>
 
         <div class="flex justify-end gap-2">

@@ -118,5 +118,13 @@ export function useStaff() {
     return response.data
   }
 
-  return { listStaff, listSystemRoles, createStaff, updateStaff }
+  async function getStaff(id: number) {
+    const response = await $fetch<StaffResponse>(`${config.public.apiBase}/staff/${id}`, {
+      headers: { Authorization: `Bearer ${token.value}` }
+    })
+
+    return response.data
+  }
+
+  return { listStaff, listSystemRoles, createStaff, updateStaff, getStaff }
 }

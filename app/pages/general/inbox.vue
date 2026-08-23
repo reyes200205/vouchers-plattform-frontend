@@ -39,6 +39,9 @@ const tabItems = computed(() => {
   }, {
     label: `Puntos (${totals?.redemptions?.total ?? 0})`,
     value: 'redemptions'
+  }, {
+    label: `Conciliaciones (${totals?.reconciliations?.total ?? 0})`,
+    value: 'reconciliations'
   }]
 
   if (canApproveCustomers.value) {
@@ -159,6 +162,10 @@ async function onDecided() {
 
         <div v-else-if="selectedTab === 'customers'" class="h-full overflow-y-auto">
           <InboxCustomersPanel :items="pendingCustomerRequests" @decided="onDecided" />
+        </div>
+
+        <div v-else-if="selectedTab === 'reconciliations'" class="h-full overflow-y-auto">
+          <InboxReconciliationsPanel :items="data.reconciliations?.items ?? []" @decided="onDecided" />
         </div>
 
         <div v-else class="h-full overflow-y-auto">

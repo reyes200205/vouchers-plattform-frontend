@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import type { Branch, PaginatedData, Reconciliation } from '~/types'
 
-const { listBankTransactions, listReconciliations, verifyReconciliation, importBankDeposits } = useReconciliations()
+const { listBankTransactions, listReconciliations, importBankDeposits } = useReconciliations()
 const { listBranches } = useBranches()
 const { user } = useAuth()
 
@@ -114,27 +114,9 @@ async function onImportFileSelected(event: Event) {
   }
 }
 
-async function onVerify(item: Reconciliation) {
-  try {
-    await verifyReconciliation(item.id)
-
-    toast.add({
-      title: 'Conciliación verificada',
-      description: item.status === 'CONCILIADA'
-        ? 'La relación se marcó como pagada.'
-        : 'La conciliación quedó registrada con diferencia.',
-      color: 'success'
-    })
-
-    await refreshPending()
-    await refresh()
-  } catch {
-    toast.add({
-      title: 'Error',
-      description: 'No se pudo verificar la conciliación.',
-      color: 'error'
-    })
-  }
+async function onDecided() {
+  await refreshPending()
+  await refresh()
 }
 </script>
 
@@ -314,7 +296,7 @@ async function onVerify(item: Reconciliation) {
                 <div class="min-w-0">
                   <div class="flex items-center gap-2">
                     <p class="truncate font-semibold text-highlighted">
-                      {{ item.distributor_payment?.reported_reference || `Conciliación #${item.id}` }}
+                      {{ item.distributor_payment?.distributor?.name || item.distributor_payment?.reported_reference || `Conciliación #${item.id}` }}
                     </p>
                     <UBadge color="warning" variant="subtle" label="Por verificar" />
                   </div>
@@ -322,10 +304,11 @@ async function onVerify(item: Reconciliation) {
                     <span>
                       Registrada {{ item.reconciled_at ? new Date(item.reconciled_at).toLocaleDateString('es-MX') : '' }}
                     </span>
+                    <span v-if="item.distributor_payment?.cutoff_relation?.cutoff?.branch_name">{{ item.distributor_payment.cutoff_relation.cutoff.branch_name }}</span>
                     <span v-if="item.notes">{{ item.notes }}</span>
                   </div>
                   <p class="mt-1 text-xs text-dimmed">
-                    Relación {{ item.distributor_payment?.cutoff_relation_id ?? '—' }} · Diferencia:
+                    Relación {{ item.distributor_payment?.cutoff_relation?.relation_number ?? `#${item.distributor_payment?.cutoff_relation_id ?? '—'}` }} · Diferencia:
                     {{ money.format(Number(item.amount_difference)) }}
                   </p>
                 </div>
@@ -341,14 +324,7 @@ async function onVerify(item: Reconciliation) {
                   </p>
                 </div>
 
-                <UButton
-                  label="Verificar"
-                  icon="i-lucide-badge-check"
-                  color="success"
-                  variant="solid"
-                  size="sm"
-                  @click="onVerify(item)"
-                />
+                <ReconciliationsDecideReconciliationModal :item="item" @decided="onDecided" />
               </div>
             </div>
           </div>

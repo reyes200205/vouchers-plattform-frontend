@@ -52,11 +52,13 @@ export function useReconciliations() {
     page?: number
     status?: string
     per_page?: number
+    branch_id?: number
   }) {
     const search = new URLSearchParams()
     search.set('page', String(params?.page ?? 1))
     search.set('per_page', String(params?.per_page ?? 50))
     if (params?.status) search.set('status', params.status)
+    if (params?.branch_id) search.set('branch_id', String(params.branch_id))
 
     const response = await $fetch<CutoffsResponse>(`${config.public.apiBase}/cutoffs?${search.toString()}`, {
       headers: { Authorization: `Bearer ${token.value}` }
@@ -141,6 +143,14 @@ export function useReconciliations() {
     })
   }
 
+  async function rejectReconciliation(id: number, rejectionReason: string) {
+    await $fetch(`${config.public.apiBase}/reconciliations/${id}/reject`, {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${token.value}` },
+      body: { rejection_reason: rejectionReason }
+    })
+  }
+
   async function importBankDeposits(branchId: number, file: File) {
     const formData = new FormData()
     formData.append('file', file)
@@ -168,6 +178,7 @@ export function useReconciliations() {
     manualMatch,
     listReconciliations,
     verifyReconciliation,
+    rejectReconciliation,
     importBankDeposits
   }
 }

@@ -65,6 +65,18 @@ async function onDisbursed() {
   await refresh()
 }
 
+// Detalle del vale seleccionado (cajera): permite ver los datos completos,
+// incluida la referencia de transferencia y el número de autorización, para
+// que los pueda anotar en su Excel de conciliación bancaria sin tener que
+// abrir el modal de "Entregar vale" (que solo aplica a vales por entregar).
+const isDetailOpen = ref(false)
+const selectedVoucher = ref<Voucher | null>(null)
+
+function openVoucherDetail(voucher: Voucher) {
+  selectedVoucher.value = voucher
+  isDetailOpen.value = true
+}
+
 watch(error, (e) => {
   if (e) {
     console.error('[vouchers] No se pudieron cargar los vales:', e)
@@ -238,7 +250,12 @@ function distributorName(voucher: { distributor?: { person?: { first_name: strin
         </div>
 
         <div v-else class="h-full overflow-y-auto divide-y divide-default">
-          <div v-for="item in items" :key="item.id" class="px-6 py-4">
+          <div
+            v-for="item in items"
+            :key="item.id"
+            class="cursor-pointer px-6 py-4 hover:bg-elevated/50"
+            @click="openVoucherDetail(item)"
+          >
             <div class="flex flex-wrap items-center justify-between gap-3">
               <div class="flex min-w-0 items-center gap-3">
                 <UAvatar :alt="customerName(item)" icon="i-lucide-ticket" size="lg" />
@@ -286,7 +303,7 @@ function distributorName(voucher: { distributor?: { person?: { first_name: strin
                 </div>
               </div>
 
-              <div class="flex items-center gap-3">
+              <div class="flex items-center gap-3" @click.stop>
                 <div class="text-right">
                   <p class="text-sm font-semibold text-highlighted">
                     {{ money.format(Number(item.amount)) }}
@@ -316,4 +333,6 @@ function distributorName(voucher: { distributor?: { person?: { first_name: strin
       </template>
     </template>
   </UDashboardPanel>
+
+  <VoucherDetailModal v-model:open="isDetailOpen" :voucher="selectedVoucher" />
 </template>

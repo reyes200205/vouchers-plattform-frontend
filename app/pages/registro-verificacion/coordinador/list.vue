@@ -136,11 +136,16 @@ const statusItems = [
   { label: 'Rechazada', value: 'RECHAZADA' }
 ]
 
-const tabItems = [
-  { label: 'Solicitudes de Distribuidora', value: 'applications', icon: 'i-lucide-file-text' },
-  { label: 'Incrementos de Crédito', value: 'credit-increase', icon: 'i-lucide-trending-up' },
-  { label: 'Vales Digitales', value: 'vouchers', icon: 'i-lucide-ticket' }
-]
+const tabItems = computed(() => {
+  const items = [
+    { label: 'Solicitudes de Distribuidora', value: 'applications', icon: 'i-lucide-file-text' },
+    { label: 'Incrementos de Crédito', value: 'credit-increase', icon: 'i-lucide-trending-up' }
+  ]
+  if (canApproveVouchers.value) {
+    items.push({ label: 'Vales Digitales', value: 'vouchers', icon: 'i-lucide-ticket' })
+  }
+  return items
+})
 const selectedTab = ref('applications')
 
 // Tab "Vales Digitales": solicitudes de vale (pre-issue) pendientes de

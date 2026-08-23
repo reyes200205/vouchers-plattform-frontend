@@ -30,7 +30,7 @@ onMounted(async () => {
 
   try {
     const c = await counts()
-    inboxCount.value = c.applications + c.credit_increases + c.redemptions
+    inboxCount.value = c.applications + c.credit_increases + c.redemptions + c.reconciliations
   } catch {
     inboxCount.value = 0
   }

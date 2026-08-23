@@ -21,7 +21,7 @@ const emit = defineEmits<{ created: [], updated: [] }>()
 const schema = z.object({
   code: z.string().max(30, 'Muy largo').optional(),
   name: z.string().min(2, 'Muy corto').max(150, 'Muy largo'),
-  description: z.string().max(255, 'Muy largo').optional(),
+  description: z.string().min(1, 'Requerido').max(255, 'Muy largo'),
   principal_amount: z.coerce.string().min(1, 'Requerido').refine(value => Number(value) > 0, 'Monto inválido'),
   number_of_fortnights: z.number().int().min(1, 'Mínimo 1 quincena'),
   category_id: z.any().optional().superRefine((value, ctx) => {
@@ -189,7 +189,7 @@ async function onSubmit(event: FormSubmitEvent<Schema>) {
       await updateProduct(props.branchId, props.product.id, {
         code: event.data.code || undefined,
         name: event.data.name,
-        description: event.data.description || undefined,
+        description: event.data.description,
         category_id: Number(event.data.category_id),
         principal_amount: event.data.principal_amount,
         number_of_fortnights: event.data.number_of_fortnights,
@@ -210,7 +210,7 @@ async function onSubmit(event: FormSubmitEvent<Schema>) {
       await createProduct(props.branchId, {
         code: event.data.code || undefined,
         name: event.data.name,
-        description: event.data.description || undefined,
+        description: event.data.description,
         category_id: Number(event.data.category_id),
         principal_amount: event.data.principal_amount,
         number_of_fortnights: event.data.number_of_fortnights,
@@ -277,7 +277,7 @@ async function onSubmit(event: FormSubmitEvent<Schema>) {
           <UInput v-model="state.name" class="w-full" placeholder="Ej. Vale Zapatería 8K" />
         </UFormField>
 
-        <UFormField label="Descripción" name="description">
+        <UFormField required label="Descripción" name="description">
           <UInput v-model="state.description" class="w-full" placeholder="Ej. Vale de 8,000 MXN a 2 quincenas" />
         </UFormField>
 
@@ -439,7 +439,7 @@ async function onSubmit(event: FormSubmitEvent<Schema>) {
         </div>
 
         <UFormField v-if="product" label="Activo" name="is_active">
-          <UToggle v-model="state.is_active" aria-label="Activo" />
+          <USwitch v-model="state.is_active" aria-label="Activo" />
         </UFormField>
 
         <div class="flex justify-end gap-2">

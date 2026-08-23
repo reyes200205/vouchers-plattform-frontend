@@ -1,6 +1,6 @@
-import type { InboxApplication, InboxCreditIncrease, InboxData, InboxRedemption } from '~/types'
+import type { InboxApplication, InboxCreditIncrease, InboxData, InboxRedemption, InboxReconciliation } from '~/types'
 
-export type InboxTab = 'applications' | 'credit' | 'redemptions'
+export type InboxTab = 'applications' | 'credit' | 'redemptions' | 'reconciliations'
 
 interface InboxResponse {
   success: boolean
@@ -12,6 +12,7 @@ interface InboxCounts {
   applications: number
   credit_increases: number
   redemptions: number
+  reconciliations: number
 }
 
 export function useInbox() {
@@ -37,7 +38,8 @@ export function useInbox() {
     return {
       applications: data.applications?.total ?? 0,
       credit_increases: data.credit_increases?.total ?? 0,
-      redemptions: data.redemptions?.total ?? 0
+      redemptions: data.redemptions?.total ?? 0,
+      reconciliations: data.reconciliations?.total ?? 0
     }
   }
 
@@ -92,4 +94,4 @@ export function useInbox() {
   }
 }
 
-export type { InboxApplication, InboxCreditIncrease, InboxRedemption }
+export type { InboxApplication, InboxCreditIncrease, InboxRedemption, InboxReconciliation }

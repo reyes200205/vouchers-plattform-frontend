@@ -35,6 +35,11 @@ const links = computed(() => {
       icon: 'i-lucide-layout-dashboard',
       to: '/registro-verificacion/verificador/dashboard_verificador',
       onSelect: () => { open.value = false }
+    }, {
+      label: 'Solicitudes',
+      icon: 'i-lucide-file-text',
+      to: '/registro-verificacion/verificador/solicitudes',
+      onSelect: () => { open.value = false }
     })
   } else {
     items.push({
@@ -45,14 +50,7 @@ const links = computed(() => {
     })
   }
 
-  return [items, [{
-    label: 'Cerrar Sesión',
-    icon: 'i-lucide-log-out',
-    onSelect: async () => {
-      await logout()
-      await navigateTo('/login')
-    }
-  }]] satisfies NavigationMenuItem[][]
+  return [items, []] satisfies NavigationMenuItem[][]
 })
 
 const groups = computed(() => [{

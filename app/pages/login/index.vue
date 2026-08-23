@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { ref, onMounted, onUnmounted } from 'vue'
 
-const { login, verifyMfa, resendMfa, roleHome } = useAuth()
+const { login, verifyMfa, resendMfa, roleHome, confirmPassword, changePassword } = useAuth()
 
 const username = ref('')
 const password = ref('')
@@ -9,6 +9,18 @@ const showPassword = ref(false)
 const rememberMe = ref(false)
 const loading = ref(false)
 const errorMessage = ref('')
+
+// Paso de "primer login": cuando el backend marca requires_password_confirmation
+// (la distribuidora sigue usando el CURP que se le asigno al darla de alta),
+// se detiene la navegacion y se le da a elegir entre dejar esa contrasena o
+// cambiarla por una propia, antes de mandarla a su pantalla.
+const passwordConfirmStep = ref(false)
+const pendingRoleCode = ref<string | null>(null)
+const showChangePasswordForm = ref(false)
+const newPassword = ref('')
+const newPasswordConfirmation = ref('')
+const passwordStepLoading = ref(false)
+const passwordStepError = ref('')
 
 // Segundo factor (OTP por correo): solo aplica a roles que lo requieren
 // (ej. super-admin). Cuando el backend responde requires_otp, se muestra
@@ -108,6 +120,12 @@ const handleSubmit = async () => {
       return
     }
 
+    if (result.requiresPasswordConfirmation) {
+      pendingRoleCode.value = result.roleCode
+      passwordConfirmStep.value = true
+      return
+    }
+
     await navigateTo(roleHome(result.roleCode))
   } catch (error: any) {
     const responseData = error.data || error.response?._data
@@ -151,13 +169,57 @@ const handleVerifyOtp = async () => {
   otpError.value = ''
 
   try {
-    const roleCode = await verifyMfa(mfaChallengeId.value, otpCode.value)
-    await navigateTo(roleHome(roleCode))
+    const result = await verifyMfa(mfaChallengeId.value, otpCode.value)
+
+    if (result.requiresPasswordConfirmation) {
+      pendingRoleCode.value = result.roleCode
+      mfaStep.value = false
+      passwordConfirmStep.value = true
+      return
+    }
+
+    await navigateTo(roleHome(result.roleCode))
   } catch (error: any) {
     const responseData = error.data || error.response?._data
     otpError.value = responseData?.message ?? 'El código ingresado es incorrecto.'
   } finally {
     otpLoading.value = false
+  }
+}
+
+const handleKeepPassword = async () => {
+  passwordStepLoading.value = true
+  passwordStepError.value = ''
+
+  try {
+    await confirmPassword()
+    await navigateTo(roleHome(pendingRoleCode.value))
+  } catch {
+    passwordStepError.value = 'No se pudo continuar. Intenta de nuevo.'
+  } finally {
+    passwordStepLoading.value = false
+  }
+}
+
+const handleChangePassword = async () => {
+  if (!newPassword.value || !newPasswordConfirmation.value) return
+
+  if (newPassword.value !== newPasswordConfirmation.value) {
+    passwordStepError.value = 'Las contraseñas no coinciden.'
+    return
+  }
+
+  passwordStepLoading.value = true
+  passwordStepError.value = ''
+
+  try {
+    await changePassword(password.value, newPassword.value, newPasswordConfirmation.value)
+    await navigateTo(roleHome(pendingRoleCode.value))
+  } catch (error: any) {
+    const responseData = error.data || error.response?._data
+    passwordStepError.value = responseData?.message ?? 'No se pudo cambiar la contraseña. Intenta de nuevo.'
+  } finally {
+    passwordStepLoading.value = false
   }
 }
 
@@ -323,17 +385,18 @@ const backToLogin = () => {
 
         <div class="form-wrapper">
           <!-- Encabezado -->
-          <div v-if="!mfaStep" class="form-header">
-            <span>BIENVENIDO DE NUEVO</span>
+          <div v-if="passwordConfirmStep" class="form-header">
+            <span>PRIMER INICIO DE SESIÓN</span>
 
-            <h2>Iniciar sesión</h2>
+            <h2>Tu contraseña</h2>
 
             <p>
-              Ingresa tus datos para acceder a la plataforma de Mis Vales.
+              Ingresaste con la contraseña temporal asignada al darte de alta.
+              Puedes conservarla o cambiarla por una propia.
             </p>
           </div>
 
-          <div v-else class="form-header">
+          <div v-else-if="mfaStep" class="form-header">
             <span>VERIFICACIÓN REQUERIDA</span>
 
             <h2>Ingresa tu código</h2>
@@ -344,6 +407,104 @@ const backToLogin = () => {
               <span v-else>tu correo</span>.
               Ingresa el código para completar tu inicio de sesión.
             </p>
+          </div>
+
+          <div v-else class="form-header">
+            <span>BIENVENIDO DE NUEVO</span>
+
+            <h2>Iniciar sesión</h2>
+
+            <p>
+              Ingresa tus datos para acceder a la plataforma de Mis Vales.
+            </p>
+          </div>
+
+          <!-- PASO DE "PRIMER LOGIN": dejar o cambiar la contrasena temporal (CURP) -->
+          <div v-if="passwordConfirmStep">
+            <div v-if="!showChangePasswordForm">
+              <p v-if="passwordStepError" class="login-error">
+                {{ passwordStepError }}
+              </p>
+
+              <button
+                type="button"
+                class="login-button"
+                :disabled="passwordStepLoading"
+                @click="handleKeepPassword"
+              >
+                <span v-if="!passwordStepLoading">Continuar con esta contraseña</span>
+                <span v-else>Guardando...</span>
+                <span v-if="!passwordStepLoading" class="arrow">→</span>
+              </button>
+
+              <div style="display:flex; justify-content:center; margin-top:16px;">
+                <button
+                  type="button"
+                  class="forgot-password"
+                  :disabled="passwordStepLoading"
+                  @click="showChangePasswordForm = true"
+                >
+                  Prefiero cambiarla ahora
+                </button>
+              </div>
+            </div>
+
+            <form v-else @submit.prevent="handleChangePassword">
+              <div class="form-group">
+                <label for="new-password">Nueva contraseña</label>
+
+                <div class="input-wrapper">
+                  <input
+                    id="new-password"
+                    v-model="newPassword"
+                    type="password"
+                    placeholder="Ingresa tu nueva contraseña"
+                    autocomplete="new-password"
+                    required
+                  >
+                </div>
+              </div>
+
+              <div class="form-group">
+                <label for="new-password-confirmation">Confirma tu nueva contraseña</label>
+
+                <div class="input-wrapper">
+                  <input
+                    id="new-password-confirmation"
+                    v-model="newPasswordConfirmation"
+                    type="password"
+                    placeholder="Repite tu nueva contraseña"
+                    autocomplete="new-password"
+                    required
+                  >
+                </div>
+              </div>
+
+              <p v-if="passwordStepError" class="login-error">
+                {{ passwordStepError }}
+              </p>
+
+              <button
+                type="submit"
+                class="login-button"
+                :disabled="passwordStepLoading"
+              >
+                <span v-if="!passwordStepLoading">Cambiar y continuar</span>
+                <span v-else>Guardando...</span>
+                <span v-if="!passwordStepLoading" class="arrow">→</span>
+              </button>
+
+              <div style="display:flex; justify-content:center; margin-top:16px;">
+                <button
+                  type="button"
+                  class="forgot-password"
+                  :disabled="passwordStepLoading"
+                  @click="showChangePasswordForm = false; passwordStepError = ''"
+                >
+                  Volver
+                </button>
+              </div>
+            </form>
           </div>
 
           <!-- FORMULARIO DE VERIFICACIÓN OTP -->
@@ -405,7 +566,7 @@ const backToLogin = () => {
           </form>
 
           <!-- FORMULARIO DE LOGIN -->
-          <form v-else @submit.prevent="handleSubmit">
+          <form v-else-if="!passwordConfirmStep" @submit.prevent="handleSubmit">
             <!-- Usuario -->
             <div class="form-group">
               <label for="username">
@@ -452,12 +613,9 @@ const backToLogin = () => {
                   Contraseña
                 </label>
 
-                <button
-                  type="button"
-                  class="forgot-password"
-                >
+                <NuxtLink to="/forgot-password" class="forgot-password">
                   ¿Olvidaste tu contraseña?
-                </button>
+                </NuxtLink>
               </div>
 
               <div class="input-wrapper">

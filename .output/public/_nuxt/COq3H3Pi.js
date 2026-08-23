@@ -1,0 +1,1 @@
+import{f as e,n as t,p as n,t as r}from"./DT1-jSFJ.js";function i(e){return n(t,e)}function a(t){return e(r,t)}export{i as n,a as t};

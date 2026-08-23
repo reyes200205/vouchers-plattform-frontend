@@ -233,10 +233,18 @@ export interface InboxSection<T> {
   total: number
 }
 
+// Reconciliation ya trae todo lo que necesita DecideReconciliationModal.vue
+// (distribuidora, relación de corte, transacción bancaria) -- se reutiliza
+// tal cual en vez de duplicar un shape plano como los otros tres tipos.
+export interface InboxReconciliation extends Reconciliation {
+  type: 'reconciliation'
+}
+
 export interface InboxData {
   applications?: InboxSection<InboxApplication>
   credit_increases?: InboxSection<InboxCreditIncrease>
   redemptions?: InboxSection<InboxRedemption>
+  reconciliations?: InboxSection<InboxReconciliation>
 }
 
 // Fila de la tabla del apartado "Solicitudes de vale" (gerentes), separado
@@ -355,6 +363,35 @@ export interface BankTransaction {
   reconciliation: BankTransactionReconciliation | null
 }
 
+export interface ReconciliationDistributorInfo {
+  id: number
+  distributor_number: string
+  name: string | null
+  category: { code: string, name: string } | null
+}
+
+export interface ReconciliationCutoffInfo {
+  id: number
+  branch_id: number | null
+  branch_name: string | null
+  period_start: string | null
+  scheduled_at: string | null
+}
+
+export interface ReconciliationCutoffRelationInfo {
+  id: number
+  relation_number: string
+  status: string | null
+  total_payment: string
+  total_commission: string
+  total_late_fees: string
+  total_amount_due: string
+  payment_due_date: string | null
+  early_payment_start_date: string | null
+  early_payment_end_date: string | null
+  cutoff: ReconciliationCutoffInfo | null
+}
+
 export interface ReconciliationDistributorPayment {
   id: number
   cutoff_relation_id: number
@@ -362,12 +399,23 @@ export interface ReconciliationDistributorPayment {
   amount: string
   reported_reference: string | null
   status: string | null
+  distributor: ReconciliationDistributorInfo | null
+  cutoff_relation: ReconciliationCutoffRelationInfo | null
+}
+
+export interface ReconciliationBankTransactionInfo {
+  id: number
+  reference: string | null
+  transaction_date: string | null
+  amount: string
+  raw_description: string | null
 }
 
 export interface Reconciliation {
   id: number
   distributor_payment_id: number
   bank_transaction_id: number
+  original_cutoff_relation_id: number | null
   reconciled_by_user_id: number | null
   verified_by_user_id: number | null
   verified_at: string | null
@@ -375,8 +423,11 @@ export interface Reconciliation {
   reconciled_amount: string
   amount_difference: string
   status: ReconciliationStatus
+  is_retroactive_correction: boolean
+  waived_late_fees_total: string | null
   notes: string | null
   distributor_payment: ReconciliationDistributorPayment | null
+  bank_transaction: ReconciliationBankTransactionInfo | null
 }
 
 export interface BankImportResult {
@@ -469,27 +520,42 @@ export interface CustomerChangeRequest {
 export type VoucherStatus = 'BORRADOR' | 'APROBADO' | 'TRANSFERIDO' | 'ACTIVO' | 'PAGO_PARCIAL' | 'PAGADO' | 'LIQUIDADO' | 'MOROSO' | 'RECLAMADO' | 'CANCELADO' | 'REVERSADO'
 
 export interface Voucher {
-  is_expired: any
-  expiration_date: boolean
   id: number
   voucher_number: string
   distributor_id: number
   customer_id: number
   financial_product_id: number
+  voucher_request_id: number | null
   branch_id: number
   status: VoucherStatus
+  is_pre_vale: boolean
   amount: string
-  total_debt_amount: string
+  company_commission_percentage_snapshot: string
+  company_commission_amount: string
+  insurance_amount_snapshot: string
+  interest_percentage_snapshot: string
+  interest_amount: string
+  distributor_profit_percentage_snapshot: string
+  distributor_profit_amount: string
   late_fee_amount_snapshot: string
+  total_debt_amount: string
   fortnightly_payment_amount: string
   total_fortnights: number
   payments_made: number
   current_balance: string
   transfer_reference: string | null
+  authorized_number: string | null
   issued_at: string | null
   transferred_at: string | null
   payment_due_date: string | null
+  is_canceled: boolean
+  is_expired: boolean
+  expiration_date: string | null
+  canceled_at: string | null
   notes: string | null
+  created_by_user_id: number | null
+  approved_by_user_id: number | null
+  disbursed_by_user_id: number | null
   customer: (Pick<Customer, 'id' | 'customer_code' | 'status' | 'verified_at'> & { person: Person | null }) | null
   distributor?: { id: number, distributor_number: string, person: Person | null } | null
   financial_product?: { id: number, name: string, code: string } | null
@@ -549,6 +615,7 @@ export interface CutoffRelationItem {
   previous_paid_amount: string | null
   origin_cutoff_id: number | null
   origin_relation_id: number | null
+  commission_forfeited_amount?: string | null
   customer?: CutoffRelationItemCustomer | null
 }
 

@@ -28,6 +28,8 @@ export interface ApplicationPerson {
   city: string | null
   state: string | null
   postal_code?: string | null
+  street_references?: string | null
+  notes?: string | null
 }
 
 export interface ApplicationBranchRef {
@@ -65,9 +67,65 @@ export interface ApplicationVerificationRef {
   verifier?: { id: number, person: ApplicationPerson | null } | null
 }
 
+export interface ApplicationFamilyMember {
+  name: string | null
+  relationship: string | null
+  phone: string | null
+  age: number | null
+}
+
+export interface ApplicationOccupation {
+  type: string | null
+  place_name: string | null
+  position: string | null
+  phone: string | null
+  years: number | null
+  monthly_income: number | null
+}
+
+export interface ApplicationWorkReference {
+  name: string | null
+  phone: string | null
+}
+
+export interface ApplicationHousing {
+  ownership_type: string | null
+  dimensions: string | null
+  years_at_address: number | null
+  work_reference: ApplicationWorkReference | null
+}
+
+// Estructura que arma registro-verificacion/new.vue al capturar la solicitud
+// (ver CreateApplicationPayload.family_data ahí). El backend la guarda tal
+// cual en `family_data_json`, sin normalizarla — si el formulario de captura
+// cambia esta forma, hay que actualizarla aquí también.
 export interface ApplicationFamilyData {
-  applicant_age?: number
+  applicant_age?: number | null
+  members?: ApplicationFamilyMember[]
+  occupation?: ApplicationOccupation
+  housing?: ApplicationHousing
   [key: string]: unknown
+}
+
+export interface ApplicationVehicle {
+  brand: string | null
+  model: string | null
+  year: string | null
+  plates: string | null
+}
+
+export interface ApplicationCorrectionChange {
+  field: string
+  label: string
+  old_value: unknown
+  new_value: unknown
+}
+
+export interface ApplicationCorrectionEntry {
+  corrected_at: string
+  corrected_by_user_id: number
+  corrected_by_name: string
+  changes: ApplicationCorrectionChange[]
 }
 
 export interface Application {
@@ -98,7 +156,11 @@ export interface Application {
   coordinator?: { id: number, person: ApplicationPerson | null } | null
   family_data_json?: ApplicationFamilyData | null
   external_affiliations_json?: Record<string, unknown> | null
-  vehicles_json?: Record<string, unknown>[] | null
+  vehicles_json?: ApplicationVehicle[] | null
+  // Historial de correcciones que el verificador hizo a los datos capturados
+  // por el coordinador (ver UpdateApplicationService en el backend). Cada
+  // entrada es una llamada a PATCH /applications/{id} con al menos un cambio.
+  verifier_corrections_json?: ApplicationCorrectionEntry[] | null
   id_front_path?: string | null
   id_back_path?: string | null
   proof_of_address_path?: string | null
@@ -126,6 +188,7 @@ export interface ApplicationPersonPayload {
   state?: string
   postal_code?: string
   notes?: string
+  street_references?: string
 }
 
 export interface CreateApplicationPayload {
@@ -137,6 +200,35 @@ export interface CreateApplicationPayload {
   id_front_path?: string | null
   id_back_path?: string | null
   proof_of_address_path?: string | null
+}
+
+export interface UpdateApplicationPersonPayload {
+  first_name?: string
+  middle_name?: string | null
+  last_name?: string
+  second_last_name?: string
+  gender?: 'M' | 'F' | 'OTHER'
+  birth_date?: string
+  curp?: string
+  rfc?: string
+  home_phone?: string
+  mobile_phone?: string
+  email?: string
+  street?: string
+  external_number?: string
+  neighborhood?: string
+  city?: string
+  state?: string
+  postal_code?: string
+  notes?: string | null
+  street_references?: string | null
+}
+
+export interface UpdateApplicationPayload {
+  person?: UpdateApplicationPersonPayload
+  family_data?: Record<string, unknown>
+  vehicles?: Record<string, unknown>[] | null
+  requested_credit_limit?: number | string
 }
 
 export interface SubmitVerificationPayload {
@@ -155,6 +247,14 @@ export type VerificationPhotoType = 'front_photo' | 'id_with_person_photo' | 'pr
 
 export interface VerificationPhotoUploadResult {
   type: VerificationPhotoType
+  path: string
+  url: string
+}
+
+export type ApplicationDocumentType = 'id_front' | 'id_back' | 'proof_of_address'
+
+export interface ApplicationDocumentUploadResult {
+  type: ApplicationDocumentType
   path: string
   url: string
 }
@@ -192,6 +292,12 @@ interface VerificationPhotoResponse {
   data: VerificationPhotoUploadResult
 }
 
+interface ApplicationDocumentResponse {
+  success: boolean
+  message: string
+  data: ApplicationDocumentUploadResult
+}
+
 export function useApplications() {
   const config = useRuntimeConfig()
   const { token } = useAuth()
@@ -220,6 +326,20 @@ export function useApplications() {
   async function createApplication(payload: CreateApplicationPayload) {
     const response = await $fetch<ApplicationResponse>(`${config.public.apiBase}/applications`, {
       method: 'POST',
+      headers: authHeaders(),
+      body: payload
+    })
+
+    return response.data
+  }
+
+  // Corrección de datos mal capturados por el coordinador. Solo el verificador
+  // asignado a la solicitud puede llamarla, y solo mientras siga EN_REVISION
+  // (el backend lo rechaza con 403/422 fuera de esas condiciones, ver
+  // UpdateApplicationService).
+  async function updateApplication(applicationId: number, payload: UpdateApplicationPayload) {
+    const response = await $fetch<ApplicationResponse>(`${config.public.apiBase}/applications/${applicationId}`, {
+      method: 'PATCH',
       headers: authHeaders(),
       body: payload
     })
@@ -261,7 +381,21 @@ export function useApplications() {
     return response.data
   }
 
-  return { listApplications, getApplication, createApplication, assignVerifier, submitVerification, uploadVerificationPhoto }
+  async function uploadApplicationDocument(file: File, type: ApplicationDocumentType) {
+    const formData = new FormData()
+    formData.append('type', type)
+    formData.append('document', file)
+
+    const response = await $fetch<ApplicationDocumentResponse>(`${config.public.apiBase}/applications/documents`, {
+      method: 'POST',
+      headers: authHeaders(),
+      body: formData
+    })
+
+    return response.data
+  }
+
+  return { listApplications, getApplication, createApplication, updateApplication, assignVerifier, submitVerification, uploadVerificationPhoto, uploadApplicationDocument }
 }
 
 export function applicantFullName(person: ApplicationPerson | null | undefined): string {
