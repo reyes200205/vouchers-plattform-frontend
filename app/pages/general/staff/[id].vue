@@ -240,7 +240,7 @@ const formRef = ref<any>(null)
           description="No se pudo encontrar al miembro del personal especificado."
         />
       </div>
-      <div v-else class="max-w-4xl mx-auto w-full p-6">
+      <div v-else class="w-full p-6">
         <UForm
           ref="formRef"
           :schema="schema"
@@ -253,7 +253,7 @@ const formRef = ref<any>(null)
               <h3 class="font-semibold text-base">Datos Personales</h3>
             </template>
 
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div class="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-4">
               <UFormField required label="Nombre" name="first_name">
                 <UInput v-model="state.first_name" class="w-full" />
               </UFormField>
@@ -302,7 +302,7 @@ const formRef = ref<any>(null)
               <h3 class="font-semibold text-base">Domicilio</h3>
             </template>
 
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
               <UFormField label="Calle" name="street">
                 <UInput v-model="state.street" class="w-full" />
               </UFormField>
@@ -329,7 +329,7 @@ const formRef = ref<any>(null)
               <h3 class="font-semibold text-base">Datos de Acceso y Permisos</h3>
             </template>
 
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div class="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-4">
               <UFormField required label="Nombre de usuario (Email)" name="username">
                 <UInput v-model="state.username" class="w-full" />
               </UFormField>

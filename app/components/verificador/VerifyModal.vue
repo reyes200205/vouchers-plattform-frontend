@@ -109,6 +109,7 @@ async function onSubmit(event: FormSubmitEvent<Schema>) {
     v-model:open="open"
     :title="`Verificar solicitud de ${applicantName}`"
     description="Registra el resultado de la visita de verificación"
+    :ui="{ content: 'max-w-4xl' }"
   >
     <template #body>
       <div v-if="application" class="space-y-4">
@@ -149,32 +150,34 @@ async function onSubmit(event: FormSubmitEvent<Schema>) {
             <UInput v-model="state.visit_date" type="date" class="w-full" />
           </UFormField>
 
-          <UFormField label="Fotografía de fachada" required>
-            <ApplicationsEvidencePhotoCapture
-              ref="frontPhotoRef"
-              v-model="frontPhotoPath"
-              :upload="file => uploadVerificationPhoto(application!.id, file, 'front_photo')"
-              label="Fotografía de fachada"
-            />
-          </UFormField>
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <UFormField label="Fotografía de fachada" required>
+              <ApplicationsEvidencePhotoCapture
+                ref="frontPhotoRef"
+                v-model="frontPhotoPath"
+                :upload="file => uploadVerificationPhoto(application!.id, file, 'front_photo')"
+                label="Fotografía de fachada"
+              />
+            </UFormField>
 
-          <UFormField label="Solicitante sosteniendo su INE" required>
-            <ApplicationsEvidencePhotoCapture
-              ref="idWithPersonPhotoRef"
-              v-model="idWithPersonPhotoPath"
-              :upload="file => uploadVerificationPhoto(application!.id, file, 'id_with_person_photo')"
-              label="Solicitante con su INE"
-            />
-          </UFormField>
+            <UFormField label="Solicitante sosteniendo su INE" required>
+              <ApplicationsEvidencePhotoCapture
+                ref="idWithPersonPhotoRef"
+                v-model="idWithPersonPhotoPath"
+                :upload="file => uploadVerificationPhoto(application!.id, file, 'id_with_person_photo')"
+                label="Solicitante con su INE"
+              />
+            </UFormField>
 
-          <UFormField label="Comprobante de domicilio" required>
-            <ApplicationsEvidencePhotoCapture
-              ref="proofOfAddressPhotoRef"
-              v-model="proofOfAddressPhotoPath"
-              :upload="file => uploadVerificationPhoto(application!.id, file, 'proof_of_address_photo')"
-              label="Comprobante de domicilio"
-            />
-          </UFormField>
+            <UFormField label="Comprobante de domicilio" required>
+              <ApplicationsEvidencePhotoCapture
+                ref="proofOfAddressPhotoRef"
+                v-model="proofOfAddressPhotoPath"
+                :upload="file => uploadVerificationPhoto(application!.id, file, 'proof_of_address_photo')"
+                label="Comprobante de domicilio"
+              />
+            </UFormField>
+          </div>
 
           <UFormField label="Resultado" name="result">
             <URadioGroup
