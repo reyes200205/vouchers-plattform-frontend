@@ -13,6 +13,7 @@ export interface AuditLogItem {
   module: string
   description: string
   extra_data: any
+  old_data: Record<string, any> | null
   ip_address: string | null
   user_agent: string | null
   created_at: string
