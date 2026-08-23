@@ -28,6 +28,8 @@ export interface ApplicationPerson {
   city: string | null
   state: string | null
   postal_code?: string | null
+  street_references?: string | null
+  notes?: string | null
 }
 
 export interface ApplicationBranchRef {
@@ -126,6 +128,7 @@ export interface ApplicationPersonPayload {
   state?: string
   postal_code?: string
   notes?: string
+  street_references?: string
 }
 
 export interface CreateApplicationPayload {

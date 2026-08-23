@@ -404,6 +404,8 @@ export interface Person {
   city: string | null
   state: string | null
   postal_code: string | null
+  street_references?: string | null
+  notes?: string | null
 }
 
 export type CustomerStatus = 'EN_VERIFICACION' | 'ACTIVO' | 'BLOQUEADO' | 'MOROSO' | 'INACTIVO'

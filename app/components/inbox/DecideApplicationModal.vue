@@ -207,6 +207,12 @@ async function onSubmit(event: FormSubmitEvent<Schema>) {
                   {{ [detail.applicant?.street, detail.applicant?.external_number, detail.applicant?.neighborhood, detail.applicant?.city, detail.applicant?.state, detail.applicant?.postal_code].filter(Boolean).join(', ') || '—' }}
                 </p>
               </div>
+              <div v-if="detail.applicant?.street_references" class="col-span-2 sm:col-span-3">
+                <p class="text-xs text-muted">Referencias del domicilio</p>
+                <p class="text-highlighted bg-elevated/40 border border-default rounded-lg p-2.5 mt-1 text-xs">
+                  {{ detail.applicant.street_references }}
+                </p>
+              </div>
               <div>
                 <p class="text-xs text-muted">Crédito solicitado</p>
                 <p class="text-highlighted">{{ money.format(Number(detail.requested_credit_limit || 0)) }}</p>
