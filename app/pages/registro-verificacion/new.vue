@@ -367,6 +367,118 @@ function getStepForFieldName(name: string): number {
   return 5;
 }
 
+const formRef = ref<any>(null);
+
+function getFieldsForStep(step: number): string[] {
+  if (step === 1) {
+    return [
+      "first_name",
+      "last_name",
+      "second_last_name",
+      "gender",
+      "birth_date",
+      "curp",
+      "rfc",
+      "home_phone",
+      "mobile_phone",
+      "email",
+    ];
+  }
+  if (step === 2) {
+    return [
+      "street",
+      "external_number",
+      "neighborhood",
+      "city",
+      "state",
+      "postal_code",
+      "street_references",
+    ];
+  }
+  if (step === 3) {
+    return [
+      "applicant_age",
+      "occupation_type",
+      "occupation_place",
+      "occupation_position",
+      "occupation_phone",
+      "occupation_years",
+      "housing_ownership_type",
+      "housing_years",
+      "housing_dimensions",
+      "work_reference_name",
+      "work_reference_phone",
+    ];
+  }
+  if (step === 4) {
+    return ["requested_credit_limit"];
+  }
+  return [];
+}
+
+function validateStep(step: number): { success: boolean; errors: { name: string; message: string }[] } {
+  const fields = getFieldsForStep(step);
+  if (fields.length === 0) return { success: true, errors: [] };
+
+  // Creamos un sub-schema eligiendo solo las llaves de este paso
+  const pickObject = fields.reduce((acc, field) => {
+    acc[field] = true;
+    return acc;
+  }, {} as Record<string, true>);
+
+  // Usamos schema.pick para validar únicamente este grupo de campos
+  const stepSchema = schema.pick(pickObject);
+  const result = stepSchema.safeParse(state);
+
+  if (result.success) {
+    return { success: true, errors: [] };
+  } else {
+    const formattedErrors = result.error.errors.map((err) => ({
+      name: String(err.path[0]),
+      message: err.message,
+    }));
+    return { success: false, errors: formattedErrors };
+  }
+}
+
+async function validateStepAndAdvance(): Promise<boolean> {
+  const validation = validateStep(currentStep.value);
+
+  if (validation.success) {
+    if (formRef.value) {
+      formRef.value.setErrors([]);
+    }
+    currentStep.value++;
+    return true;
+  } else {
+    if (formRef.value) {
+      formRef.value.setErrors(validation.errors);
+    }
+    toast.add({
+      title: "Campos requeridos pendientes",
+      description:
+        "Por favor, completa todos los campos obligatorios de esta sección antes de continuar.",
+      color: "error",
+    });
+    return false;
+  }
+}
+
+async function goToStep(stepNumber: number) {
+  if (stepNumber <= currentStep.value) {
+    if (formRef.value) {
+      formRef.value.setErrors([]);
+    }
+    currentStep.value = stepNumber;
+    return;
+  }
+
+  while (currentStep.value < stepNumber) {
+    const success = await validateStepAndAdvance();
+    if (!success) break;
+  }
+}
+
 function onFormError(event: any) {
   const errors = event.errors || [];
   if (errors.length > 0) {
@@ -418,6 +530,7 @@ function onFormError(event: any) {
 
       <UForm
         v-else
+        ref="formRef"
         id="new-application"
         :schema="schema"
         :state="state"
@@ -435,7 +548,7 @@ function onFormError(event: any) {
               v-for="step in steps"
               :key="step.number"
               class="flex items-center flex-1 last:flex-initial cursor-pointer"
-              @click="currentStep = step.number"
+              @click="goToStep(step.number)"
             >
               <div class="flex items-center gap-3">
                 <span
@@ -972,7 +1085,7 @@ function onFormError(event: any) {
               color="primary"
               variant="solid"
               trailing-icon="i-lucide-arrow-right"
-              @click="currentStep++"
+              @click="goToStep(currentStep + 1)"
             />
             <UButton
               v-else
