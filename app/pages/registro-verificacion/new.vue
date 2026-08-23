@@ -424,7 +424,7 @@ function validateStep(step: number): { success: boolean; errors: { name: string;
   const pickObject = fields.reduce((acc, field) => {
     acc[field] = true;
     return acc;
-  }, {} as Record<string, true>);
+  }, {} as any);
 
   // Usamos schema.pick para validar únicamente este grupo de campos
   const stepSchema = schema.pick(pickObject);
@@ -433,7 +433,7 @@ function validateStep(step: number): { success: boolean; errors: { name: string;
   if (result.success) {
     return { success: true, errors: [] };
   } else {
-    const formattedErrors = result.error.errors.map((err) => ({
+    const formattedErrors = result.error.issues.map((err) => ({
       name: String(err.path[0]),
       message: err.message,
     }));
