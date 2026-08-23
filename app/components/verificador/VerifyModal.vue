@@ -14,6 +14,14 @@ const schema = z.object({
   result: z.enum(['VERIFICADA', 'RECHAZADA']),
   visit_date: z.string().min(1, 'Requerido'),
   notes: z.string().optional()
+}).superRefine((data, ctx) => {
+  if (data.result === 'RECHAZADA' && !data.notes) {
+    ctx.addIssue({
+      path: ['notes'],
+      code: 'custom',
+      message: 'Explica el motivo del rechazo'
+    })
+  }
 })
 
 type Schema = z.output<typeof schema>
@@ -146,7 +154,7 @@ async function onSubmit(event: FormSubmitEvent<Schema>) {
           class="space-y-4"
           @submit="onSubmit"
         >
-          <UFormField label="Fecha de visita" name="visit_date">
+          <UFormField required label="Fecha de visita" name="visit_date">
             <UInput v-model="state.visit_date" type="date" class="w-full" />
           </UFormField>
 
@@ -190,7 +198,7 @@ async function onSubmit(event: FormSubmitEvent<Schema>) {
             />
           </UFormField>
 
-          <UFormField label="Notas" name="notes">
+          <UFormField :required="state.result === 'RECHAZADA'" label="Notas" name="notes">
             <UTextarea v-model="state.notes" class="w-full" placeholder="Observaciones de la visita..." />
           </UFormField>
 

@@ -6,10 +6,10 @@ import type { AvailableManager } from '~/composables/useBranches'
 const emit = defineEmits<{ created: [] }>()
 
 const schema = z.object({
-  name: z.string().min(2, 'Too short'),
-  address: z.string().optional(),
-  phone: z.string().optional(),
-  manager_user_id: z.any().optional()
+  name: z.string().min(2, 'Muy corto'),
+  address: z.string().min(1, 'Requerido'),
+  phone: z.string().min(1, 'Requerido'),
+  manager_user_id: z.string().min(1, 'Selecciona un gerente')
 })
 const open = ref(false)
 
@@ -48,9 +48,9 @@ async function onSubmit(event: FormSubmitEvent<Schema>) {
   try {
     await createBranch({
       name: event.data.name,
-      address: event.data.address || undefined,
-      phone: event.data.phone || undefined,
-      manager_user_id: event.data.manager_user_id ? Number(event.data.manager_user_id) : undefined
+      address: event.data.address,
+      phone: event.data.phone,
+      manager_user_id: Number(event.data.manager_user_id)
     })
 
     toast.add({
@@ -88,16 +88,31 @@ async function onSubmit(event: FormSubmitEvent<Schema>) {
         class="space-y-4"
         @submit="onSubmit"
       >
-        <UFormField label="Nombre" placeholder="Sucursal Centro" name="name">
+        <UFormField
+          required
+          label="Nombre"
+          placeholder="Sucursal Centro"
+          name="name"
+        >
           <UInput v-model="state.name" class="w-full" />
         </UFormField>
-        <UFormField label="Dirección" placeholder="Calle 123, Ciudad" name="address">
+        <UFormField
+          required
+          label="Dirección"
+          placeholder="Calle 123, Ciudad"
+          name="address"
+        >
           <UInput v-model="state.address" class="w-full" />
         </UFormField>
-        <UFormField label="Teléfono" placeholder="555-0101" name="phone">
+        <UFormField
+          required
+          label="Teléfono"
+          placeholder="555-0101"
+          name="phone"
+        >
           <UInput v-model="state.phone" class="w-full" />
         </UFormField>
-        <UFormField label="Gerente" name="manager_user_id">
+        <UFormField required label="Gerente" name="manager_user_id">
           <USelect
             v-model="state.manager_user_id"
             :items="managerItems"
