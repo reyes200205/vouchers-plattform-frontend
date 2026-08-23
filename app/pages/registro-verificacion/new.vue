@@ -21,7 +21,7 @@ const schema = z.object({
   middle_name: z.string().optional(),
   last_name: z.string().min(2, 'El apellido paterno es obligatorio y debe tener al menos 2 letras'),
   second_last_name: z.string().optional(),
-  gender: z.string({ required_error: 'El género es obligatorio' }).min(1, 'El género es obligatorio'),
+  gender: z.string().min(1, 'El género es obligatorio'),
   birth_date: z.string().min(1, 'La fecha de nacimiento es obligatoria').refine(value => {
     if (!value) return false
     const birth = new Date(value)
@@ -45,19 +45,19 @@ const schema = z.object({
   state: z.string().min(1, 'El estado es obligatorio'),
   postal_code: z.string().min(1, 'El código postal es obligatorio').length(5, 'El código postal debe tener exactamente 5 dígitos'),
   notes: z.string().optional(),
-  requested_credit_limit: z.number({ required_error: 'Captura el límite de crédito solicitado' })
+  requested_credit_limit: z.number({ error: 'Captura el límite de crédito solicitado' })
     .min(1000, 'El límite de crédito solicitado debe ser de al menos $1,000'),
   // Datos adicionales para la distribuidora
-  applicant_age: z.number({ required_error: 'Captura la edad del solicitante' })
+  applicant_age: z.number({ error: 'Captura la edad del solicitante' })
     .min(18, 'El solicitante debe ser mayor de edad (18 años o más)'),
-  occupation_type: z.string({ required_error: 'Selecciona la ocupación' }).min(1, 'Selecciona la ocupación'),
+  occupation_type: z.string().min(1, 'Selecciona la ocupación'),
   occupation_place: z.string().min(1, 'El lugar de ocupación es obligatorio'),
   occupation_position: z.string().min(1, 'El puesto o grado es obligatorio'),
   occupation_phone: z.string().min(1, 'El teléfono de ocupación es obligatorio'),
-  occupation_years: z.number({ required_error: 'Especifica la antigüedad' }).min(0, 'La antigüedad no puede ser negativa'),
-  housing_ownership_type: z.string({ required_error: 'Selecciona la tenencia de vivienda' }).min(1, 'Selecciona la tenencia de vivienda'),
+  occupation_years: z.number({ error: 'Especifica la antigüedad' }).min(0, 'La antigüedad no puede ser negativa'),
+  housing_ownership_type: z.string().min(1, 'Selecciona la tenencia de vivienda'),
   housing_dimensions: z.string().min(1, 'Las dimensiones son obligatorias'),
-  housing_years: z.number({ required_error: 'Especifica los años de vivienda' }).min(0, 'Los años no pueden ser negativos'),
+  housing_years: z.number({ error: 'Especifica los años de vivienda' }).min(0, 'Los años no pueden ser negativos'),
   work_reference_name: z.string().min(1, 'La referencia laboral es obligatoria'),
   work_reference_phone: z.string().min(1, 'El teléfono de referencia es obligatorio')
 })
@@ -358,7 +358,7 @@ function onFormError(event: any) {
                 Paso {{ currentStep }} de {{ steps.length }}
               </span>
               <span class="text-sm font-bold text-highlighted">
-                {{ steps[currentStep - 1].label }}
+                {{ steps[currentStep - 1]?.label }}
               </span>
             </div>
             <div class="flex gap-1">
