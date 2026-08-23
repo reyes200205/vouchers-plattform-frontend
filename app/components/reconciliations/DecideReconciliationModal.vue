@@ -81,11 +81,26 @@ async function onSubmit(event: FormSubmitEvent<Schema>) {
         <p class="font-medium text-highlighted">
           {{ item.distributor_payment?.reported_reference || `Conciliación #${item.id}` }}
         </p>
+        <p v-if="item.distributor_payment?.distributor" class="text-muted">
+          Distribuidora: <span class="font-medium text-highlighted">{{ item.distributor_payment.distributor.name || '—' }}</span>
+          ({{ item.distributor_payment.distributor.distributor_number }})
+          <span v-if="item.distributor_payment.distributor.category"> · Categoría {{ item.distributor_payment.distributor.category.name }}</span>
+        </p>
         <p class="text-muted">
-          Relación de corte: {{ item.distributor_payment?.cutoff_relation_id ?? '—' }}
+          Relación de corte:
+          <span class="font-medium text-highlighted">
+            {{ item.distributor_payment?.cutoff_relation?.relation_number ?? `#${item.distributor_payment?.cutoff_relation_id ?? '—'}` }}
+          </span>
+          <span v-if="item.distributor_payment?.cutoff_relation?.status"> · {{ item.distributor_payment.cutoff_relation.status }}</span>
+          <span v-if="item.distributor_payment?.cutoff_relation?.cutoff?.branch_name"> · {{ item.distributor_payment.cutoff_relation.cutoff.branch_name }}</span>
+        </p>
+        <p v-if="item.distributor_payment?.cutoff_relation" class="text-muted">
+          Lo que debía la relación: <span class="font-medium text-highlighted">{{ money.format(Number(item.distributor_payment.cutoff_relation.total_amount_due)) }}</span>
+          <span v-if="item.distributor_payment.cutoff_relation.payment_due_date"> · Fecha límite de pago: {{ item.distributor_payment.cutoff_relation.payment_due_date }}</span>
         </p>
         <p class="text-muted">
           Monto conciliado: <span class="font-medium text-highlighted">{{ money.format(Number(item.reconciled_amount)) }}</span>
+          <span v-if="item.bank_transaction?.transaction_date"> · Fecha del depósito bancario: {{ item.bank_transaction.transaction_date }}</span>
         </p>
         <p class="text-muted">
           Diferencia contra lo que debía la relación:

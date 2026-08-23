@@ -296,7 +296,7 @@ async function onDecided() {
                 <div class="min-w-0">
                   <div class="flex items-center gap-2">
                     <p class="truncate font-semibold text-highlighted">
-                      {{ item.distributor_payment?.reported_reference || `Conciliación #${item.id}` }}
+                      {{ item.distributor_payment?.distributor?.name || item.distributor_payment?.reported_reference || `Conciliación #${item.id}` }}
                     </p>
                     <UBadge color="warning" variant="subtle" label="Por verificar" />
                   </div>
@@ -304,10 +304,11 @@ async function onDecided() {
                     <span>
                       Registrada {{ item.reconciled_at ? new Date(item.reconciled_at).toLocaleDateString('es-MX') : '' }}
                     </span>
+                    <span v-if="item.distributor_payment?.cutoff_relation?.cutoff?.branch_name">{{ item.distributor_payment.cutoff_relation.cutoff.branch_name }}</span>
                     <span v-if="item.notes">{{ item.notes }}</span>
                   </div>
                   <p class="mt-1 text-xs text-dimmed">
-                    Relación {{ item.distributor_payment?.cutoff_relation_id ?? '—' }} · Diferencia:
+                    Relación {{ item.distributor_payment?.cutoff_relation?.relation_number ?? `#${item.distributor_payment?.cutoff_relation_id ?? '—'}` }} · Diferencia:
                     {{ money.format(Number(item.amount_difference)) }}
                   </p>
                 </div>

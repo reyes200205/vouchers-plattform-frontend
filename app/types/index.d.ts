@@ -209,10 +209,18 @@ export interface InboxSection<T> {
   total: number
 }
 
+// Reconciliation ya trae todo lo que necesita DecideReconciliationModal.vue
+// (distribuidora, relación de corte, transacción bancaria) -- se reutiliza
+// tal cual en vez de duplicar un shape plano como los otros tres tipos.
+export interface InboxReconciliation extends Reconciliation {
+  type: 'reconciliation'
+}
+
 export interface InboxData {
   applications?: InboxSection<InboxApplication>
   credit_increases?: InboxSection<InboxCreditIncrease>
   redemptions?: InboxSection<InboxRedemption>
+  reconciliations?: InboxSection<InboxReconciliation>
 }
 
 // Fila de la tabla del apartado "Solicitudes de vale" (gerentes), separado
@@ -331,6 +339,35 @@ export interface BankTransaction {
   reconciliation: BankTransactionReconciliation | null
 }
 
+export interface ReconciliationDistributorInfo {
+  id: number
+  distributor_number: string
+  name: string | null
+  category: { code: string, name: string } | null
+}
+
+export interface ReconciliationCutoffInfo {
+  id: number
+  branch_id: number | null
+  branch_name: string | null
+  period_start: string | null
+  scheduled_at: string | null
+}
+
+export interface ReconciliationCutoffRelationInfo {
+  id: number
+  relation_number: string
+  status: string | null
+  total_payment: string
+  total_commission: string
+  total_late_fees: string
+  total_amount_due: string
+  payment_due_date: string | null
+  early_payment_start_date: string | null
+  early_payment_end_date: string | null
+  cutoff: ReconciliationCutoffInfo | null
+}
+
 export interface ReconciliationDistributorPayment {
   id: number
   cutoff_relation_id: number
@@ -338,6 +375,16 @@ export interface ReconciliationDistributorPayment {
   amount: string
   reported_reference: string | null
   status: string | null
+  distributor: ReconciliationDistributorInfo | null
+  cutoff_relation: ReconciliationCutoffRelationInfo | null
+}
+
+export interface ReconciliationBankTransactionInfo {
+  id: number
+  reference: string | null
+  transaction_date: string | null
+  amount: string
+  raw_description: string | null
 }
 
 export interface Reconciliation {
@@ -356,6 +403,7 @@ export interface Reconciliation {
   waived_late_fees_total: string | null
   notes: string | null
   distributor_payment: ReconciliationDistributorPayment | null
+  bank_transaction: ReconciliationBankTransactionInfo | null
 }
 
 export interface BankImportResult {
@@ -404,8 +452,6 @@ export interface Person {
   city: string | null
   state: string | null
   postal_code: string | null
-  street_references?: string | null
-  notes?: string | null
 }
 
 export type CustomerStatus = 'EN_VERIFICACION' | 'ACTIVO' | 'BLOQUEADO' | 'MOROSO' | 'INACTIVO'
