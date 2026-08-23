@@ -45,14 +45,7 @@ const links = computed(() => {
     })
   }
 
-  return [items, [{
-    label: 'Cerrar Sesión',
-    icon: 'i-lucide-log-out',
-    onSelect: async () => {
-      await logout()
-      await navigateTo('/login')
-    }
-  }]] satisfies NavigationMenuItem[][]
+  return [items, []] satisfies NavigationMenuItem[][]
 })
 
 const groups = computed(() => [{

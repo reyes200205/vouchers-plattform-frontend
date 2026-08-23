@@ -296,8 +296,28 @@ async function onSubmit(event: FormSubmitEvent<Schema>) {
     });
 
     await router.push("/registro-verificacion/coordinador/list");
-  } catch (e) {
+  } catch (e: any) {
     console.error(e);
+    const apiErrors = e?.data?.errors;
+    if ((e?.status === 422 || e?.statusCode === 422) && apiErrors) {
+      const formattedErrors = Object.entries(apiErrors).map(([field, messages]) => {
+        const cleanedField = field.startsWith("person.") ? field.substring(7) : field;
+        return {
+          name: cleanedField,
+          message: (messages as string[])[0] || "Dato inválido",
+        };
+      });
+      formRef.value?.setErrors(formattedErrors);
+
+      if (formattedErrors.length > 0 && formattedErrors[0]) {
+        const firstErrorField = formattedErrors[0].name;
+        const step = getStepForFieldName(firstErrorField);
+        if (step) {
+          currentStep.value = step;
+        }
+      }
+    }
+
     toast.add({
       title: "Error",
       description: extractApiErrorMessage(
