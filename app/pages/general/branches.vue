@@ -24,6 +24,7 @@ const { listBranches } = useBranches()
 const { data, status, refresh } = await useAsyncData<Branch[]>('branches', () => listBranches())
 
 const isEditOpen = ref(false)
+const isDetailOpen = ref(false)
 const isSettingsOpen = ref(false)
 const selectedBranch = ref<Branch | null>(null)
 
@@ -80,7 +81,11 @@ function getRowItems(row: Row<Branch>) {
     },
     {
       label: 'Ver detalles de sucursal',
-      icon: 'i-lucide-list'
+      icon: 'i-lucide-list',
+      onSelect() {
+        selectedBranch.value = row.original
+        isDetailOpen.value = true
+      }
     }
   )
 
@@ -309,6 +314,10 @@ const pagination = ref({
         v-model:open="isEditOpen"
         :branch="selectedBranch"
         @updated="refresh"
+      />
+      <BranchesDetailModal
+        v-model:open="isDetailOpen"
+        :branch="selectedBranch"
       />
       <BranchesSettingsModal
         v-if="selectedBranch"

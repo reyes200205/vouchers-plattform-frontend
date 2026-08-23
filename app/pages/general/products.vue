@@ -12,6 +12,8 @@ const { user } = useAuth()
 
 const canManage = computed(() => user.value?.permissions?.includes('products.manage') ?? false)
 const isGeneralManager = computed(() => user.value?.permissions?.includes('categories.manage') ?? false)
+const isSuperAdmin = computed(() => user.value?.roles?.some(r => r.code === 'super-admin') ?? false)
+const showBranchSelector = computed(() => isGeneralManager.value || isSuperAdmin.value)
 
 const branchManagerBranchId = computed(() => {
   return user.value?.roles?.find(r => r.code === 'branch_manager' && r.branch_id !== null)?.branch_id ?? null
@@ -184,7 +186,7 @@ function getProductItems(product: FinancialProduct) {
 
         <template #right>
           <USelect
-            v-if="isGeneralManager"
+            v-if="showBranchSelector"
             v-model="selectedBranchId"
             :items="branches.map(b => ({ label: b.name, value: b.id as number }))"
             placeholder="Sucursal..."
@@ -298,7 +300,7 @@ function getProductItems(product: FinancialProduct) {
               />
 
               <UDropdownMenu
-                v-if="canManage || product.origin === 'global'"
+                v-if="!isSuperAdmin && (canManage || product.origin === 'global')"
                 :items="getProductItems(product)"
               >
                 <UButton

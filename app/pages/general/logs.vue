@@ -2,15 +2,30 @@
 import { ref, watch, computed } from 'vue'
 import type { TableColumn } from '@nuxt/ui'
 import type { AuditLogItem } from '~/composables/useAuditLogs'
+import type { Branch } from '~/types'
 
 const UBadge = resolveComponent('UBadge')
 const UButton = resolveComponent('UButton')
 
 const { listAuditLogs } = useAuditLogs()
+const { listBranches } = useBranches()
+const { listStaff } = useStaff()
+const { user } = useAuth()
+
+const isBranchManager = computed(() => user.value?.roles?.some(r => r.code === 'branch_manager') ?? false)
+const branchManagerBranchId = computed(() => {
+  return user.value?.roles?.find(r => r.code === 'branch_manager' && r.branch_id !== null)?.branch_id ?? null
+})
+
+const { data: branches } = await useAsyncData<Branch[]>('logs-branches', () => listBranches(), { default: () => [] })
+const { data: staffData } = await useAsyncData('logs-staff', () => listStaff({ per_page: 200 }), { default: () => ({ data: [] }) })
 
 const search = ref('')
 const level = ref('all')
 const moduleFilter = ref('all')
+const branchFilter = ref('all')
+const userRoleFilter = ref('all')
+const userFilter = ref('all')
 const page = ref(1)
 
 const isDetailOpen = ref(false)
@@ -41,11 +56,41 @@ const moduleItems = [
   { label: 'Vales', value: 'vouchers' },
   { label: 'Clientes', value: 'customers' },
   { label: 'Usuarios', value: 'users' },
-  { label: 'Sucursales', value: 'branches' }
+  { label: 'Sucursales', value: 'branches' },
+  { label: 'Personal', value: 'staff' }
 ]
 
+const branchItems = computed(() => [
+  { label: 'Todas las sucursales', value: 'all' },
+  ...branches.value.map(b => ({ label: b.name, value: b.id.toString() }))
+])
+
+const roleLabels: Record<string, string> = {
+  'super-admin': 'Administrador General',
+  'branch_manager': 'Gerente General',
+  'coordinator': 'Coordinador',
+  'verifier': 'Verificador'
+}
+
+const roleItems = [
+  { label: 'Todos los roles', value: 'all' },
+  ...Object.entries(roleLabels).map(([code, label]) => ({ label, value: code }))
+]
+
+const staffItems = computed(() => {
+  const list = staffData.value?.data ?? []
+  return [
+    { label: 'Todos los usuarios', value: 'all' },
+    ...list.map(s => {
+      const name = s.person ? `${s.person.first_name ?? ''} ${s.person.last_name ?? ''}`.trim() : ''
+      const label = name ? `${name} (${s.username})` : s.username
+      return { label, value: s.id.toString() }
+    })
+  ]
+})
+
 // Reset page to 1 when filters change to avoid empty pages
-watch([search, level, moduleFilter], () => {
+watch([search, level, moduleFilter, branchFilter, userRoleFilter, userFilter], () => {
   page.value = 1
 })
 
@@ -55,10 +100,13 @@ const { data, status, refresh } = await useAsyncData(
     page: page.value,
     search: search.value || undefined,
     level: level.value !== 'all' ? level.value : undefined,
-    module: moduleFilter.value !== 'all' ? moduleFilter.value : undefined
+    module: moduleFilter.value !== 'all' ? moduleFilter.value : undefined,
+    branch_id: isBranchManager.value ? (branchManagerBranchId.value ?? undefined) : (branchFilter.value !== 'all' ? Number(branchFilter.value) : undefined),
+    user_role: userRoleFilter.value !== 'all' ? userRoleFilter.value : undefined,
+    user_id: userFilter.value !== 'all' ? Number(userFilter.value) : undefined
   }),
   {
-    watch: [page, search, level, moduleFilter],
+    watch: [page, search, level, moduleFilter, branchFilter, userRoleFilter, userFilter],
     default: () => ({ data: [], meta: { current_page: 1, last_page: 1, per_page: 15, total: 0 } })
   }
 )
@@ -82,6 +130,13 @@ const columns: TableColumn<AuditLogItem>[] = [
         h('p', { class: 'font-medium text-highlighted' }, row.original.user_name || 'Sistema'),
         row.original.user_role ? h('p', { class: 'text-xs text-muted' }, row.original.user_role) : null
       ])
+    }
+  },
+  {
+    id: 'branch',
+    header: 'Sucursal',
+    cell: ({ row }) => {
+      return h('span', { class: 'text-sm text-muted' }, row.original.branch?.name || 'Global')
     }
   },
   {
@@ -162,6 +217,13 @@ const columns: TableColumn<AuditLogItem>[] = [
 
         <div class="flex flex-wrap items-center gap-1.5">
           <USelect
+            v-if="!isBranchManager"
+            v-model="branchFilter"
+            :items="branchItems"
+            placeholder="Filtrar sucursal"
+            class="min-w-44"
+          />
+          <USelect
             v-model="level"
             :items="levelItems"
             placeholder="Filtrar nivel"
@@ -172,6 +234,18 @@ const columns: TableColumn<AuditLogItem>[] = [
             :items="moduleItems"
             placeholder="Filtrar módulo"
             class="min-w-44"
+          />
+          <USelect
+            v-model="userRoleFilter"
+            :items="roleItems"
+            placeholder="Filtrar rol"
+            class="min-w-44"
+          />
+          <USelect
+            v-model="userFilter"
+            :items="staffItems"
+            placeholder="Filtrar usuario"
+            class="min-w-48"
           />
         </div>
       </div>
@@ -193,17 +267,18 @@ const columns: TableColumn<AuditLogItem>[] = [
           :columns="columns"
           :loading="status === 'pending'"
           class="shrink-0"
+          @select="(e, row) => showDetails(row.original)"
           :ui="{
             base: 'table-fixed border-separate border-spacing-0',
             thead: '[&>tr]:bg-elevated/50 [&>tr]:after:content-none',
-            tbody: '[&>tr]:last:[&>td]:border-b-0',
+            tbody: '[&>tr]:last:[&>td]:border-b-0 [&>tr]:cursor-pointer [&>tr]:hover:bg-muted/40 transition-colors',
             th: 'py-2 first:rounded-l-lg last:rounded-r-lg border-y border-default first:border-l last:border-r',
             td: 'border-b border-default',
             separator: 'h-0'
           }"
         />
 
-        <div v-if="meta.last_page > 1" class="flex items-center justify-end gap-3 border-t border-default pt-4 mt-auto">
+        <div class="flex items-center justify-end gap-3 border-t border-default pt-4 mt-auto">
           <UPagination
             v-model:page="page"
             :total="meta.total"

@@ -439,7 +439,7 @@ async function onSubmit(event: FormSubmitEvent<Schema>) {
         </div>
 
         <UFormField v-if="product" label="Activo" name="is_active">
-          <UToggle v-model="state.is_active" aria-label="Activo" />
+          <USwitch v-model="state.is_active" aria-label="Activo" />
         </UFormField>
 
         <div class="flex justify-end gap-2">

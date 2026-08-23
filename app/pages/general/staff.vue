@@ -20,14 +20,14 @@ const BRANCH_MANAGER_ROLE_CODES = ['cashier', 'coordinator', 'verifier']
 const { data: branches } = await useAsyncData<Branch[]>('staff-branches', () => listBranches(), { default: () => [] })
 
 const q = ref('')
-const roleFilter = ref<string | undefined>(undefined)
-const branchFilter = ref<string | undefined>(undefined)
+const roleFilter = ref('all')
+const branchFilter = ref('all')
 const page = ref(1)
 
 const { data: staffData, status, refresh } = await useAsyncData('staff', () => listStaff({
   page: page.value,
-  role: roleFilter.value,
-  branch_id: isBranchManager.value ? undefined : branchFilter.value ? Number(branchFilter.value) : undefined
+  role: roleFilter.value === 'all' ? undefined : roleFilter.value,
+  branch_id: isBranchManager.value ? undefined : (branchFilter.value === 'all' ? undefined : Number(branchFilter.value))
 }), {
   watch: [page, roleFilter, branchFilter],
   default: () => ({ data: [], meta: { current_page: 1, last_page: 1, per_page: 15, total: 0 } })
@@ -117,14 +117,14 @@ function getMemberItems(member: StaffMember) {
 }
 
 const roleItems = computed(() => [
-  { label: 'Todos los roles', value: undefined },
+  { label: 'Todos los roles', value: 'all' },
   ...Object.entries(roleLabels)
     .filter(([code]) => !isBranchManager.value || BRANCH_MANAGER_ROLE_CODES.includes(code))
     .map(([code, label]) => ({ label, value: code }))
 ])
 
 const branchItems = computed(() => [
-  { label: 'Todas las sucursales', value: undefined },
+  { label: 'Todas las sucursales', value: 'all' },
   ...branches.value.map(b => ({ label: b.name, value: b.id.toString() }))
 ])
 
@@ -140,9 +140,24 @@ const columns = computed<TableColumn<StaffMember>[]>(() => {
         const fullName = `${firstName} ${lastName}`.trim() || 'Sin nombre'
 
         return h('div', { class: 'min-w-0 py-1' }, [
-          h('p', { class: 'truncate font-semibold text-highlighted text-sm' }, fullName),
-          h('p', { class: 'truncate text-xs text-muted font-normal' }, `@${member.username}`)
+          h('p', { class: 'truncate font-semibold text-highlighted text-sm' }, fullName)
         ])
+      }
+    },
+    {
+      id: 'username',
+      header: 'Usuario',
+      cell: ({ row }) => {
+        const member = row.original
+        return h('span', { class: 'text-sm text-muted font-normal' }, `${member.username}`)
+      }
+    },
+    {
+      id: 'email',
+      header: 'Correo',
+      cell: ({ row }) => {
+        const member = row.original
+        return h('span', { class: 'text-sm text-muted font-normal' }, member.person?.email ?? 'Sin correo')
       }
     },
     {

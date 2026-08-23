@@ -40,9 +40,7 @@ const schema = z.object({
       ctx.addIssue({ code: 'custom', message: 'RFC con formato inválido' })
     }
   }),
-  home_phone: z.string().max(20, 'Muy largo').optional(),
   mobile_phone: z.string().max(20, 'Muy largo').optional(),
-  email: z.string().email('Correo inválido').max(150, 'Muy largo').optional(),
   street: z.string().max(150, 'Muy largo').optional(),
   external_number: z.string().max(30, 'Muy largo').optional(),
   neighborhood: z.string().max(120, 'Muy largo').optional(),
@@ -121,9 +119,7 @@ const state = reactive<Partial<Schema>>({
   birth_date: '',
   curp: '',
   rfc: '',
-  home_phone: '',
   mobile_phone: '',
-  email: '',
   street: '',
   external_number: '',
   neighborhood: '',
@@ -147,9 +143,7 @@ watch(() => props.member, (member) => {
     state.birth_date = member.person?.birth_date || ''
     state.curp = member.person?.curp || ''
     state.rfc = member.person?.rfc || ''
-    state.home_phone = member.person?.home_phone || ''
     state.mobile_phone = member.person?.mobile_phone || ''
-    state.email = member.person?.email || ''
     state.street = member.person?.street || ''
     state.external_number = member.person?.external_number || ''
     state.neighborhood = member.person?.neighborhood || ''
@@ -170,9 +164,7 @@ watch(() => props.member, (member) => {
     state.birth_date = ''
     state.curp = ''
     state.rfc = ''
-    state.home_phone = ''
     state.mobile_phone = ''
-    state.email = ''
     state.street = ''
     state.external_number = ''
     state.neighborhood = ''
@@ -220,9 +212,8 @@ async function onSubmit(event: FormSubmitEvent<Schema>) {
         birth_date: event.data.birth_date || null,
         curp: event.data.curp || null,
         rfc: event.data.rfc || null,
-        home_phone: event.data.home_phone || null,
         mobile_phone: event.data.mobile_phone || null,
-        email: event.data.email || null,
+        email: event.data.username,
         street: event.data.street || null,
         external_number: event.data.external_number || null,
         neighborhood: event.data.neighborhood || null,
@@ -247,9 +238,8 @@ async function onSubmit(event: FormSubmitEvent<Schema>) {
         birth_date: event.data.birth_date || undefined,
         curp: event.data.curp || '',
         rfc: event.data.rfc || undefined,
-        home_phone: event.data.home_phone || undefined,
         mobile_phone: event.data.mobile_phone || undefined,
-        email: event.data.email || undefined,
+        email: event.data.username,
         street: event.data.street || undefined,
         external_number: event.data.external_number || undefined,
         neighborhood: event.data.neighborhood || undefined,
@@ -283,7 +273,16 @@ async function onSubmit(event: FormSubmitEvent<Schema>) {
     }
 
     open.value = false
-  } catch (e: unknown) {
+  } catch (e: any) {
+    const apiErrors = e?.data?.errors
+    if (e?.status === 422 && apiErrors) {
+      const formattedErrors = Object.entries(apiErrors).map(([field, messages]) => ({
+        path: field,
+        message: (messages as string[])[0] || 'Dato inválido'
+      }))
+      formRef.value?.setErrors(formattedErrors)
+    }
+
     toast.add({
       title: 'Error',
       description: extractApiErrorMessage(e, 'No se pudo guardar el personal. Verifica los datos e intenta de nuevo.'),
@@ -293,6 +292,8 @@ async function onSubmit(event: FormSubmitEvent<Schema>) {
     submitting.value = false
   }
 }
+
+const formRef = ref<any>(null)
 </script>
 
 <template>
@@ -300,10 +301,11 @@ async function onSubmit(event: FormSubmitEvent<Schema>) {
     v-model:open="open"
     :title="member ? 'Editar personal' : 'Nuevo miembro'"
     :description="member ? `Actualizar a ${member.username}` : 'Agrega un nuevo miembro al personal'"
-    :ui="{ content: 'max-w-4xl' }"
+    :ui="{ content: 'max-w-5xl' }"
   >
     <template #body>
       <UForm
+        ref="formRef"
         :schema="schema"
         :state="state"
         class="space-y-4"
@@ -358,14 +360,8 @@ async function onSubmit(event: FormSubmitEvent<Schema>) {
         </div>
 
         <div class="grid grid-cols-2 gap-4">
-          <UFormField label="Teléfono de casa" name="home_phone">
-            <UInput v-model="state.home_phone" class="w-full" />
-          </UFormField>
           <UFormField label="Celular" name="mobile_phone">
             <UInput v-model="state.mobile_phone" class="w-full" />
-          </UFormField>
-          <UFormField label="Correo" name="email">
-            <UInput v-model="state.email" type="email" class="w-full" />
           </UFormField>
         </div>
 
@@ -425,7 +421,7 @@ async function onSubmit(event: FormSubmitEvent<Schema>) {
         </UFormField>
 
         <UFormField v-if="member" label="Activo" name="is_active">
-          <UToggle v-model="state.is_active" aria-label="Activo" />
+          <USwitch v-model="state.is_active" aria-label="Activo" />
         </UFormField>
 
         <div class="flex justify-end gap-2">

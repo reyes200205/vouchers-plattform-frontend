@@ -24,6 +24,9 @@ export interface AuditLogListParams {
   search?: string
   level?: string
   module?: string
+  branch_id?: number
+  user_role?: string
+  user_id?: number
 }
 
 interface AuditLogListResponse {
