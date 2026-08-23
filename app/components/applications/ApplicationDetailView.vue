@@ -37,11 +37,7 @@ function fmtGender(value: string | null | undefined) {
   return GENDER_LABELS[value] ?? value
 }
 
-// applicant_age se captura junto con el resto de family_data (ver
-// StoreApplicationRequest en el backend), pero es un dato de la PERSONA, no
-// de su familia/vivienda — se muestra junto con el resto de datos
-// personales, no aquí.
-const applicantAge = computed(() => props.detail.family_data_json?.applicant_age ?? null)
+
 
 // family_data_json llega anidado tal cual lo arma registro-verificacion/new.vue
 // (members / occupation / housing.work_reference), no como pares planos — ver
@@ -132,14 +128,6 @@ const verifierPhotos = computed(() => {
           </p>
           <p class="text-highlighted">
             {{ fmtBirthDate(detail.applicant?.birth_date) }}
-          </p>
-        </div>
-        <div v-if="applicantAge !== null">
-          <p class="text-xs text-muted">
-            Edad
-          </p>
-          <p class="text-highlighted">
-            {{ applicantAge }} años
           </p>
         </div>
         <div>

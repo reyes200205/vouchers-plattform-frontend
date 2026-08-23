@@ -75,7 +75,6 @@ const schema = z.object({
   street_references: z.string().optional(),
   notes: z.string().optional(),
   requested_credit_limit: z.union([z.number().positive(), z.string().regex(/^\d+(\.\d{1,2})?$/)]),
-  applicant_age: z.number().min(18, 'Debe ser mayor de edad').optional(),
   occupation_type: z.string().optional(),
   occupation_place: z.string().optional(),
   occupation_position: z.string().optional(),
@@ -137,7 +136,6 @@ function startEditing() {
   state.requested_credit_limit = detail.value.requested_credit_limit ?? undefined
 
   const familyData = detail.value.family_data_json
-  state.applicant_age = familyData?.applicant_age ?? undefined
   state.occupation_type = familyData?.occupation?.type ?? ''
   state.occupation_place = familyData?.occupation?.place_name ?? ''
   state.occupation_position = familyData?.occupation?.position ?? ''
@@ -196,7 +194,6 @@ async function onSubmit(event: FormSubmitEvent<Schema>) {
             phone: m.phone || null,
             age: m.age ?? null
           })),
-        applicant_age: event.data.applicant_age ?? null,
         occupation: {
           type: event.data.occupation_type || null,
           place_name: event.data.occupation_place || null,
@@ -338,9 +335,6 @@ async function onSubmit(event: FormSubmitEvent<Schema>) {
                 </UFormField>
                 <UFormField required label="RFC" name="rfc">
                   <UInput v-model="state.rfc" class="w-full uppercase" />
-                </UFormField>
-                <UFormField label="Edad del solicitante" name="applicant_age">
-                  <UInputNumber v-model="state.applicant_age" :min="0" class="w-full" />
                 </UFormField>
                 <UFormField label="Teléfono de casa" name="home_phone">
                   <UInput v-model="state.home_phone" class="w-full" />

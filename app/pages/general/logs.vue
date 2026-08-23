@@ -35,6 +35,7 @@ const { data: staffData } = await useAsyncData(
 );
 
 const search = ref("");
+const eventFilter = ref("all");
 const level = ref("all");
 const moduleFilter = ref("all");
 const branchFilter = ref("all");
@@ -68,6 +69,38 @@ const levelItems = [
   { label: "Info", value: "INFO" },
   { label: "Warning", value: "WARNING" },
   { label: "Error", value: "ERROR" },
+];
+
+const eventItems = [
+  { label: "Todos los eventos", value: "all" },
+  { label: "Creado", value: "CREATED" },
+  { label: "Actualizado", value: "UPDATED" },
+  { label: "Eliminado", value: "DELETED" },
+  { label: "Aprobado", value: "APPROVED" },
+  { label: "Rechazado", value: "REJECTED" },
+  { label: "Solicitado", value: "REQUESTED" },
+  { label: "Verificado", value: "VERIFIED" },
+  { label: "Resuelto", value: "RESOLVED" },
+  { label: "Asignado", value: "ASSIGNED" },
+  { label: "Decidido", value: "DECIDED" },
+  { label: "Cambiado", value: "CHANGED" },
+  { label: "Emparejado", value: "MATCHED" },
+  { label: "Cancelado", value: "CANCELED" },
+  { label: "Confirmado", value: "CONFIRMED" },
+  { label: "Completado", value: "COMPLETED" },
+  { label: "Generado", value: "GENERATED" },
+  { label: "Reprocesado", value: "REPROCESSED" },
+  { label: "Cerrado", value: "CLOSED" },
+  { label: "Enviado a revisión", value: "SUBMITTED" },
+  { label: "Registrado", value: "RECORDED" },
+  { label: "Revertido", value: "REVERSED" },
+  { label: "Desembolsado", value: "DISBURSED" },
+  { label: "Enviado", value: "SENT" },
+  { label: "Reenviado", value: "RESENT" },
+  { label: "Fallido", value: "FAILED" },
+  { label: "Preautorizado", value: "PRE_AUTHORIZED" },
+  { label: "Inicio de sesión", value: "LOGIN" },
+  { label: "Cierre de sesión", value: "LOGOUT" },
 ];
 
 const moduleItems = [
@@ -117,7 +150,15 @@ const staffItems = computed(() => {
 
 // Reset page to 1 when filters change to avoid empty pages
 watch(
-  [search, level, moduleFilter, branchFilter, userRoleFilter, userFilter],
+  [
+    search,
+    eventFilter,
+    level,
+    moduleFilter,
+    branchFilter,
+    userRoleFilter,
+    userFilter,
+  ],
   () => {
     page.value = 1;
   },
@@ -129,6 +170,7 @@ const { data, status, refresh } = await useAsyncData(
     listAuditLogs({
       page: page.value,
       search: search.value || undefined,
+      event_type: eventFilter.value !== "all" ? eventFilter.value : undefined,
       level: level.value !== "all" ? level.value : undefined,
       module: moduleFilter.value !== "all" ? moduleFilter.value : undefined,
       branch_id: isBranchManager.value
@@ -145,6 +187,7 @@ const { data, status, refresh } = await useAsyncData(
     watch: [
       page,
       search,
+      eventFilter,
       level,
       moduleFilter,
       branchFilter,
@@ -306,6 +349,12 @@ const columns: TableColumn<AuditLogItem>[] = [
             v-model="branchFilter"
             :items="branchItems"
             placeholder="Filtrar sucursal"
+            class="min-w-44"
+          />
+          <USelect
+            v-model="eventFilter"
+            :items="eventItems"
+            placeholder="Filtrar evento"
             class="min-w-44"
           />
           <USelect

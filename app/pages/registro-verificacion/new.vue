@@ -92,9 +92,6 @@ const schema = z.object({
     .number({ error: "Captura el límite de crédito solicitado" })
     .min(1000, "El límite de crédito solicitado debe ser de al menos $1,000"),
   // Datos adicionales para la distribuidora
-  applicant_age: z
-    .number({ error: "Captura la edad del solicitante" })
-    .min(18, "El solicitante debe ser mayor de edad (18 años o más)"),
   occupation_type: z.string().min(1, "Selecciona la ocupación"),
   occupation_place: z.string().min(1, "El lugar de ocupación es obligatorio"),
   occupation_position: z.string().min(1, "El puesto o grado es obligatorio"),
@@ -143,7 +140,6 @@ const state = reactive<Partial<Schema>>({
   notes: "",
   street_references: "",
   requested_credit_limit: undefined,
-  applicant_age: undefined,
   occupation_type: undefined,
   occupation_place: "",
   occupation_position: "",
@@ -257,7 +253,6 @@ async function onSubmit(event: FormSubmitEvent<Schema>) {
             phone: m.phone || null,
             age: m.age ?? null,
           })),
-        applicant_age: data.applicant_age ?? null,
         occupation: {
           type: data.occupation_type || null,
           place_name: data.occupation_place || null,
@@ -366,7 +361,6 @@ function getStepForFieldName(name: string): number {
     "postal_code",
   ];
   const step3Fields = [
-    "applicant_age",
     "occupation_type",
     "occupation_place",
     "occupation_position",
@@ -829,17 +823,6 @@ function onFormError(event: any) {
                   Ocupación
                 </h4>
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                  <UFormField
-                    label="Edad del solicitante"
-                    name="applicant_age"
-                    required
-                  >
-                    <UInputNumber
-                      v-model="state.applicant_age"
-                      class="w-full"
-                      :min="0"
-                    />
-                  </UFormField>
                   <UFormField
                     label="Trabaja o estudia"
                     name="occupation_type"

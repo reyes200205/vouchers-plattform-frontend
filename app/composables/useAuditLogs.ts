@@ -23,6 +23,7 @@ export interface AuditLogListParams {
   page?: number
   per_page?: number
   search?: string
+  event_type?: string
   level?: string
   module?: string
   branch_id?: number
