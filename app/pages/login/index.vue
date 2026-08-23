@@ -613,12 +613,9 @@ const backToLogin = () => {
                   Contraseña
                 </label>
 
-                <button
-                  type="button"
-                  class="forgot-password"
-                >
+                <NuxtLink to="/forgot-password" class="forgot-password">
                   ¿Olvidaste tu contraseña?
-                </button>
+                </NuxtLink>
               </div>
 
               <div class="input-wrapper">

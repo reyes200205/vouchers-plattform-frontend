@@ -275,9 +275,9 @@ async function onSubmit(event: FormSubmitEvent<Schema>) {
     open.value = false
   } catch (e: any) {
     const apiErrors = e?.data?.errors
-    if (e?.status === 422 && apiErrors) {
+    if ((e?.status === 422 || e?.statusCode === 422) && apiErrors) {
       const formattedErrors = Object.entries(apiErrors).map(([field, messages]) => ({
-        path: field,
+        name: field,
         message: (messages as string[])[0] || 'Dato inválido'
       }))
       formRef.value?.setErrors(formattedErrors)

@@ -225,5 +225,34 @@ export function useAuth() {
     if (user.value) user.value = { ...user.value, requires_password_confirmation: false }
   }
 
-  return { token, user, roleCode, roleName, isLoggedIn, login, verifyMfa, resendMfa, logout, roleHome, fetchMe, confirmPassword, changePassword }
+  // "Olvidé mi contraseña": el backend siempre responde el mismo mensaje
+  // exista o no el usuario, para no revelar cuentas registradas.
+  async function forgotPassword(username: string, turnstileToken?: string) {
+    const response = await $fetch<{ success: boolean, message: string }>(`${config.public.apiBase}/auth/forgot-password`, {
+      method: 'POST',
+      body: {
+        username,
+        'cf-turnstile-response': turnstileToken
+      }
+    })
+
+    return response.message
+  }
+
+  // Paso final del enlace de recuperación (llega por correo con ?token=&email=).
+  async function resetPassword(email: string, token: string, password: string, passwordConfirmation: string) {
+    const response = await $fetch<{ success: boolean, message: string }>(`${config.public.apiBase}/auth/reset-password`, {
+      method: 'POST',
+      body: {
+        email,
+        token,
+        password,
+        password_confirmation: passwordConfirmation
+      }
+    })
+
+    return response.message
+  }
+
+  return { token, user, roleCode, roleName, isLoggedIn, login, verifyMfa, resendMfa, logout, roleHome, fetchMe, confirmPassword, changePassword, forgotPassword, resetPassword }
 }
