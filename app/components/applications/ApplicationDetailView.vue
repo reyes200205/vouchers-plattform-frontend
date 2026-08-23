@@ -325,6 +325,14 @@ const verifierPhotos = computed(() => {
             {{ occupation.years !== null ? `${occupation.years} años` : '—' }}
           </p>
         </div>
+        <div>
+          <p class="text-xs text-muted">
+            Ganancia al mes
+          </p>
+          <p class="text-highlighted">
+            {{ occupation.monthly_income !== null && occupation.monthly_income !== undefined ? money.format(occupation.monthly_income) : '—' }}
+          </p>
+        </div>
       </div>
 
       <div v-if="housing" class="mt-3 grid grid-cols-1 gap-x-4 gap-y-2 border-t border-default pt-3 text-sm sm:grid-cols-2 lg:grid-cols-3">

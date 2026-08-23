@@ -93,6 +93,9 @@ const schema = z.object({
     .min(1000, "El límite de crédito solicitado debe ser de al menos $1,000"),
   // Datos adicionales para la distribuidora
   occupation_type: z.string().min(1, "Selecciona la ocupación"),
+  occupation_monthly_income: z
+    .number({ error: "Captura la ganancia al mes" })
+    .min(0, "La ganancia no puede ser negativa"),
   occupation_place: z.string().min(1, "El lugar de ocupación es obligatorio"),
   occupation_position: z.string().min(1, "El puesto o grado es obligatorio"),
   occupation_phone: z
@@ -145,6 +148,7 @@ const state = reactive<Partial<Schema>>({
   occupation_position: "",
   occupation_phone: "",
   occupation_years: undefined,
+  occupation_monthly_income: undefined,
   housing_ownership_type: undefined,
   housing_dimensions: "",
   housing_years: undefined,
@@ -259,6 +263,7 @@ async function onSubmit(event: FormSubmitEvent<Schema>) {
           position: data.occupation_position || null,
           phone: data.occupation_phone || null,
           years: data.occupation_years ?? null,
+          monthly_income: data.occupation_monthly_income ?? null,
         },
         housing: {
           ownership_type: data.housing_ownership_type || null,
@@ -366,6 +371,7 @@ function getStepForFieldName(name: string): number {
     "occupation_position",
     "occupation_phone",
     "occupation_years",
+    "occupation_monthly_income",
     "housing_ownership_type",
     "housing_years",
     "housing_dimensions",
@@ -870,6 +876,17 @@ function onFormError(event: any) {
                   >
                     <UInputNumber
                       v-model="state.occupation_years"
+                      class="w-full"
+                      :min="0"
+                    />
+                  </UFormField>
+                  <UFormField
+                    label="Ganancia al mes"
+                    name="occupation_monthly_income"
+                    required
+                  >
+                    <UInputNumber
+                      v-model="state.occupation_monthly_income"
                       class="w-full"
                       :min="0"
                     />

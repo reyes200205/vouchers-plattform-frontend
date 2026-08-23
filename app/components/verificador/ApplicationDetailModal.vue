@@ -76,6 +76,7 @@ const schema = z.object({
   notes: z.string().optional(),
   requested_credit_limit: z.union([z.number().positive(), z.string().regex(/^\d+(\.\d{1,2})?$/)]),
   occupation_type: z.string().optional(),
+  occupation_monthly_income: z.number().min(0).optional(),
   occupation_place: z.string().optional(),
   occupation_position: z.string().optional(),
   occupation_phone: z.string().optional(),
@@ -141,6 +142,7 @@ function startEditing() {
   state.occupation_position = familyData?.occupation?.position ?? ''
   state.occupation_phone = familyData?.occupation?.phone ?? ''
   state.occupation_years = familyData?.occupation?.years ?? undefined
+  state.occupation_monthly_income = familyData?.occupation?.monthly_income ?? undefined
   state.housing_ownership_type = familyData?.housing?.ownership_type ?? ''
   state.housing_dimensions = familyData?.housing?.dimensions ?? ''
   state.housing_years = familyData?.housing?.years_at_address ?? undefined
@@ -199,7 +201,8 @@ async function onSubmit(event: FormSubmitEvent<Schema>) {
           place_name: event.data.occupation_place || null,
           position: event.data.occupation_position || null,
           phone: event.data.occupation_phone || null,
-          years: event.data.occupation_years ?? null
+          years: event.data.occupation_years ?? null,
+          monthly_income: event.data.occupation_monthly_income ?? null
         },
         housing: {
           ownership_type: event.data.housing_ownership_type || null,
@@ -464,6 +467,9 @@ async function onSubmit(event: FormSubmitEvent<Schema>) {
                 </UFormField>
                 <UFormField label="Antigüedad (años)" name="occupation_years">
                   <UInputNumber v-model="state.occupation_years" class="w-full" :min="0" />
+                </UFormField>
+                <UFormField label="Ganancia al mes" name="occupation_monthly_income">
+                  <UInputNumber v-model="state.occupation_monthly_income" class="w-full" :min="0" />
                 </UFormField>
               </div>
             </div>
