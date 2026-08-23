@@ -417,12 +417,12 @@ function getFieldsForStep(step: number): string[] {
   }
   if (step === 3) {
     return [
-      "applicant_age",
       "occupation_type",
       "occupation_place",
       "occupation_position",
       "occupation_phone",
       "occupation_years",
+      "occupation_monthly_income",
       "housing_ownership_type",
       "housing_years",
       "housing_dimensions",
