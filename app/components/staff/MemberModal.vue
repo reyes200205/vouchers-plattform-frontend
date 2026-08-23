@@ -23,9 +23,21 @@ const schema = z.object({
   first_name: z.string().min(2, 'Muy corto').max(100, 'Muy largo'),
   middle_name: z.string().max(100, 'Muy largo').optional(),
   last_name: z.string().min(2, 'Muy corto').max(100, 'Muy largo'),
-  second_last_name: z.string().max(100, 'Muy largo').optional(),
-  gender: z.string().optional(),
-  birth_date: z.string().optional(),
+  second_last_name: z.string().max(100, 'Muy largo').optional().superRefine((value, ctx) => {
+    if (!props.member && !value) {
+      ctx.addIssue({ code: 'custom', message: 'Requerido' })
+    }
+  }),
+  gender: z.string().optional().superRefine((value, ctx) => {
+    if (!props.member && !value) {
+      ctx.addIssue({ code: 'custom', message: 'Selecciona un género' })
+    }
+  }),
+  birth_date: z.string().optional().superRefine((value, ctx) => {
+    if (!props.member && !value) {
+      ctx.addIssue({ code: 'custom', message: 'Requerido' })
+    }
+  }),
   curp: z.string().max(18, 'CURP inválida').optional().superRefine((value, ctx) => {
     if (!props.member && (!value || value.length !== 18)) {
       ctx.addIssue({ code: 'custom', message: 'CURP inválida (18 caracteres)' })
@@ -36,17 +48,49 @@ const schema = z.object({
     }
   }),
   rfc: z.string().max(13, 'RFC inválido').optional().superRefine((value, ctx) => {
+    if (!props.member && !value) {
+      ctx.addIssue({ code: 'custom', message: 'Requerido' })
+      return
+    }
     if (value && !isValidRfc(value)) {
       ctx.addIssue({ code: 'custom', message: 'RFC con formato inválido' })
     }
   }),
-  mobile_phone: z.string().max(20, 'Muy largo').optional(),
-  street: z.string().max(150, 'Muy largo').optional(),
-  external_number: z.string().max(30, 'Muy largo').optional(),
-  neighborhood: z.string().max(120, 'Muy largo').optional(),
-  city: z.string().max(120, 'Muy largo').optional(),
-  state: z.string().max(120, 'Muy largo').optional(),
-  postal_code: z.string().max(10, 'Muy largo').optional(),
+  mobile_phone: z.string().max(20, 'Muy largo').optional().superRefine((value, ctx) => {
+    if (!props.member && !value) {
+      ctx.addIssue({ code: 'custom', message: 'Requerido' })
+    }
+  }),
+  street: z.string().max(150, 'Muy largo').optional().superRefine((value, ctx) => {
+    if (!props.member && !value) {
+      ctx.addIssue({ code: 'custom', message: 'Requerido' })
+    }
+  }),
+  external_number: z.string().max(30, 'Muy largo').optional().superRefine((value, ctx) => {
+    if (!props.member && !value) {
+      ctx.addIssue({ code: 'custom', message: 'Requerido' })
+    }
+  }),
+  neighborhood: z.string().max(120, 'Muy largo').optional().superRefine((value, ctx) => {
+    if (!props.member && !value) {
+      ctx.addIssue({ code: 'custom', message: 'Requerido' })
+    }
+  }),
+  city: z.string().max(120, 'Muy largo').optional().superRefine((value, ctx) => {
+    if (!props.member && !value) {
+      ctx.addIssue({ code: 'custom', message: 'Requerido' })
+    }
+  }),
+  state: z.string().max(120, 'Muy largo').optional().superRefine((value, ctx) => {
+    if (!props.member && !value) {
+      ctx.addIssue({ code: 'custom', message: 'Requerido' })
+    }
+  }),
+  postal_code: z.string().max(10, 'Muy largo').optional().superRefine((value, ctx) => {
+    if (!props.member && !value) {
+      ctx.addIssue({ code: 'custom', message: 'Requerido' })
+    }
+  }),
   username: z.string().email('Correo inválido').max(80, 'Muy largo'),
   password: z.string().optional().superRefine((value, ctx) => {
     if (!props.member && (!value || value.length < 8)) {
@@ -321,13 +365,13 @@ const formRef = ref<any>(null)
           <UFormField required label="Apellido paterno" name="last_name">
             <UInput v-model="state.last_name" class="w-full" />
           </UFormField>
-          <UFormField label="Apellido materno" name="second_last_name">
+          <UFormField :required="!member" label="Apellido materno" name="second_last_name">
             <UInput v-model="state.second_last_name" class="w-full" />
           </UFormField>
         </div>
 
         <div class="grid grid-cols-2 gap-4">
-          <UFormField label="Género" name="gender">
+          <UFormField :required="!member" label="Género" name="gender">
             <USelect
               v-model="state.gender"
               :items="[
@@ -339,7 +383,7 @@ const formRef = ref<any>(null)
               class="w-full"
             />
           </UFormField>
-          <UFormField label="Fecha de nacimiento" name="birth_date">
+          <UFormField :required="!member" label="Fecha de nacimiento" name="birth_date">
             <UInput v-model="state.birth_date" type="date" class="w-full" />
           </UFormField>
           <UFormField
@@ -354,34 +398,34 @@ const formRef = ref<any>(null)
               placeholder="18 caracteres"
             />
           </UFormField>
-          <UFormField label="RFC" name="rfc">
+          <UFormField :required="!member" label="RFC" name="rfc">
             <UInput v-model="state.rfc" class="w-full" uppercase />
           </UFormField>
         </div>
 
         <div class="grid grid-cols-2 gap-4">
-          <UFormField label="Celular" name="mobile_phone">
+          <UFormField :required="!member" label="Celular" name="mobile_phone">
             <UInput v-model="state.mobile_phone" class="w-full" />
           </UFormField>
         </div>
 
         <div class="grid grid-cols-2 gap-4">
-          <UFormField label="Calle" name="street">
+          <UFormField :required="!member" label="Calle" name="street">
             <UInput v-model="state.street" class="w-full" />
           </UFormField>
-          <UFormField label="Número exterior" name="external_number">
+          <UFormField :required="!member" label="Número exterior" name="external_number">
             <UInput v-model="state.external_number" class="w-full" />
           </UFormField>
-          <UFormField label="Colonia" name="neighborhood">
+          <UFormField :required="!member" label="Colonia" name="neighborhood">
             <UInput v-model="state.neighborhood" class="w-full" />
           </UFormField>
-          <UFormField label="C.P." name="postal_code">
+          <UFormField :required="!member" label="C.P." name="postal_code">
             <UInput v-model="state.postal_code" class="w-full" />
           </UFormField>
-          <UFormField label="Ciudad" name="city">
+          <UFormField :required="!member" label="Ciudad" name="city">
             <UInput v-model="state.city" class="w-full" />
           </UFormField>
-          <UFormField label="Estado" name="state">
+          <UFormField :required="!member" label="Estado" name="state">
             <UInput v-model="state.state" class="w-full" />
           </UFormField>
         </div>

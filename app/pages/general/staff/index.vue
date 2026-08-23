@@ -12,7 +12,7 @@ const { listBranches } = useBranches()
 const { user } = useAuth()
 
 const canManage = computed(() => user.value?.permissions?.includes('staff.manage') ?? false)
-const isBranchManager = computed(() => user.value?.roles?.some(r => r.code === 'branch_manager') ?? false)
+const isBranchManager = computed(() => user.value?.roles?.some(r => r.code === 'branch_manager' ?? false))
 // Debe coincidir con ListStaffService::BRANCH_MANAGER_ROLES del backend: los
 // roles que un gerente de sucursal puede crear/ver en su propia sucursal.
 const BRANCH_MANAGER_ROLE_CODES = ['cashier', 'coordinator', 'verifier']
@@ -63,12 +63,8 @@ function branchName(branchId: number | null | undefined) {
   return branches.value.find(b => b.id === branchId)?.name ?? 'Global'
 }
 
-const isEditOpen = ref(false)
-const selectedMember = ref<StaffMember | null>(null)
-
 function openCreate() {
-  selectedMember.value = null
-  isEditOpen.value = true
+  navigateTo('/general/staff/new')
 }
 
 function getMemberItems(member: StaffMember) {
@@ -84,8 +80,7 @@ function getMemberItems(member: StaffMember) {
       label: 'Editar',
       icon: 'i-lucide-pencil',
       onSelect() {
-        selectedMember.value = member
-        isEditOpen.value = true
+        navigateTo(`/general/staff/${member.id}`)
       }
     })
   }
@@ -318,12 +313,4 @@ const columns = computed<TableColumn<StaffMember>[]>(() => {
       </template>
     </template>
   </UDashboardPanel>
-
-  <StaffMemberModal
-    v-model:open="isEditOpen"
-    :member="selectedMember"
-    :branches="branches"
-    @created="refresh()"
-    @updated="refresh()"
-  />
 </template>

@@ -8,7 +8,7 @@ const emit = defineEmits<{ requested: [] }>()
 const schema = z.object({
   distributor_id: z.number({ error: 'Selecciona una distribuidora' }),
   requested_amount: z.union([z.number().positive(), z.string().regex(/^\d+(\.\d{1,2})?$/)]),
-  reason: z.string().max(255).optional()
+  reason: z.string().min(1, 'Requerido').max(255)
 })
 
 type Schema = z.output<typeof schema>
@@ -72,7 +72,7 @@ async function onSubmit(event: FormSubmitEvent<Schema>) {
     await requestCreditIncrease({
       distributor_id: event.data.distributor_id,
       requested_amount: String(event.data.requested_amount),
-      reason: event.data.reason || undefined
+      reason: event.data.reason
     })
 
     toast.add({
@@ -137,7 +137,7 @@ async function onSubmit(event: FormSubmitEvent<Schema>) {
           />
         </UFormField>
 
-        <UFormField label="Motivo (opcional)" name="reason">
+        <UFormField label="Motivo" name="reason" required>
           <UTextarea v-model="state.reason" class="w-full" />
         </UFormField>
 
