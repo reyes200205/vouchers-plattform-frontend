@@ -204,6 +204,30 @@ export interface InboxRedemption {
   created_at: string
 }
 
+// Vista de un canje de puntos desde el lado de la distribuidora (espejo de
+// PointRedemptionResource en el backend). Distinto de InboxRedemption, que es
+// la fila que ve el staff en la bandeja de aprobaciones.
+export interface PointRedemption {
+  id: number
+  folio: string | null
+  distributor_id: number
+  branch_id: number
+  requested_by_user_id: number
+  points: string
+  point_value_snapshot: string
+  amount_mxn: string
+  status: 'PENDIENTE' | 'APROBADO' | 'RECHAZADO' | 'CANCELADO'
+  decided_by_user_id: number | null
+  decision_notes: string | null
+  decided_at: string | null
+  created_at: string | null
+  distributor?: {
+    id: number
+    distributor_number: string
+    current_points: string
+  }
+}
+
 export interface InboxSection<T> {
   items: T[]
   total: number
@@ -577,8 +601,8 @@ declare global {
       render: (
         container: string | HTMLElement,
         options: {
-          sitekey: string
-          callback?: (token: string) => void
+          'sitekey': string
+          'callback'?: (token: string) => void
           'expired-callback'?: () => void
           'error-callback'?: () => void
           [key: string]: any
@@ -596,24 +620,24 @@ declare global {
       render: (
         container: string | HTMLElement,
         options: {
-          sitekey: string
-          action?: string
-          cData?: string
-          callback?: (token: string) => void
+          'sitekey': string
+          'action'?: string
+          'cData'?: string
+          'callback'?: (token: string) => void
           'expired-callback'?: () => void
           'timeout-callback'?: () => void
           'error-callback'?: () => void
           'unsupported-callback'?: () => void
-          theme?: 'light' | 'dark' | 'auto'
-          size?: 'normal' | 'flexible' | 'compact'
-          tabindex?: number
+          'theme'?: 'light' | 'dark' | 'auto'
+          'size'?: 'normal' | 'flexible' | 'compact'
+          'tabindex'?: number
           'response-field'?: boolean
           'response-field-name'?: string
-          retry?: 'auto' | 'never'
+          'retry'?: 'auto' | 'never'
           'retry-interval'?: number
-          refresh?: 'auto' | 'manual' | 'never'
-          appearance?: 'always' | 'execute' | 'interaction-only'
-          execution?: 'render' | 'execute'
+          'refresh'?: 'auto' | 'manual' | 'never'
+          'appearance'?: 'always' | 'execute' | 'interaction-only'
+          'execution'?: 'render' | 'execute'
           [key: string]: any
         }
       ) => string | number
@@ -623,4 +647,3 @@ declare global {
     }
   }
 }
-

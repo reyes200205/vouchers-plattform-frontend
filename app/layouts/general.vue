@@ -137,6 +137,17 @@ const links = computed(() => {
     })
   }
 
+  if (hasPermission('points.redeem.payout')) {
+    items.push({
+      label: 'Canje de puntos',
+      icon: 'i-lucide-ticket',
+      to: '/general/point-redemptions-payout',
+      onSelect: () => {
+        open.value = false
+      }
+    })
+  }
+
   if (hasPermission('staff.view')) {
     items.push({
       label: 'Personal',
