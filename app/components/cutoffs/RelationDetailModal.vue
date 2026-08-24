@@ -47,18 +47,36 @@ function isCarryover(item: { origin_relation_id: number | null }): boolean {
   return item.origin_relation_id !== null
 }
 
-// La normal (sin arrastre) que se le suma al saldo arrastrado en esta misma
-// relación, si trae ambos -- para el desglose informativo de abajo. El
-// arrastre en sí ya viene sumado en relation.total_carryover_received.
+// Cuánto queda REALMENTE pendiente de un item: su total menos lo que ya se
+// le acreditó (previous_paid_amount, ver
+// SettleCutoffRelationService::applyPartialPayment).
+function remainingOf(item: { line_total_amount: string; previous_paid_amount: string | null }): number {
+  return Math.max(0, Number(item.line_total_amount) - Number(item.previous_paid_amount ?? 0))
+}
+
+// La normal (sin arrastre) y el saldo arrastrado, para el desglose
+// informativo de abajo -- sumando el remanente REAL de cada item agrupado
+// por si trae origin_relation_id (arrastre) o no (quincena normal). Antes
+// esto se calculaba con total_amount_due - total_carryover_received:
+// total_carryover_received es una foto fija del monto arrastrado ORIGINAL
+// (se guarda una vez al generarse la relación y nunca se reduce), así que
+// esa resta le atribuía TODO pago recibido a la quincena normal aunque en
+// realidad se hubiera acreditado al arrastre -- una conciliación retroactiva
+// dirigida específicamente a una relación ya cerrada (ver
+// RetroactiveReconciliationService) podía terminar mostrando "$0.00 de
+// quincena normal" cuando la quincena normal seguía debiéndose completa, y
+// el arrastre por el monto total original sin haber bajado nada.
 const normalPortion = computed(() => {
-  const due = Number(props.relation?.total_amount_due ?? 0)
-  const carryover = Number(props.relation?.total_carryover_received ?? 0)
-  return due - carryover
+  const items = props.relation?.items ?? []
+  return items.filter(item => !isCarryover(item)).reduce((sum, item) => sum + remainingOf(item), 0)
 })
 
-const carryoverPortion = computed(() => Number(props.relation?.total_carryover_received ?? 0))
+const carryoverPortion = computed(() => {
+  const items = props.relation?.items ?? []
+  return items.filter(isCarryover).reduce((sum, item) => sum + remainingOf(item), 0)
+})
 
-const hasCarryover = computed(() => carryoverPortion.value > 0)
+const hasCarryover = computed(() => (props.relation?.items ?? []).some(isCarryover))
 
 // Solo informativo: cuánta comisión se perdió en total por atraso, sumando
 // lo que cada vale hubiera ganado (commission_forfeited_amount, calculado en
