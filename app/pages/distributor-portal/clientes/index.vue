@@ -332,51 +332,59 @@ const volver = () => {
   bottom: 0;
   width: 100vw;
   height: 100vh;
-  background-color: #f8fafc;
+  background-color: #f1f5f9;
   overflow-y: auto;
   font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
 }
 
 .form-wrapper {
   width: 100%;
-  max-width: 440px;
+  max-width: 480px;
   margin: 0 auto;
   min-height: 100vh;
   display: flex;
   flex-direction: column;
-  background-color: #ffffff;
+  background-color: #f1f5f9;
 }
 
 .top-navbar {
-  background-color: #002366;
+  background: linear-gradient(135deg, #0a2472 0%, #001845 100%);
   color: #ffffff;
-  height: 56px;
+  padding: 16px 20px;
   display: flex;
   align-items: center;
-  padding: 0 16px;
+  gap: 14px;
   position: sticky;
   top: 0;
   z-index: 10;
+  border-radius: 0 0 20px 20px;
+  box-shadow: 0 10px 24px -12px rgba(0, 24, 69, 0.5);
 }
 
 .back-btn {
-  background: none;
-  border: none;
+  width: 36px;
+  height: 36px;
+  flex-shrink: 0;
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 10px;
   color: #ffffff;
-  font-size: 24px;
+  font-size: 18px;
   cursor: pointer;
   padding: 0;
-  margin-right: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .nav-title {
-  font-size: 18px;
-  font-weight: 700;
+  font-size: clamp(16px, 4.6vw, 19px);
+  font-weight: 800;
   margin: 0;
 }
 
 .form-body {
- padding: 20px 16px 110px 16px;
+  padding: 18px 16px 110px 16px;
   display: flex;
   flex-direction: column;
   gap: 16px;
@@ -385,27 +393,28 @@ const volver = () => {
 .error-banner {
   background-color: #fee2e2;
   color: #991b1b;
-  border-radius: 10px;
-  padding: 10px 14px;
+  border-radius: 12px;
+  padding: 12px 14px;
   font-size: 13px;
   font-weight: 600;
   margin: 0;
+  border: 1px solid #fecaca;
 }
 
 .section-title {
   margin: 8px 0 -4px 0;
-  font-size: 13px;
+  font-size: 12px;
   font-weight: 800;
-  color: #002366;
+  color: #0a2472;
   text-transform: uppercase;
-  letter-spacing: 0.02em;
-  border-bottom: 1px solid #e2e8f0;
-  padding-bottom: 6px;
+  letter-spacing: 0.04em;
+  border-bottom: 2px solid #e0e7ff;
+  padding-bottom: 8px;
 }
 
 .input-row {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
   gap: 12px;
 }
 
@@ -413,28 +422,33 @@ const volver = () => {
   display: flex;
   flex-direction: column;
   gap: 6px;
+  min-width: 0;
 }
 
 .input-group label {
-  font-size: 12px;
-  font-weight: 700;
-  color: #002366;
+  font-size: 11px;
+  font-weight: 800;
+  color: #334155;
   text-transform: uppercase;
+  letter-spacing: 0.02em;
 }
 
 .app-input {
   width: 100%;
-  padding: 12px 14px;
-  border-radius: 10px;
-  border: 1px solid #cbd5e1;
+  padding: 13px 14px;
+  border-radius: 12px;
+  border: 1px solid #e2e8f0;
+  background-color: #ffffff;
   font-size: 14px;
   color: #0f172a;
   box-sizing: border-box;
   outline: none;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
 }
 
 .app-input:focus {
-  border-color: #002366;
+  border-color: #1d4ed8;
+  box-shadow: 0 0 0 3px rgba(29, 78, 216, 0.12);
 }
 
 .uppercase {
@@ -447,22 +461,41 @@ const volver = () => {
 
 .submit-btn {
   margin-top: 10px;
-  background-color: #84cc16;
-  color: #0d2747;
+  background: linear-gradient(135deg, #84cc16 0%, #65a30d 100%);
+  color: #052e16;
   border: none;
-  padding: 14px;
-  border-radius: 12px;
+  padding: 15px;
+  border-radius: 16px;
   font-size: 15px;
   font-weight: 800;
   cursor: pointer;
+  box-shadow: 0 8px 20px rgba(132, 204, 22, 0.3);
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
 }
 
 .submit-btn:active {
-  opacity: 0.9;
+  transform: scale(0.99);
+  box-shadow: 0 4px 10px rgba(132, 204, 22, 0.2);
 }
 
 .submit-btn:disabled {
   opacity: 0.6;
   cursor: not-allowed;
+  box-shadow: none;
+}
+
+@media (max-width: 360px) {
+  .top-navbar {
+    padding: 14px 14px;
+  }
+
+  .form-body {
+    padding: 16px 14px 100px 14px;
+  }
+
+  .input-row {
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+  }
 }
 </style>

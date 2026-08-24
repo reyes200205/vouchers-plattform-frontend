@@ -51,7 +51,7 @@ type Schema = z.output<typeof schema>
 const route = useRoute()
 const memberId = Number(route.params.id)
 
-const { user } = useAuth()
+const { user, fetchMe } = useAuth()
 const { listSystemRoles, getStaff, updateStaff } = useStaff()
 const { listBranches } = useBranches()
 const toast = useToast()
@@ -64,6 +64,10 @@ const branchManagerBranchId = computed(() => {
 
 const isBranchManager = computed(() => user.value?.roles?.some(r => r.code === 'branch_manager') ?? false)
 const isSuperAdmin = computed(() => user.value?.roles?.some(r => r.code === 'super-admin') ?? false)
+
+// Ver la misma nota en staff/new.vue: refresca la sesión guardada por si el
+// rol/sucursal del gerente cambió después de su último login.
+await fetchMe()
 
 const { data: branches } = await useAsyncData<Branch[]>('staff-edit-branches', () => listBranches(), { default: () => [] })
 const { data: member, status: memberStatus } = await useAsyncData<StaffMember>('staff-edit-member-' + memberId, () => getStaff(memberId))

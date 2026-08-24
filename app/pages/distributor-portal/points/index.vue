@@ -222,23 +222,26 @@ function statusLabel(status: PointRedemption['status']) {
 .puntos-container {
   display: flex;
   flex-direction: column;
+  background-color: #f1f5f9;
+  min-height: 100%;
 }
 
 .top-navbar {
-  background-color: #002366;
+  background: linear-gradient(135deg, #0a2472 0%, #001845 100%);
   color: #ffffff;
-  height: 56px;
+  padding: 16px 20px;
   display: flex;
   align-items: center;
-  padding: 0 16px;
   position: sticky;
   top: 0;
   z-index: 10;
+  border-radius: 0 0 20px 20px;
+  box-shadow: 0 10px 24px -12px rgba(0, 24, 69, 0.5);
 }
 
 .nav-title {
-  font-size: 18px;
-  font-weight: 700;
+  font-size: clamp(16px, 4.6vw, 19px);
+  font-weight: 800;
   margin: 0;
 }
 
@@ -250,14 +253,28 @@ function statusLabel(status: PointRedemption['status']) {
 }
 
 .points-card {
-  background: linear-gradient(135deg, #1e1b4b, #312e81);
+  background: linear-gradient(135deg, #0a2472 0%, #0b347f 55%, #001845 100%);
   color: #ffffff;
   border-radius: 20px;
-  padding: 24px;
+  padding: 26px 22px;
   text-align: center;
   display: flex;
   flex-direction: column;
   align-items: center;
+  box-shadow: 0 10px 24px -10px rgba(10, 36, 114, 0.4);
+  position: relative;
+  overflow: hidden;
+}
+
+.points-card::before {
+  content: '';
+  position: absolute;
+  top: -50px;
+  right: -40px;
+  width: 150px;
+  height: 150px;
+  background: radial-gradient(circle, rgba(132, 204, 22, 0.25) 0%, rgba(255, 255, 255, 0) 70%);
+  pointer-events: none;
 }
 
 .points-header {
@@ -272,45 +289,63 @@ function statusLabel(status: PointRedemption['status']) {
 }
 
 .points-label {
-  font-size: 13px;
-  color: #c7d2fe;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.3px;
+  text-transform: uppercase;
+  color: #cbd5e1;
 }
 
 .points-amount {
-  font-size: 40px;
+  font-size: clamp(34px, 10vw, 44px);
   font-weight: 800;
-  color: #fbbf24;
+  color: #a3e635;
   margin: 0 0 8px 0;
+  position: relative;
+  z-index: 1;
 }
 
 .points-sub {
   font-size: 12px;
-  color: #e0e7ff;
+  color: #cbd5e1;
   margin: 0 0 16px 0;
   max-width: 260px;
+  position: relative;
+  z-index: 1;
 }
 
 .redeem-btn {
   width: 100%;
-  background-color: #84cc16;
-  color: #0d2747;
+  background: linear-gradient(135deg, #84cc16 0%, #65a30d 100%);
+  color: #052e16;
   border: none;
-  padding: 12px;
-  border-radius: 24px;
+  padding: 14px;
+  border-radius: 100px;
   font-size: 15px;
   font-weight: 800;
   cursor: pointer;
+  box-shadow: 0 8px 20px rgba(132, 204, 22, 0.3);
+  position: relative;
+  z-index: 1;
+  transition: transform 0.15s ease;
+}
+
+.redeem-btn:active:not(:disabled) {
+  transform: scale(0.99);
 }
 
 .redeem-btn:disabled {
   opacity: 0.5;
   cursor: not-allowed;
+  box-shadow: none;
 }
 
 .pending-hint {
   margin: 12px 0 0 0;
   font-size: 12px;
   color: #fde68a;
+  position: relative;
+  z-index: 1;
 }
 
 .redeem-form {
@@ -321,13 +356,21 @@ function statusLabel(status: PointRedemption['status']) {
   border: 1px solid #e2e8f0;
   border-radius: 16px;
   background-color: #ffffff;
+  box-shadow: 0 1px 3px rgba(2, 6, 23, 0.04);
 }
 
 .redeem-input {
-  border: 1px solid #cbd5e1;
+  border: 1px solid #e2e8f0;
   border-radius: 12px;
   padding: 12px 14px;
   font-size: 15px;
+  outline: none;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.redeem-input:focus {
+  border-color: #1d4ed8;
+  box-shadow: 0 0 0 3px rgba(29, 78, 216, 0.12);
 }
 
 .section-title {
@@ -350,19 +393,21 @@ function statusLabel(status: PointRedemption['status']) {
 
 .submit-btn {
   width: 100%;
-  background-color: #002366;
+  background: linear-gradient(135deg, #0a2472 0%, #001845 100%);
   color: #ffffff;
   border: none;
   padding: 14px;
-  border-radius: 24px;
-  font-size: 16px;
-  font-weight: 700;
+  border-radius: 100px;
+  font-size: 15px;
+  font-weight: 800;
   cursor: pointer;
+  box-shadow: 0 8px 20px -6px rgba(10, 36, 114, 0.4);
 }
 
 .submit-btn:disabled {
   opacity: 0.5;
   cursor: not-allowed;
+  box-shadow: none;
 }
 
 .benefits-section {
@@ -379,6 +424,7 @@ function statusLabel(status: PointRedemption['status']) {
   border-radius: 14px;
   background-color: #ffffff;
   align-items: center;
+  box-shadow: 0 1px 3px rgba(2, 6, 23, 0.04);
 }
 
 .benefit-icon {
@@ -431,7 +477,7 @@ function statusLabel(status: PointRedemption['status']) {
   margin: 16px 0 8px 0;
   font-size: 22px;
   font-weight: 800;
-  color: #0f172a;
+  color: #0a2472;
 }
 
 .modal-subtitle {
@@ -458,14 +504,15 @@ function statusLabel(status: PointRedemption['status']) {
 
 .modal-btn {
   width: 100%;
-  background-color: #84cc16;
-  color: #0d2747;
+  background: linear-gradient(135deg, #84cc16 0%, #65a30d 100%);
+  color: #052e16;
   border: none;
-  padding: 12px;
-  border-radius: 12px;
+  padding: 13px;
+  border-radius: 14px;
   font-size: 15px;
   font-weight: 800;
   cursor: pointer;
+  box-shadow: 0 8px 20px rgba(132, 204, 22, 0.3);
 }
 
 .success-checkmark {
