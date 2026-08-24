@@ -71,6 +71,17 @@ const links = computed(() => {
     })
   }
 
+  if (hasPermission('distributors.view')) {
+    items.push({
+      label: 'Distribuidoras',
+      icon: 'i-lucide-award',
+      to: '/general/distributors',
+      onSelect: () => {
+        open.value = false
+      }
+    })
+  }
+
   if (hasAnyPermission(['branches.manage', 'branches.view'])) {
     items.push({
       label: 'Sucursales',
