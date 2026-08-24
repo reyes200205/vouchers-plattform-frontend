@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import * as z from 'zod'
 import type { FormSubmitEvent } from '@nuxt/ui'
-import { applicantFullName, APPLICATION_STATUS_LABELS, type Application, type ApplicationFamilyMember, type ApplicationVehicle } from '~/composables/useApplications'
+import { applicantFullName, APPLICATION_STATUS_LABELS, type Application } from '~/composables/useApplications'
 
 const props = defineProps<{
   applicationId: number | null
@@ -60,9 +60,28 @@ const schema = z.object({
   last_name: z.string().min(2, 'Muy corto').max(100, 'Muy largo'),
   second_last_name: z.string().max(100, 'Muy largo').optional(),
   gender: z.enum(['M', 'F', 'OTHER']).optional(),
-  birth_date: z.string().optional(),
-  curp: z.string().length(18, 'CURP inválida (18 caracteres)'),
-  rfc: z.string().length(13, 'RFC inválido (13 caracteres)'),
+  birth_date: z.string().min(1, 'La fecha de nacimiento es obligatoria').superRefine((value, ctx) => {
+    const birthDate = new Date(value)
+    const today = new Date()
+    let age = today.getFullYear() - birthDate.getFullYear()
+    const monthDiff = today.getMonth() - birthDate.getMonth()
+    if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
+      age--
+    }
+    if (age < 18) {
+      ctx.addIssue({ code: 'custom', message: 'El solicitante debe ser mayor de 18 años' })
+    }
+  }),
+  curp: z.string().length(18, 'CURP inválida (18 caracteres)').superRefine((value, ctx) => {
+    if (!isValidCurp(value)) {
+      ctx.addIssue({ code: 'custom', message: 'CURP con formato inválido' })
+    }
+  }),
+  rfc: z.string().length(13, 'RFC inválido (13 caracteres)').superRefine((value, ctx) => {
+    if (!isValidRfc(value)) {
+      ctx.addIssue({ code: 'custom', message: 'RFC con formato inválido' })
+    }
+  }),
   home_phone: z.string().max(30, 'Muy largo').optional(),
   mobile_phone: z.string().max(30, 'Muy largo').optional(),
   email: z.string().email('Correo inválido'),
@@ -90,10 +109,26 @@ const schema = z.object({
 
 type Schema = z.output<typeof schema>
 
+// Estado local de edicion: sin null (a diferencia de ApplicationFamilyMember/
+// ApplicationVehicle) porque UInput/USelect no aceptan null en su v-model.
+interface EditableFamilyMember {
+  name: string
+  relationship: string
+  phone: string
+  age: number | null
+}
+
+interface EditableVehicle {
+  brand: string
+  model: string
+  year: string
+  plates: string
+}
+
 const state = reactive<Partial<Schema>>({})
 
-const familyMembers = ref<ApplicationFamilyMember[]>([])
-const vehicles = ref<ApplicationVehicle[]>([])
+const familyMembers = ref<EditableFamilyMember[]>([])
+const vehicles = ref<EditableVehicle[]>([])
 
 function addFamilyMember() {
   familyMembers.value.push({ name: '', relationship: '', phone: '', age: null })
@@ -149,12 +184,22 @@ function startEditing() {
   state.work_reference_name = familyData?.housing?.work_reference?.name ?? ''
   state.work_reference_phone = familyData?.housing?.work_reference?.phone ?? ''
 
-  familyMembers.value = (familyData?.members ?? []).map(m => ({ ...m }))
+  familyMembers.value = (familyData?.members ?? []).map(m => ({
+    name: m.name ?? '',
+    relationship: m.relationship ?? '',
+    phone: m.phone ?? '',
+    age: m.age ?? null
+  }))
   if (familyMembers.value.length === 0) {
     familyMembers.value.push({ name: '', relationship: '', phone: '', age: null })
   }
 
-  vehicles.value = (detail.value.vehicles_json ?? []).map(v => ({ ...v }))
+  vehicles.value = (detail.value.vehicles_json ?? []).map(v => ({
+    brand: v.brand ?? '',
+    model: v.model ?? '',
+    year: v.year ?? '',
+    plates: v.plates ?? ''
+  }))
 
   editing.value = true
 }

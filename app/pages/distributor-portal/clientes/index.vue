@@ -44,6 +44,20 @@ const guardarCliente = async () => {
     return
   }
 
+  if (form.value.fechaNacimiento) {
+    const birthDate = new Date(form.value.fechaNacimiento)
+    const today = new Date()
+    let age = today.getFullYear() - birthDate.getFullYear()
+    const monthDiff = today.getMonth() - birthDate.getMonth()
+    if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
+      age--
+    }
+    if (age < 18) {
+      errorMessage.value = 'El cliente debe ser mayor de 18 años.'
+      return
+    }
+  }
+
   saving.value = true
   errorMessage.value = null
 

@@ -1,5 +1,5 @@
-import process from 'node:process';globalThis._importMeta_=globalThis._importMeta_||{url:"file:///_entry.js",env:process.env};import { getCurrentScope, ref, watchEffect, getCurrentInstance, onBeforeUnmount, onDeactivated, onActivated, shallowReactive, reactive, effectScope, hasInjectionContext, inject, toRef, computed, customRef, defineComponent, h, onServerPrefetch, shallowRef, watch, nextTick, createElementBlock, provide, cloneVNode, isRef, toValue, unref, queuePostFlushCb, mergeProps, createVNode, resolveDynamicComponent, camelize, Comment, withCtx, renderSlot, openBlock, createBlock, shallowReadonly, Fragment, toRefs, onScopeDispose, resolveComponent, toHandlerKey, readonly, useSSRContext, Teleport, createCommentVNode, markRaw, useSlots, toDisplayString, useModel, createTextVNode, mergeModels, createApp, onErrorCaptured, useId, defineAsyncComponent, isVNode, renderList, useTemplateRef, withModifiers, normalizeProps, guardReactiveProps, normalizeStyle, isReadonly, Suspense, isShallow, isReactive, toRaw } from 'vue';
-import { c as createError, r as hasProtocol, v as joinURL, J as withQuery, B as sanitizeStatusCode, y as parseURL$1, j as encodePath$1, d as decodePath, u as isScriptProtocol, w as klona, n as getRequestHeader, t as isEqual$2, C as setCookie, l as getCookie, h as deleteCookie, $ as $fetch$3, b as baseURL, f as defu, g as defuFn, s as hash, x as parseQuery$1, K as withTrailingSlash, L as withoutTrailingSlash } from '../_/nitro.mjs';
+import process from 'node:process';globalThis._importMeta_=globalThis._importMeta_||{url:"file:///_entry.js",env:process.env};import { getCurrentScope, ref, watchEffect, getCurrentInstance, onBeforeUnmount, onDeactivated, onActivated, shallowReactive, reactive, effectScope, hasInjectionContext, inject, toRef, computed, customRef, defineComponent, shallowRef, h, resolveComponent, unref, isRef, onServerPrefetch, watch, nextTick, createElementBlock, provide, cloneVNode, toValue, queuePostFlushCb, mergeProps, createVNode, resolveDynamicComponent, camelize, Comment, withCtx, renderSlot, openBlock, createBlock, shallowReadonly, Fragment, toRefs, onScopeDispose, toHandlerKey, readonly, useSSRContext, Teleport, createCommentVNode, markRaw, useSlots, toDisplayString, useModel, createTextVNode, mergeModels, createApp, onErrorCaptured, useId, defineAsyncComponent, isVNode, renderList, useTemplateRef, withModifiers, normalizeProps, guardReactiveProps, normalizeStyle, isReadonly, Suspense, isShallow, isReactive, toRaw } from 'vue';
+import { c as createError, y as parseURL$1, j as encodePath$1, d as decodePath, r as hasProtocol, u as isScriptProtocol, v as joinURL, J as withQuery, B as sanitizeStatusCode, w as klona, n as getRequestHeader, t as isEqual$2, C as setCookie, l as getCookie, h as deleteCookie, $ as $fetch$3, b as baseURL, f as defu, x as parseQuery$1, K as withTrailingSlash, L as withoutTrailingSlash, g as defuFn, s as hash } from '../_/nitro.mjs';
 import { FlatMetaPlugin } from 'unhead/plugins';
 import { hasOwn, walkResolver } from 'unhead/utils';
 import { i as injectHead$1, V as VueResolver, h as headSymbol } from '../routes/renderer.mjs';
@@ -1225,6 +1225,26 @@ function useAuth() {
 			requires_password_confirmation: false
 		};
 	}
+	async function forgotPassword(username, turnstileToken) {
+		return (await $fetch$2(`${config.public.apiBase}/auth/forgot-password`, {
+			method: "POST",
+			body: {
+				username,
+				"cf-turnstile-response": turnstileToken
+			}
+		})).message;
+	}
+	async function resetPassword(email, token, password, passwordConfirmation) {
+		return (await $fetch$2(`${config.public.apiBase}/auth/reset-password`, {
+			method: "POST",
+			body: {
+				email,
+				token,
+				password,
+				password_confirmation: passwordConfirmation
+			}
+		})).message;
+	}
 	return {
 		token,
 		user,
@@ -1238,36 +1258,11 @@ function useAuth() {
 		roleHome,
 		fetchMe,
 		confirmPassword,
-		changePassword
+		changePassword,
+		forgotPassword,
+		resetPassword
 	};
 }
-
-//#region \0rolldown/runtime.js
-var __defProp = Object.defineProperty;
-var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
-var __getOwnPropNames = Object.getOwnPropertyNames;
-var __hasOwnProp = Object.prototype.hasOwnProperty;
-var __commonJSMin = (cb, mod) => () => (mod || (cb((mod = { exports: {} }).exports, mod), cb = null), mod.exports);
-var __exportAll = (all, no_symbols) => {
-	let target = {};
-	for (var name in all) __defProp(target, name, {
-		get: all[name],
-		enumerable: true
-	});
-	__defProp(target, Symbol.toStringTag, { value: "Module" });
-	return target;
-};
-var __copyProps = (to, from, except, desc) => {
-	if (from && typeof from === "object" || typeof from === "function") for (var keys = __getOwnPropNames(from), i = 0, n = keys.length, key; i < n; i++) {
-		key = keys[i];
-		if (!__hasOwnProp.call(to, key) && key !== except) __defProp(to, key, {
-			get: ((k) => from[k]).bind(null, key),
-			enumerable: !(desc = __getOwnPropDesc(from, key)) || desc.enumerable
-		});
-	}
-	return to;
-};
-var __reExport = (target, mod, secondTarget) => (__copyProps(target, mod, "default"), secondTarget);
 
 //#region node_modules/.pnpm/vue-router@5.2.0_@vue+compi_158f7e579753dc474e70c0d7900eca1c/node_modules/vue-router/dist/useApi-CROJJdhE.js
 /*!
@@ -1860,7 +1855,385 @@ function _mergeTransitionProps(routeProps) {
 	}
 	return defu(..._props);
 }
+
+//#region node_modules/.pnpm/nuxt@4.5.2_@babel+plugin-sy_8d3ee09fd7864d66cfa01977225356c6/node_modules/nuxt/dist/pages/runtime/router.options.js
+var router_options_default = { scrollBehavior(to, from, savedPosition) {
+	const nuxtApp = useNuxtApp();
+	const router = useRouter();
+	const hashScrollBehaviour = router.options?.scrollBehaviorType ?? "auto";
+	if (to.path.replace(/\/$/, "") === from.path.replace(/\/$/, "")) {
+		if (from.hash && !to.hash) return savedPosition ?? {
+			left: 0,
+			top: 0
+		};
+		if (to.hash) return {
+			el: to.hash,
+			top: _getHashElementScrollMarginTop(to.hash),
+			behavior: hashScrollBehaviour
+		};
+		return false;
+	}
+	if ((typeof to.meta.scrollToTop === "function" ? to.meta.scrollToTop(to, from) : to.meta.scrollToTop) === false) return false;
+	if (from === START_LOCATION_NORMALIZED) return _calculatePosition(to, from, savedPosition, hashScrollBehaviour);
+	return new Promise((resolve) => {
+		const doScroll = () => {
+			requestAnimationFrame(() => {
+				if (router.currentRoute.value.fullPath !== to.fullPath) {
+					resolve(false);
+					return;
+				}
+				resolve(_calculatePosition(to, from, savedPosition, hashScrollBehaviour));
+			});
+		};
+		nuxtApp.hooks.hookOnce("page:loading:end", () => {
+			const transitionPromise = nuxtApp["~transitionPromise"];
+			if (transitionPromise) transitionPromise.then(doScroll);
+			else doScroll();
+		});
+	});
+} };
+function _getHashElementScrollMarginTop(selector) {
+	try {
+		const elem = (void 0).querySelector(selector);
+		if (elem) return (Number.parseFloat(getComputedStyle(elem).scrollMarginTop) || 0) + (Number.parseFloat(getComputedStyle((void 0).documentElement).scrollPaddingTop) || 0);
+	} catch {}
+	return 0;
+}
+function _calculatePosition(to, from, savedPosition, defaultHashScrollBehaviour) {
+	if (savedPosition) return savedPosition;
+	if (to.hash) return {
+		el: to.hash,
+		top: _getHashElementScrollMarginTop(to.hash),
+		behavior: isChangingPage(to, from) ? defaultHashScrollBehaviour : "instant"
+	};
+	return {
+		left: 0,
+		top: 0
+	};
+}
+var virtual_nuxt_node_modules_2F_cache_2Fnuxt_2F_nuxt_2Frouter_options_default = {
+	hashMode: false,
+	scrollBehaviorType: "auto",
+	...router_options_default
+};
 //#endregion
+//#region node_modules/.pnpm/nuxt@4.5.2_@babel+plugin-sy_8d3ee09fd7864d66cfa01977225356c6/node_modules/nuxt/dist/app/components/nuxt-link.js
+var firstNonUndefined = (...args) => args.find((arg) => arg !== void 0);
+/**
+* Reject URL strings that would resolve to a script-capable protocol when used as the
+* `href` of an anchor element. Returns the value unchanged when safe, or `null`.
+*
+* The denylist is delegated to `ufo`'s `isScriptProtocol` so it stays in sync with the
+* check used by `navigateTo` (currently `javascript:`, `data:`, `vbscript:`, `blob:`).
+* ASCII whitespace and control characters are stripped first because browser URL
+* parsers tolerate them before the scheme, and `view-source:` is peeled recursively
+* because Chromium resolves it transparently to the inner URL.
+*/
+function sanitizeExternalHref(value) {
+	let candidate = value.replace(/[\u0000-\u001F\s]+/g, "");
+	while (candidate.toLowerCase().startsWith("view-source:")) candidate = candidate.slice(12);
+	const colon = candidate.indexOf(":");
+	if (colon > 0 && isScriptProtocol(candidate.slice(0, colon + 1))) return null;
+	return value;
+}
+/* @__NO_SIDE_EFFECTS__ */
+function defineNuxtLink(options) {
+	const componentName = options.componentName || "NuxtLink";
+	function isHashLinkWithoutHashMode(link) {
+		return typeof link === "string" && link.startsWith("#");
+	}
+	function resolveTrailingSlashBehavior(to, resolve, trailingSlash) {
+		const effectiveTrailingSlash = trailingSlash ?? options.trailingSlash;
+		if (!to || effectiveTrailingSlash !== "append" && effectiveTrailingSlash !== "remove") return to;
+		if (typeof to === "string") return applyTrailingSlashBehavior(to, effectiveTrailingSlash);
+		const path = "path" in to && to.path !== void 0 ? to.path : resolve(to).path;
+		return {
+			...to,
+			name: void 0,
+			path: applyTrailingSlashBehavior(path, effectiveTrailingSlash)
+		};
+	}
+	function useNuxtLink(props) {
+		const router = useRouter();
+		const config = /* @__PURE__ */ useRuntimeConfig();
+		const hasTarget = computed(() => !!unref(props.target) && unref(props.target) !== "_self");
+		const isAbsoluteUrl = computed(() => {
+			const path = unref(props.to) || unref(props.href) || "";
+			return typeof path === "string" && hasProtocol(path, { acceptRelative: true });
+		});
+		const builtinRouterLink = resolveComponent("RouterLink");
+		const useBuiltinLink = builtinRouterLink && typeof builtinRouterLink !== "string" ? builtinRouterLink.useLink : void 0;
+		const isExternal = computed(() => {
+			if (unref(props.external)) return true;
+			const path = unref(props.to) || unref(props.href) || "";
+			if (typeof path === "object") return false;
+			return path === "" || isAbsoluteUrl.value;
+		});
+		const to = computed(() => {
+			const path = unref(props.to) || unref(props.href) || "";
+			if (isExternal.value) return path;
+			return resolveTrailingSlashBehavior(path, router.resolve, unref(props.trailingSlash));
+		});
+		const link = isExternal.value ? void 0 : useBuiltinLink?.({
+			...props,
+			to,
+			viewTransition: unref(props.viewTransition)
+		});
+		const href = computed(() => {
+			const effectiveTrailingSlash = unref(props.trailingSlash) ?? options.trailingSlash;
+			if (!to.value || isAbsoluteUrl.value || isHashLinkWithoutHashMode(to.value)) {
+				const raw = to.value;
+				return typeof raw === "string" ? sanitizeExternalHref(raw) : raw;
+			}
+			if (isExternal.value) {
+				const path = typeof to.value === "object" && "path" in to.value ? resolveRouteObject(to.value) : to.value;
+				const href = typeof path === "object" ? router.resolve(path).href : path;
+				const safe = typeof href === "string" ? sanitizeExternalHref(href) : href;
+				return safe === null ? null : applyTrailingSlashBehavior(safe, effectiveTrailingSlash);
+			}
+			if (typeof to.value === "object") return router.resolve(to.value)?.href ?? null;
+			return applyTrailingSlashBehavior(joinURL(config.app.baseURL, to.value), effectiveTrailingSlash);
+		});
+		return {
+			to,
+			hasTarget,
+			isAbsoluteUrl,
+			isExternal,
+			href,
+			isActive: link?.isActive ?? computed(() => to.value === router.currentRoute.value.path),
+			isExactActive: link?.isExactActive ?? computed(() => to.value === router.currentRoute.value.path),
+			route: link?.route ?? computed(() => router.resolve(to.value)),
+			async navigate(_e) {
+				if (href.value === null) return;
+				await navigateTo(href.value, {
+					replace: unref(props.replace),
+					external: isExternal.value || hasTarget.value
+				});
+			}
+		};
+	}
+	return defineComponent({
+		name: componentName,
+		props: {
+			to: {
+				type: [String, Object],
+				default: void 0,
+				required: false
+			},
+			href: {
+				type: [String, Object],
+				default: void 0,
+				required: false
+			},
+			target: {
+				type: String,
+				default: void 0,
+				required: false
+			},
+			rel: {
+				type: String,
+				default: void 0,
+				required: false
+			},
+			noRel: {
+				type: Boolean,
+				default: void 0,
+				required: false
+			},
+			prefetch: {
+				type: Boolean,
+				default: void 0,
+				required: false
+			},
+			prefetchOn: {
+				type: [String, Object],
+				default: void 0,
+				required: false
+			},
+			noPrefetch: {
+				type: Boolean,
+				default: void 0,
+				required: false
+			},
+			activeClass: {
+				type: String,
+				default: void 0,
+				required: false
+			},
+			exactActiveClass: {
+				type: String,
+				default: void 0,
+				required: false
+			},
+			prefetchedClass: {
+				type: String,
+				default: void 0,
+				required: false
+			},
+			replace: {
+				type: Boolean,
+				default: void 0,
+				required: false
+			},
+			ariaCurrentValue: {
+				type: String,
+				default: void 0,
+				required: false
+			},
+			external: {
+				type: Boolean,
+				default: void 0,
+				required: false
+			},
+			custom: {
+				type: Boolean,
+				default: void 0,
+				required: false
+			},
+			trailingSlash: {
+				type: String,
+				default: void 0,
+				required: false
+			}
+		},
+		useLink: useNuxtLink,
+		setup(props, { slots }) {
+			const router = useRouter();
+			const { to, href, navigate, isExternal, hasTarget, isAbsoluteUrl } = useNuxtLink(props);
+			const prefetched = shallowRef(false);
+			const el = void 0;
+			const elRef = void 0;
+			function shouldPrefetch(mode) {
+				return false;
+			}
+			async function prefetch(nuxtApp = useNuxtApp()) {}
+			return () => {
+				const target = props.target || null;
+				const rel = firstNonUndefined(props.noRel ? "" : props.rel, options.externalRelAttribute, isAbsoluteUrl.value || hasTarget.value ? "noopener noreferrer" : "") || null;
+				const getCustomSlotProps = (routerLinkSlotProps) => ({
+					href: href.value,
+					navigate,
+					get route() {
+						if (!href.value) return;
+						const url = new URL(href.value, "http://localhost");
+						return {
+							path: url.pathname,
+							fullPath: url.pathname,
+							get query() {
+								return parseQuery$1(url.search);
+							},
+							hash: url.hash,
+							params: {},
+							name: void 0,
+							matched: [],
+							redirectedFrom: void 0,
+							meta: {},
+							href: href.value
+						};
+					},
+					rel,
+					target,
+					isExternal: isExternal.value || hasTarget.value,
+					isActive: false,
+					isExactActive: false,
+					...routerLinkSlotProps,
+					prefetch,
+					prefetched: prefetched.value,
+					shouldPrefetch
+				});
+				if (!isExternal.value && !hasTarget.value && !isHashLinkWithoutHashMode(to.value)) {
+					const routerLinkProps = {
+						ref: elRef,
+						to: to.value,
+						activeClass: props.activeClass || options.activeClass,
+						exactActiveClass: props.exactActiveClass || options.exactActiveClass,
+						replace: props.replace,
+						ariaCurrentValue: props.ariaCurrentValue,
+						custom: props.custom
+					};
+					if (!props.custom) routerLinkProps.rel = props.rel || void 0;
+					return h(resolveComponent("RouterLink"), routerLinkProps, props.custom && slots.default ? { default: (slotProps) => slots.default(getCustomSlotProps(slotProps)) } : slots.default);
+				}
+				if (props.custom) {
+					if (!slots.default) return null;
+					return slots.default(getCustomSlotProps());
+				}
+				return h("a", {
+					ref: el,
+					href: href.value || null,
+					rel,
+					target,
+					onClick: async (event) => {
+						if (isExternal.value || hasTarget.value) return;
+						event.preventDefault();
+						try {
+							const encodedHref = encodeRoutePath(href.value ?? "");
+							return await (props.replace ? router.replace(encodedHref) : router.push(encodedHref));
+						} finally {}
+					}
+				}, slots.default?.());
+			};
+		}
+	});
+}
+var NuxtLink = /* @__PURE__ */ defineNuxtLink(nuxtLinkDefaults);
+function applyTrailingSlashBehavior(to, trailingSlash) {
+	if (trailingSlash !== "append" && trailingSlash !== "remove") return to;
+	const normalizeFn = trailingSlash === "append" ? withTrailingSlash : withoutTrailingSlash;
+	if (hasProtocol(to) && !to.startsWith("http")) return to;
+	return normalizeFn(to, true);
+}
+
+//#region node_modules/.pnpm/nuxt@4.5.2_@babel+plugin-sy_8d3ee09fd7864d66cfa01977225356c6/node_modules/nuxt/dist/app/composables/state.js
+var useStateKeyPrefix = "$s";
+function useState(...args) {
+	const autoKey = typeof args[args.length - 1] === "string" ? args.pop() : void 0;
+	if (typeof args[0] !== "string") args.unshift(autoKey);
+	const [_key, init] = args;
+	if (!_key || typeof _key !== "string") throw stateDiagnostics.NUXT_E7009({ key: _key });
+	if (init !== void 0 && typeof init !== "function") throw stateDiagnostics.NUXT_E7007({ type: typeof init });
+	const key = useStateKeyPrefix + _key;
+	const nuxtApp = useNuxtApp();
+	const state = toRef(nuxtApp.payload.state, key);
+	if (init) nuxtApp._state[key] ??= { _default: init };
+	if (state.value === void 0 && init) {
+		const initialValue = init();
+		if (isRef(initialValue)) {
+			nuxtApp.payload.state[key] = initialValue;
+			return initialValue;
+		}
+		state.value = initialValue;
+	}
+	return state;
+}
+
+//#region \0rolldown/runtime.js
+var __defProp = Object.defineProperty;
+var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
+var __getOwnPropNames = Object.getOwnPropertyNames;
+var __hasOwnProp = Object.prototype.hasOwnProperty;
+var __commonJSMin = (cb, mod) => () => (mod || (cb((mod = { exports: {} }).exports, mod), cb = null), mod.exports);
+var __exportAll = (all, no_symbols) => {
+	let target = {};
+	for (var name in all) __defProp(target, name, {
+		get: all[name],
+		enumerable: true
+	});
+	__defProp(target, Symbol.toStringTag, { value: "Module" });
+	return target;
+};
+var __copyProps = (to, from, except, desc) => {
+	if (from && typeof from === "object" || typeof from === "function") for (var keys = __getOwnPropNames(from), i = 0, n = keys.length, key; i < n; i++) {
+		key = keys[i];
+		if (!__hasOwnProp.call(to, key) && key !== except) __defProp(to, key, {
+			get: ((k) => from[k]).bind(null, key),
+			enumerable: !(desc = __getOwnPropDesc(from, key)) || desc.enumerable
+		});
+	}
+	return to;
+};
+var __reExport = (target, mod, secondTarget) => (__copyProps(target, mod, "default"), secondTarget);
+
 //#region app/app.config.ts
 var app_config_default = defineAppConfig({ ui: { colors: {
 	primary: "indigo",
@@ -4392,116 +4765,20 @@ var components_default = defineComponent({
 	}
 });
 
-const componentsDgyXoJhZ = /*#__PURE__*/Object.freeze(/*#__PURE__*/Object.defineProperty({
+const componentsDhJRmWeP = /*#__PURE__*/Object.freeze(/*#__PURE__*/Object.defineProperty({
   __proto__: null,
-  A: normalizeQuery,
-  B: createRouterError,
-  D: isSameRouteLocationParams,
-  E: isSameRouteLocation,
-  F: stringifyQuery,
-  G: noop$1,
-  H: isNavigationFailure,
-  I: stringifyURL,
-  J: routerViewLocationKey,
-  K: routeLocationKey,
-  L: useCallbacks,
-  M: parseURL,
-  O: isSameRouteRecord,
-  R: applyToParams,
-  T: isRouteName,
-  U: matchedRouteKey,
-  V: isArray,
-  W: mergeOptions,
-  X: viewDepthKey,
-  Y: useRoute,
-  _: decode,
   a: defineKeyedFunctionFactory,
-  b: extractChangingRecords,
   c: setCustomIconsLoader,
-  d: _mergeTransitionProps,
-  f: _wrapInTransition,
-  g: createHref,
   i: dataDiagnostics,
-  j: parseQuery,
-  k: normalizeBase,
   l: useAppConfig,
-  m: START_LOCATION_NORMALIZED,
   n: components_exports,
   o: _api,
-  p: isChangingPage,
-  q: routerKey,
   r: useAsyncData,
   s: addAPIProvider,
   t: components_default,
-  u: virtual_nuxt_node_modules_2F_cache_2Fnuxt_2F_nuxt_2Fapp_config_default,
-  v: encodeHash,
-  w: guardToPromiseFn,
-  x: extractComponentsGuards,
-  y: encodeParam,
-  z: assign
+  u: virtual_nuxt_node_modules_2F_cache_2Fnuxt_2F_nuxt_2Fapp_config_default
 }, Symbol.toStringTag, { value: 'Module' }));
 
-//#region node_modules/.pnpm/nuxt@4.5.2_@babel+plugin-sy_8d3ee09fd7864d66cfa01977225356c6/node_modules/nuxt/dist/pages/runtime/router.options.js
-var router_options_default = { scrollBehavior(to, from, savedPosition) {
-	const nuxtApp = useNuxtApp();
-	const router = useRouter();
-	const hashScrollBehaviour = router.options?.scrollBehaviorType ?? "auto";
-	if (to.path.replace(/\/$/, "") === from.path.replace(/\/$/, "")) {
-		if (from.hash && !to.hash) return savedPosition ?? {
-			left: 0,
-			top: 0
-		};
-		if (to.hash) return {
-			el: to.hash,
-			top: _getHashElementScrollMarginTop(to.hash),
-			behavior: hashScrollBehaviour
-		};
-		return false;
-	}
-	if ((typeof to.meta.scrollToTop === "function" ? to.meta.scrollToTop(to, from) : to.meta.scrollToTop) === false) return false;
-	if (from === START_LOCATION_NORMALIZED) return _calculatePosition(to, from, savedPosition, hashScrollBehaviour);
-	return new Promise((resolve) => {
-		const doScroll = () => {
-			requestAnimationFrame(() => {
-				if (router.currentRoute.value.fullPath !== to.fullPath) {
-					resolve(false);
-					return;
-				}
-				resolve(_calculatePosition(to, from, savedPosition, hashScrollBehaviour));
-			});
-		};
-		nuxtApp.hooks.hookOnce("page:loading:end", () => {
-			const transitionPromise = nuxtApp["~transitionPromise"];
-			if (transitionPromise) transitionPromise.then(doScroll);
-			else doScroll();
-		});
-	});
-} };
-function _getHashElementScrollMarginTop(selector) {
-	try {
-		const elem = (void 0).querySelector(selector);
-		if (elem) return (Number.parseFloat(getComputedStyle(elem).scrollMarginTop) || 0) + (Number.parseFloat(getComputedStyle((void 0).documentElement).scrollPaddingTop) || 0);
-	} catch {}
-	return 0;
-}
-function _calculatePosition(to, from, savedPosition, defaultHashScrollBehaviour) {
-	if (savedPosition) return savedPosition;
-	if (to.hash) return {
-		el: to.hash,
-		top: _getHashElementScrollMarginTop(to.hash),
-		behavior: isChangingPage(to, from) ? defaultHashScrollBehaviour : "instant"
-	};
-	return {
-		left: 0,
-		top: 0
-	};
-}
-var virtual_nuxt_node_modules_2F_cache_2Fnuxt_2F_nuxt_2Frouter_options_default = {
-	hashMode: false,
-	scrollBehaviorType: "auto",
-	...router_options_default
-};
-//#endregion
 //#region node_modules/.pnpm/reka-ui@2.10.1_vue@3.5.41_typescript@6.0.3_/node_modules/reka-ui/dist/shared/createContext.js
 /**
 * @param providerComponentName - The name(s) of the component(s) providing the context.
@@ -10510,273 +10787,6 @@ function isPartiallyEqual(item1, item2) {
 	return isEqual$1(Object.fromEntries(Object.entries(item1).filter(([key]) => !diffedKeys.has(key))), Object.fromEntries(Object.entries(item2).filter(([key]) => !diffedKeys.has(key))));
 }
 //#endregion
-//#region node_modules/.pnpm/nuxt@4.5.2_@babel+plugin-sy_8d3ee09fd7864d66cfa01977225356c6/node_modules/nuxt/dist/app/components/nuxt-link.js
-var firstNonUndefined = (...args) => args.find((arg) => arg !== void 0);
-/**
-* Reject URL strings that would resolve to a script-capable protocol when used as the
-* `href` of an anchor element. Returns the value unchanged when safe, or `null`.
-*
-* The denylist is delegated to `ufo`'s `isScriptProtocol` so it stays in sync with the
-* check used by `navigateTo` (currently `javascript:`, `data:`, `vbscript:`, `blob:`).
-* ASCII whitespace and control characters are stripped first because browser URL
-* parsers tolerate them before the scheme, and `view-source:` is peeled recursively
-* because Chromium resolves it transparently to the inner URL.
-*/
-function sanitizeExternalHref(value) {
-	let candidate = value.replace(/[\u0000-\u001F\s]+/g, "");
-	while (candidate.toLowerCase().startsWith("view-source:")) candidate = candidate.slice(12);
-	const colon = candidate.indexOf(":");
-	if (colon > 0 && isScriptProtocol(candidate.slice(0, colon + 1))) return null;
-	return value;
-}
-/* @__NO_SIDE_EFFECTS__ */
-function defineNuxtLink(options) {
-	const componentName = options.componentName || "NuxtLink";
-	function isHashLinkWithoutHashMode(link) {
-		return typeof link === "string" && link.startsWith("#");
-	}
-	function resolveTrailingSlashBehavior(to, resolve, trailingSlash) {
-		const effectiveTrailingSlash = trailingSlash ?? options.trailingSlash;
-		if (!to || effectiveTrailingSlash !== "append" && effectiveTrailingSlash !== "remove") return to;
-		if (typeof to === "string") return applyTrailingSlashBehavior(to, effectiveTrailingSlash);
-		const path = "path" in to && to.path !== void 0 ? to.path : resolve(to).path;
-		return {
-			...to,
-			name: void 0,
-			path: applyTrailingSlashBehavior(path, effectiveTrailingSlash)
-		};
-	}
-	function useNuxtLink(props) {
-		const router = useRouter();
-		const config = /* @__PURE__ */ useRuntimeConfig();
-		const hasTarget = computed(() => !!unref(props.target) && unref(props.target) !== "_self");
-		const isAbsoluteUrl = computed(() => {
-			const path = unref(props.to) || unref(props.href) || "";
-			return typeof path === "string" && hasProtocol(path, { acceptRelative: true });
-		});
-		const builtinRouterLink = resolveComponent("RouterLink");
-		const useBuiltinLink = builtinRouterLink && typeof builtinRouterLink !== "string" ? builtinRouterLink.useLink : void 0;
-		const isExternal = computed(() => {
-			if (unref(props.external)) return true;
-			const path = unref(props.to) || unref(props.href) || "";
-			if (typeof path === "object") return false;
-			return path === "" || isAbsoluteUrl.value;
-		});
-		const to = computed(() => {
-			const path = unref(props.to) || unref(props.href) || "";
-			if (isExternal.value) return path;
-			return resolveTrailingSlashBehavior(path, router.resolve, unref(props.trailingSlash));
-		});
-		const link = isExternal.value ? void 0 : useBuiltinLink?.({
-			...props,
-			to,
-			viewTransition: unref(props.viewTransition)
-		});
-		const href = computed(() => {
-			const effectiveTrailingSlash = unref(props.trailingSlash) ?? options.trailingSlash;
-			if (!to.value || isAbsoluteUrl.value || isHashLinkWithoutHashMode(to.value)) {
-				const raw = to.value;
-				return typeof raw === "string" ? sanitizeExternalHref(raw) : raw;
-			}
-			if (isExternal.value) {
-				const path = typeof to.value === "object" && "path" in to.value ? resolveRouteObject(to.value) : to.value;
-				const href = typeof path === "object" ? router.resolve(path).href : path;
-				const safe = typeof href === "string" ? sanitizeExternalHref(href) : href;
-				return safe === null ? null : applyTrailingSlashBehavior(safe, effectiveTrailingSlash);
-			}
-			if (typeof to.value === "object") return router.resolve(to.value)?.href ?? null;
-			return applyTrailingSlashBehavior(joinURL(config.app.baseURL, to.value), effectiveTrailingSlash);
-		});
-		return {
-			to,
-			hasTarget,
-			isAbsoluteUrl,
-			isExternal,
-			href,
-			isActive: link?.isActive ?? computed(() => to.value === router.currentRoute.value.path),
-			isExactActive: link?.isExactActive ?? computed(() => to.value === router.currentRoute.value.path),
-			route: link?.route ?? computed(() => router.resolve(to.value)),
-			async navigate(_e) {
-				if (href.value === null) return;
-				await navigateTo(href.value, {
-					replace: unref(props.replace),
-					external: isExternal.value || hasTarget.value
-				});
-			}
-		};
-	}
-	return defineComponent({
-		name: componentName,
-		props: {
-			to: {
-				type: [String, Object],
-				default: void 0,
-				required: false
-			},
-			href: {
-				type: [String, Object],
-				default: void 0,
-				required: false
-			},
-			target: {
-				type: String,
-				default: void 0,
-				required: false
-			},
-			rel: {
-				type: String,
-				default: void 0,
-				required: false
-			},
-			noRel: {
-				type: Boolean,
-				default: void 0,
-				required: false
-			},
-			prefetch: {
-				type: Boolean,
-				default: void 0,
-				required: false
-			},
-			prefetchOn: {
-				type: [String, Object],
-				default: void 0,
-				required: false
-			},
-			noPrefetch: {
-				type: Boolean,
-				default: void 0,
-				required: false
-			},
-			activeClass: {
-				type: String,
-				default: void 0,
-				required: false
-			},
-			exactActiveClass: {
-				type: String,
-				default: void 0,
-				required: false
-			},
-			prefetchedClass: {
-				type: String,
-				default: void 0,
-				required: false
-			},
-			replace: {
-				type: Boolean,
-				default: void 0,
-				required: false
-			},
-			ariaCurrentValue: {
-				type: String,
-				default: void 0,
-				required: false
-			},
-			external: {
-				type: Boolean,
-				default: void 0,
-				required: false
-			},
-			custom: {
-				type: Boolean,
-				default: void 0,
-				required: false
-			},
-			trailingSlash: {
-				type: String,
-				default: void 0,
-				required: false
-			}
-		},
-		useLink: useNuxtLink,
-		setup(props, { slots }) {
-			const router = useRouter();
-			const { to, href, navigate, isExternal, hasTarget, isAbsoluteUrl } = useNuxtLink(props);
-			const prefetched = shallowRef(false);
-			const el = void 0;
-			const elRef = void 0;
-			function shouldPrefetch(mode) {
-				return false;
-			}
-			async function prefetch(nuxtApp = useNuxtApp()) {}
-			return () => {
-				const target = props.target || null;
-				const rel = firstNonUndefined(props.noRel ? "" : props.rel, options.externalRelAttribute, isAbsoluteUrl.value || hasTarget.value ? "noopener noreferrer" : "") || null;
-				const getCustomSlotProps = (routerLinkSlotProps) => ({
-					href: href.value,
-					navigate,
-					get route() {
-						if (!href.value) return;
-						const url = new URL(href.value, "http://localhost");
-						return {
-							path: url.pathname,
-							fullPath: url.pathname,
-							get query() {
-								return parseQuery$1(url.search);
-							},
-							hash: url.hash,
-							params: {},
-							name: void 0,
-							matched: [],
-							redirectedFrom: void 0,
-							meta: {},
-							href: href.value
-						};
-					},
-					rel,
-					target,
-					isExternal: isExternal.value || hasTarget.value,
-					isActive: false,
-					isExactActive: false,
-					...routerLinkSlotProps,
-					prefetch,
-					prefetched: prefetched.value,
-					shouldPrefetch
-				});
-				if (!isExternal.value && !hasTarget.value && !isHashLinkWithoutHashMode(to.value)) {
-					const routerLinkProps = {
-						ref: elRef,
-						to: to.value,
-						activeClass: props.activeClass || options.activeClass,
-						exactActiveClass: props.exactActiveClass || options.exactActiveClass,
-						replace: props.replace,
-						ariaCurrentValue: props.ariaCurrentValue,
-						custom: props.custom
-					};
-					if (!props.custom) routerLinkProps.rel = props.rel || void 0;
-					return h(resolveComponent("RouterLink"), routerLinkProps, props.custom && slots.default ? { default: (slotProps) => slots.default(getCustomSlotProps(slotProps)) } : slots.default);
-				}
-				if (props.custom) {
-					if (!slots.default) return null;
-					return slots.default(getCustomSlotProps());
-				}
-				return h("a", {
-					ref: el,
-					href: href.value || null,
-					rel,
-					target,
-					onClick: async (event) => {
-						if (isExternal.value || hasTarget.value) return;
-						event.preventDefault();
-						try {
-							const encodedHref = encodeRoutePath(href.value ?? "");
-							return await (props.replace ? router.replace(encodedHref) : router.push(encodedHref));
-						} finally {}
-					}
-				}, slots.default?.());
-			};
-		}
-	});
-}
-var NuxtLink = /* @__PURE__ */ defineNuxtLink(nuxtLinkDefaults);
-function applyTrailingSlashBehavior(to, trailingSlash) {
-	if (trailingSlash !== "append" && trailingSlash !== "remove") return to;
-	const normalizeFn = trailingSlash === "append" ? withTrailingSlash : withoutTrailingSlash;
-	if (hasProtocol(to) && !to.startsWith("http")) return to;
-	return normalizeFn(to, true);
-}
-//#endregion
 //#region node_modules/.pnpm/@nuxt+ui@4.10.0_a6bdf891eb6b0c16e122bd866561a18f/node_modules/@nuxt/ui/dist/runtime/components/LinkBase.vue
 var _sfc_main$1$2 = {
 	__name: "ULinkBase",
@@ -11268,29 +11278,6 @@ _sfc_main$8.setup = (props, ctx) => {
 	(ssrContext.modules || (ssrContext.modules = /* @__PURE__ */ new Set())).add("../node_modules/.pnpm/@nuxt+ui@4.10.0_a6bdf891eb6b0c16e122bd866561a18f/node_modules/@nuxt/ui/dist/runtime/components/Link.vue");
 	return _sfc_setup$a ? _sfc_setup$a(props, ctx) : void 0;
 };
-
-//#region node_modules/.pnpm/nuxt@4.5.2_@babel+plugin-sy_8d3ee09fd7864d66cfa01977225356c6/node_modules/nuxt/dist/app/composables/state.js
-var useStateKeyPrefix = "$s";
-function useState(...args) {
-	const autoKey = typeof args[args.length - 1] === "string" ? args.pop() : void 0;
-	if (typeof args[0] !== "string") args.unshift(autoKey);
-	const [_key, init] = args;
-	if (!_key || typeof _key !== "string") throw stateDiagnostics.NUXT_E7009({ key: _key });
-	if (init !== void 0 && typeof init !== "function") throw stateDiagnostics.NUXT_E7007({ type: typeof init });
-	const key = useStateKeyPrefix + _key;
-	const nuxtApp = useNuxtApp();
-	const state = toRef(nuxtApp.payload.state, key);
-	if (init) nuxtApp._state[key] ??= { _default: init };
-	if (state.value === void 0 && init) {
-		const initialValue = init();
-		if (isRef(initialValue)) {
-			nuxtApp.payload.state[key] = initialValue;
-			return initialValue;
-		}
-		state.value = initialValue;
-	}
-	return state;
-}
 
 //#region node_modules/.pnpm/reka-ui@2.10.1_vue@3.5.41_typescript@6.0.3_/node_modules/reka-ui/dist/shared/getActiveElement.js
 function getActiveElement() {
@@ -14485,146 +14472,181 @@ var globalMiddleware = [
 	layout_global_default,
 	/* @__PURE__ */ defineNuxtRouteMiddleware((to) => {})
 ];
-var namedMiddleware = { "approvals-inbox-channel": () => import('../build/approvals-inbox-channel-C38yzOSA.mjs') };
+var namedMiddleware = { "approvals-inbox-channel": () => import('../build/approvals-inbox-channel-CBq7MApo.mjs') };
 //#endregion
 //#region virtual:nuxt:node_modules%2F.cache%2Fnuxt%2F.nuxt%2Froutes.mjs
 var virtual_nuxt_node_modules_2F_cache_2Fnuxt_2F_nuxt_2Froutes_default = [
 	{
 		name: "general-settings-notifications",
 		path: "/general/settings/notifications",
-		component: () => import('../build/notifications-DJ9aXFyd.mjs')
+		component: () => import('../build/notifications-D8evSaaF.mjs')
 	},
 	{
 		name: "general-settings-security",
 		path: "/general/settings/security",
-		component: () => import('../build/security-ZXbymMbR.mjs')
+		component: () => import('../build/security-BFMMzVKG.mjs')
+	},
+	{
+		name: "general-staff-new",
+		path: "/general/staff/new",
+		component: () => import('../build/new-C03JnM_p.mjs')
 	},
 	{
 		name: "registro-verificacion-coordinador-list",
 		path: "/registro-verificacion/coordinador/list",
-		component: () => import('../build/list-Cy0ZDWkm.mjs')
+		component: () => import('../build/list-CxVrw1ge.mjs')
 	},
 	{
 		name: "registro-verificacion-verificador-dashboard_verificador",
 		path: "/registro-verificacion/verificador/dashboard_verificador",
-		component: () => import('../build/dashboard_verificador-DfZcxCsU.mjs')
+		component: () => import('../build/dashboard_verificador-CuOoz6J7.mjs')
+	},
+	{
+		name: "registro-verificacion-verificador-solicitudes",
+		path: "/registro-verificacion/verificador/solicitudes",
+		component: () => import('../build/solicitudes-G1isIJqU.mjs')
+	},
+	{
+		name: "general-staff-id",
+		path: "/general/staff/:id()",
+		component: () => import('../build/_id_-C8G-xjhH.mjs')
 	},
 	{
 		name: "distributor-portal-clientes",
 		path: "/distributor-portal/clientes",
 		meta: { layout: false },
-		component: () => import('../build/clientes-BsIcQUnD.mjs')
+		component: () => import('../build/clientes-DPE7dPrM.mjs')
 	},
 	{
 		name: "distributor-portal-collection-relationship",
 		path: "/distributor-portal/collection-relationship",
 		meta: { layout: "distributor-portal" },
-		component: () => import('../build/collection-relationship-Cu3w4AZL.mjs')
+		component: () => import('../build/collection-relationship-BiSa0wzn.mjs')
 	},
 	{
 		name: "distributor-portal-configure_vale",
 		path: "/distributor-portal/configure_vale",
 		meta: { layout: false },
-		component: () => import('../build/configure_vale-i_uD0wg0.mjs')
+		component: () => import('../build/configure_vale-CpyDbKQ3.mjs')
 	},
 	{
 		name: "distributor-portal-points",
 		path: "/distributor-portal/points",
 		meta: { layout: "distributor-portal" },
-		component: () => import('../build/points-EpMJiMF5.mjs')
+		component: () => import('../build/points-Celu8ZLX.mjs')
 	},
 	{
 		name: "distributor-portal-vales",
 		path: "/distributor-portal/vales",
 		meta: { layout: false },
-		component: () => import('../build/vales-dd8dLJaI.mjs')
+		component: () => import('../build/vales-B20QPZRK.mjs')
 	},
 	{
 		name: "general-branches",
 		path: "/general/branches",
-		component: () => import('../build/branches-C2KtaPg4.mjs')
+		component: () => import('../build/branches-BrTMje_t.mjs')
 	},
 	{
 		name: "general-categories",
 		path: "/general/categories",
-		component: () => import('../build/categories-B95mm1TZ.mjs')
+		component: () => import('../build/categories-DLNyOnqm.mjs')
 	},
 	{
 		name: "general-customers",
 		path: "/general/customers",
-		component: () => import('../build/customers-CwYimctM.mjs')
+		component: () => import('../build/customers-c6EDdswv.mjs')
 	},
 	{
 		name: "general-cutoffs",
 		path: "/general/cutoffs",
-		component: () => import('../build/cutoffs-DCZkWNwT.mjs')
+		component: () => import('../build/cutoffs-Cl_IuO9c.mjs')
+	},
+	{
+		name: "general-distributors",
+		path: "/general/distributors",
+		component: () => import('../build/distributors-7dhgAuNE.mjs')
 	},
 	{
 		name: "general-inbox",
 		path: "/general/inbox",
 		meta: { "middleware": "approvals-inbox-channel" },
-		component: () => import('../build/inbox-nmm56rj0.mjs')
+		component: () => import('../build/inbox-DkuU8MXd.mjs')
 	},
 	{
 		name: "general-logs",
 		path: "/general/logs",
-		component: () => import('../build/logs-B_OTmHgB.mjs')
+		component: () => import('../build/logs-P_El1qhv.mjs')
+	},
+	{
+		name: "general-point-redemptions-payout",
+		path: "/general/point-redemptions-payout",
+		component: () => import('../build/point-redemptions-payout-BymzPegE.mjs')
 	},
 	{
 		name: "general-products",
 		path: "/general/products",
-		component: () => import('../build/products-DWrkQb6Q.mjs')
+		component: () => import('../build/products-Zbw1O3xa.mjs')
 	},
 	{
 		name: "general-reconciliations",
 		path: "/general/reconciliations",
-		component: () => import('../build/reconciliations-B08xSn7e.mjs')
+		component: () => import('../build/reconciliations-Do9NJypD.mjs')
 	},
 	{
 		name: "general-settings",
 		path: "/general/settings",
-		component: () => import('../build/settings-BtuEp33t.mjs')
+		component: () => import('../build/settings-CxcIO6dy.mjs')
 	},
 	{
 		name: "general-staff",
 		path: "/general/staff",
-		component: () => import('../build/staff-Bq1vZoe1.mjs')
+		component: () => import('../build/staff-DDnGiHv9.mjs')
 	},
 	{
 		name: "general-voucher-requests",
 		path: "/general/voucher-requests",
-		component: () => import('../build/voucher-requests-DzvEeOQH.mjs')
+		component: () => import('../build/voucher-requests-DcpGSEV6.mjs')
 	},
 	{
 		name: "general-vouchers",
 		path: "/general/vouchers",
-		component: () => import('../build/vouchers-Bvkfslrh.mjs')
+		component: () => import('../build/vouchers-HDD9Q8lE.mjs')
 	},
 	{
 		name: "registro-verificacion-new",
 		path: "/registro-verificacion/new",
-		component: () => import('../build/new-DDCCzRQ2.mjs')
+		component: () => import('../build/new-eJG2OQhY.mjs')
 	},
 	{
 		name: "distributor-portal",
 		path: "/distributor-portal",
 		meta: { layout: "distributor-portal" },
-		component: () => import('../build/distributor-portal-D08MHX2x.mjs')
+		component: () => import('../build/distributor-portal-BDNafAVW.mjs')
+	},
+	{
+		name: "forgot-password",
+		path: "/forgot-password",
+		component: () => import('../build/forgot-password-UbgXzzH8.mjs')
 	},
 	{
 		name: "general",
 		path: "/general",
-		component: () => import('../build/general-BoLTtOZD.mjs')
+		component: () => import('../build/general-BgF43otH.mjs')
 	},
 	{
 		name: "login",
 		path: "/login",
-		component: () => import('../build/login-CF8_GCUC.mjs')
+		component: () => import('../build/login-WoGepBRC.mjs')
 	},
 	{
 		name: "registro-verificacion",
 		path: "/registro-verificacion",
-		component: () => import('../build/registro-verificacion-CBx3-NuQ.mjs')
+		component: () => import('../build/registro-verificacion-YXpf5CZd.mjs')
+	},
+	{
+		name: "reset-password",
+		path: "/reset-password",
+		component: () => import('../build/reset-password-947tnCkT.mjs')
 	},
 	{
 		name: "index",
@@ -14888,7 +14910,7 @@ var plugin_default = defineNuxtPlugin({
 });
 //#endregion
 //#region virtual:nuxt:node_modules%2F.cache%2Fnuxt%2F.nuxt%2Fcomponents.plugin.mjs
-var lazyGlobalComponents = [["Icon", defineAsyncComponent(() => Promise.resolve().then(function () { return componentsDgyXoJhZ; }).then((n) => n.n).then((r) => r["default"] || r.default || r))]];
+var lazyGlobalComponents = [["Icon", defineAsyncComponent(() => Promise.resolve().then(function () { return componentsDhJRmWeP; }).then((n) => n.n).then((r) => r["default"] || r.default || r))]];
 var virtual_nuxt_node_modules_2F_cache_2Fnuxt_2F_nuxt_2Fcomponents_plugin_default = defineNuxtPlugin({
 	name: "nuxt:global-components",
 	setup(nuxtApp) {
@@ -17590,9 +17612,9 @@ function resolveLayoutName(route, name) {
 //#region virtual:nuxt:node_modules%2F.cache%2Fnuxt%2F.nuxt%2Flayouts.mjs
 var virtual_nuxt_node_modules_2F_cache_2Fnuxt_2F_nuxt_2Flayouts_default = {
 	default: defineAsyncComponent(() => import('../build/default-BA_2QT4E.mjs').then((m) => m.default || m)),
-	"distributor-portal": defineAsyncComponent(() => import('../build/distributor-portal-BxM0Kalw.mjs').then((m) => m.default || m)),
-	general: defineAsyncComponent(() => import('../build/general-BOH4B16-.mjs').then((m) => m.default || m)),
-	"registro-verificacion": defineAsyncComponent(() => import('../build/registro-verificacion-D4AWGi1v.mjs').then((m) => m.default || m))
+	"distributor-portal": defineAsyncComponent(() => import('../build/distributor-portal-DypUE9zy.mjs').then((m) => m.default || m)),
+	general: defineAsyncComponent(() => import('../build/general-BME0d8t7.mjs').then((m) => m.default || m)),
+	"registro-verificacion": defineAsyncComponent(() => import('../build/registro-verificacion-knnYSRv0.mjs').then((m) => m.default || m))
 };
 //#endregion
 //#region node_modules/.pnpm/nuxt@4.5.2_@babel+plugin-sy_8d3ee09fd7864d66cfa01977225356c6/node_modules/nuxt/dist/app/components/nuxt-layout.js
@@ -17836,7 +17858,7 @@ var app_vue_vue_type_script_setup_true_lang_default = /*@__PURE__*/ defineCompon
 			],
 			link: [{
 				rel: "icon",
-				href: "/favicon.ico"
+				href: "/favicon.png"
 			}],
 			htmlAttrs: { lang: "en" }
 		});

@@ -304,7 +304,7 @@ const volver = () => {
             <p class="modal-subtitle">
               La solicitud de vale para <strong>{{ cliente.nombre }}</strong> por
               <strong>${{ Number(confirmedVoucher?.requested_amount ?? 0).toLocaleString('es-MX') }}</strong>
-              quedó registrada y está pendiente de aprobación del coordinador.
+              quedó registrada, se envio la información al cliente y asegurece de mostrarla al ferear el vale.
             </p>
 
             <div v-if="confirmedVoucher" class="modal-details">
