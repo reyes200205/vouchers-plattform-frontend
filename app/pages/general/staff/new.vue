@@ -10,36 +10,50 @@ const schema = z.object({
   first_name: z.string().min(2, 'Muy corto').max(100, 'Muy largo'),
   middle_name: z.string().max(100, 'Muy largo').optional(),
   last_name: z.string().min(2, 'Muy corto').max(100, 'Muy largo'),
-  second_last_name: z.string().max(100, 'Muy largo').optional(),
-  gender: z.string().optional(),
-  birth_date: z.string().optional(),
-  curp: z.string().max(18, 'CURP inválida').optional().superRefine((value, ctx) => {
+  second_last_name: z.string().min(2, 'Muy corto').max(100, 'Muy largo'),
+  gender: z.string().min(1, 'Selecciona el género'),
+  birth_date: z.string().min(1, 'La fecha de nacimiento es obligatoria').superRefine((val, ctx) => {
+    const birthDate = new Date(val);
+    const today = new Date();
+    let age = today.getFullYear() - birthDate.getFullYear();
+    const monthDiff = today.getMonth() - birthDate.getMonth();
+    if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
+      age--;
+    }
+    if (age < 18) {
+      ctx.addIssue({
+        code: 'custom',
+        message: 'El miembro de personal debe ser mayor de 18 años'
+      });
+    }
+  }),
+  curp: z.string().superRefine((value, ctx) => {
     if (!value || value.length !== 18) {
       ctx.addIssue({ code: 'custom', message: 'CURP inválida (18 caracteres)' })
       return
     }
-    if (value && !isValidCurp(value)) {
+    if (!isValidCurp(value)) {
       ctx.addIssue({ code: 'custom', message: 'CURP con formato inválido' })
     }
   }),
-  rfc: z.string().max(13, 'RFC inválido').optional().superRefine((value, ctx) => {
-    if (value && !isValidRfc(value)) {
+  rfc: z.string().superRefine((value, ctx) => {
+    if (!value || value.length < 10 || value.length > 13) {
+      ctx.addIssue({ code: 'custom', message: 'RFC es obligatorio (10 a 13 caracteres)' })
+      return
+    }
+    if (!isValidRfc(value)) {
       ctx.addIssue({ code: 'custom', message: 'RFC con formato inválido' })
     }
   }),
-  mobile_phone: z.string().max(20, 'Muy largo').optional(),
-  street: z.string().max(150, 'Muy largo').optional(),
-  external_number: z.string().max(30, 'Muy largo').optional(),
-  neighborhood: z.string().max(120, 'Muy largo').optional(),
-  city: z.string().max(120, 'Muy largo').optional(),
-  state: z.string().max(120, 'Muy largo').optional(),
-  postal_code: z.string().max(10, 'Muy largo').optional(),
+  mobile_phone: z.string().min(10, 'Mínimo 10 dígitos').max(20, 'Muy largo'),
+  street: z.string().min(1, 'La calle es obligatoria').max(150, 'Muy largo'),
+  external_number: z.string().min(1, 'El número exterior es obligatorio').max(30, 'Muy largo'),
+  neighborhood: z.string().min(1, 'La colonia es obligatoria').max(120, 'Muy largo'),
+  city: z.string().min(1, 'La ciudad es obligatoria').max(120, 'Muy largo'),
+  state: z.string().min(1, 'El estado es obligatorio').max(120, 'Muy largo'),
+  postal_code: z.string().min(5, 'Código postal inválido').max(10, 'Muy largo'),
   username: z.string().email('Correo inválido').max(80, 'Muy largo'),
-  password: z.string().optional().superRefine((value, ctx) => {
-    if (!value || value.length < 8) {
-      ctx.addIssue({ code: 'custom', message: 'Mínimo 8 caracteres' })
-    }
-  }),
+  password: z.string().min(8, 'Mínimo 8 caracteres'),
   role_code: z.string().min(1, 'Selecciona un rol'),
   branch_id: z.any().optional(),
 }).superRefine((data, ctx) => {
@@ -144,21 +158,21 @@ async function onSubmit(event: FormSubmitEvent<Schema>) {
       first_name: event.data.first_name,
       middle_name: event.data.middle_name || undefined,
       last_name: event.data.last_name,
-      second_last_name: event.data.second_last_name || undefined,
-      gender: event.data.gender || undefined,
-      birth_date: event.data.birth_date || undefined,
-      curp: event.data.curp || '',
-      rfc: event.data.rfc || undefined,
-      mobile_phone: event.data.mobile_phone || undefined,
+      second_last_name: event.data.second_last_name,
+      gender: event.data.gender,
+      birth_date: event.data.birth_date,
+      curp: event.data.curp,
+      rfc: event.data.rfc,
+      mobile_phone: event.data.mobile_phone,
       email: event.data.username,
-      street: event.data.street || undefined,
-      external_number: event.data.external_number || undefined,
-      neighborhood: event.data.neighborhood || undefined,
-      city: event.data.city || undefined,
-      state: event.data.state || undefined,
-      postal_code: event.data.postal_code || undefined,
+      street: event.data.street,
+      external_number: event.data.external_number,
+      neighborhood: event.data.neighborhood,
+      city: event.data.city,
+      state: event.data.state,
+      postal_code: event.data.postal_code,
       username: event.data.username,
-      password: event.data.password || '',
+      password: event.data.password,
       role_code: event.data.role_code,
       branch_id: Number(event.data.branch_id)
     })
@@ -232,10 +246,10 @@ const formRef = ref<any>(null)
               <UFormField required label="Apellido paterno" name="last_name">
                 <UInput v-model="state.last_name" class="w-full" />
               </UFormField>
-              <UFormField label="Apellido materno" name="second_last_name">
+              <UFormField required label="Apellido materno" name="second_last_name">
                 <UInput v-model="state.second_last_name" class="w-full" />
               </UFormField>
-              <UFormField label="Género" name="gender">
+              <UFormField required label="Género" name="gender">
                 <USelect
                   v-model="state.gender"
                   :items="[
@@ -247,7 +261,7 @@ const formRef = ref<any>(null)
                   class="w-full"
                 />
               </UFormField>
-              <UFormField label="Fecha de nacimiento" name="birth_date">
+              <UFormField required label="Fecha de nacimiento" name="birth_date">
                 <UInput v-model="state.birth_date" type="date" class="w-full" />
               </UFormField>
               <UFormField required label="CURP" name="curp">
@@ -257,10 +271,10 @@ const formRef = ref<any>(null)
                   placeholder="18 caracteres"
                 />
               </UFormField>
-              <UFormField label="RFC" name="rfc">
+              <UFormField required label="RFC" name="rfc">
                 <UInput v-model="state.rfc" class="w-full uppercase" />
               </UFormField>
-              <UFormField label="Celular" name="mobile_phone" class="md:col-span-1 lg:col-span-1">
+              <UFormField required label="Celular" name="mobile_phone" class="md:col-span-1 lg:col-span-1">
                 <UInput v-model="state.mobile_phone" class="w-full" />
               </UFormField>
             </div>
@@ -272,22 +286,22 @@ const formRef = ref<any>(null)
             </template>
 
             <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <UFormField label="Calle" name="street">
+              <UFormField required label="Calle" name="street">
                 <UInput v-model="state.street" class="w-full" />
               </UFormField>
-              <UFormField label="Número exterior" name="external_number">
+              <UFormField required label="Número exterior" name="external_number">
                 <UInput v-model="state.external_number" class="w-full" />
               </UFormField>
-              <UFormField label="C.P." name="postal_code">
+              <UFormField required label="C.P." name="postal_code">
                 <UInput v-model="state.postal_code" class="w-full" />
               </UFormField>
-              <UFormField label="Colonia" name="neighborhood">
+              <UFormField required label="Colonia" name="neighborhood">
                 <UInput v-model="state.neighborhood" class="w-full" />
               </UFormField>
-              <UFormField label="Ciudad" name="city">
+              <UFormField required label="Ciudad" name="city">
                 <UInput v-model="state.city" class="w-full" />
               </UFormField>
-              <UFormField label="Estado" name="state">
+              <UFormField required label="Estado" name="state">
                 <UInput v-model="state.state" class="w-full" />
               </UFormField>
             </div>
