@@ -69,23 +69,28 @@ const schema = z.object({
     .refine((value) => isValidRfc(value), "RFC con formato inválido"),
   home_phone: z
     .string()
-    .min(1, "El otro teléfono de contacto es obligatorio"),
+    .min(1, "El otro teléfono de contacto es obligatorio")
+    .length(10, "Debe tener exactamente 10 dígitos, sin espacios ni letras"),
   mobile_phone: z
     .string()
-    .min(10, "El teléfono móvil debe tener al menos 10 dígitos"),
+    .min(1, "El teléfono móvil es obligatorio")
+    .length(10, "Debe tener exactamente 10 dígitos, sin espacios ni letras"),
   email: z
     .string()
     .min(1, "El correo electrónico es obligatorio")
     .email("Correo electrónico inválido"),
   street: z.string().min(1, "La calle es obligatoria"),
-  external_number: z.string().min(1, "El número exterior es obligatorio"),
+  external_number: z
+    .string()
+    .min(1, "El número exterior es obligatorio")
+    .refine((value) => /^\d+$/.test(value), "Solo se permiten dígitos, sin letras ni espacios"),
   neighborhood: z.string().min(1, "La colonia es obligatoria"),
   city: z.string().min(1, "La ciudad es obligatoria"),
   state: z.string().min(1, "El estado es obligatorio"),
   postal_code: z
     .string()
     .min(1, "El código postal es obligatorio")
-    .length(5, "El código postal debe tener exactamente 5 dígitos"),
+    .length(5, "Debe tener exactamente 5 dígitos, sin letras"),
   notes: z.string().optional(),
   street_references: z.string().optional(),
   requested_credit_limit: z
@@ -100,14 +105,19 @@ const schema = z.object({
   occupation_position: z.string().min(1, "El puesto o grado es obligatorio"),
   occupation_phone: z
     .string()
-    .min(1, "El teléfono de ocupación es obligatorio"),
+    .min(1, "El teléfono del trabajo o escuela es obligatorio")
+    .length(10, "Debe tener exactamente 10 dígitos, sin espacios ni letras"),
   occupation_years: z
     .number({ error: "Especifica la antigüedad" })
     .min(0, "La antigüedad no puede ser negativa"),
   housing_ownership_type: z
     .string()
     .min(1, "Selecciona la tenencia de vivienda"),
-  housing_dimensions: z.string().min(1, "Las dimensiones son obligatorias"),
+  // Solo el valor numerico: la unidad (m2) es fija, ver housingDimensionUnit.
+  housing_dimensions: z
+    .string()
+    .min(1, "Las dimensiones son obligatorias")
+    .refine((value) => /^\d+$/.test(value), "Solo se permiten números, sin letras ni espacios"),
   housing_years: z
     .number({ error: "Especifica los años de vivienda" })
     .min(0, "Los años no pueden ser negativos"),
@@ -116,7 +126,8 @@ const schema = z.object({
     .min(1, "La referencia laboral es obligatoria"),
   work_reference_phone: z
     .string()
-    .min(1, "El teléfono de referencia es obligatorio"),
+    .min(1, "El teléfono de referencia es obligatorio")
+    .length(10, "Debe tener exactamente 10 dígitos, sin espacios ni letras"),
 });
 
 type Schema = z.output<typeof schema>;
@@ -199,6 +210,69 @@ function removeVehicle(index: number) {
   vehicles.value.splice(index, 1);
 }
 
+// Filtra en vivo lo que se escribe en campos que deben ser solo numericos,
+// para que nunca se llegue a mandar una letra o espacio, no solo rechazarlo
+// despues al validar (mismo patron que components/staff/MemberModal.vue).
+function onlyDigits(value: string, maxLength: number): string {
+  return value.replace(/\D/g, "").slice(0, maxLength);
+}
+
+// La unidad de las dimensiones de la vivienda es fija (siempre metros
+// cuadrados) -- se muestra en un select deshabilitado solo para que quede
+// claro en que unidad se esta capturando, no para que se pueda cambiar.
+const housingDimensionUnit = "m2";
+const housingDimensionUnitItems = [{ label: "Metros cuadrados (m²)", value: "m2" }];
+
+// Edad del solicitante derivada de su fecha de nacimiento (unica fuente de
+// verdad; no se duplica en un campo aparte). Se usa para topar la antiguedad
+// laboral y los años viviendo en el domicilio -- ver justo abajo.
+const applicantAge = computed<number | null>(() => {
+  if (!state.birth_date) return null;
+  const birth = new Date(state.birth_date);
+  if (Number.isNaN(birth.getTime())) return null;
+  const today = new Date();
+  let age = today.getFullYear() - birth.getFullYear();
+  const m = today.getMonth() - birth.getMonth();
+  if (m < 0 || (m === 0 && today.getDate() < birth.getDate())) age--;
+  return age;
+});
+
+// No se puede tener antiguedad laboral antes de ser mayor de edad.
+const maxOccupationYears = computed<number | null>(() =>
+  applicantAge.value !== null ? Math.max(0, applicantAge.value - 18) : null,
+);
+const occupationYearsExceeded = computed(
+  () =>
+    maxOccupationYears.value !== null &&
+    (state.occupation_years ?? 0) > maxOccupationYears.value,
+);
+
+// No se puede vivir en un domicilio mas años de los que se tiene de vida.
+const maxHousingYears = computed<number | null>(() => applicantAge.value);
+const housingYearsExceeded = computed(
+  () =>
+    maxHousingYears.value !== null &&
+    (state.housing_years ?? 0) > maxHousingYears.value,
+);
+
+// Un vehiculo no puede ser de un modelo mas de 2 años a futuro.
+const maxVehicleYear = new Date().getFullYear() + 2;
+function vehicleYearExceeded(year: string): boolean {
+  return /^\d{4}$/.test(year) && Number(year) > maxVehicleYear;
+}
+
+// Bloquea el envio si alguna de las reglas cruzadas (que dependen de la
+// fecha de nacimiento y no se pueden expresar en el schema de zod por
+// campo) sigue violada -- se revisa antes de mandar al backend, igual que
+// ya se hacia con los documentos obligatorios.
+function hasExtraValidationErrors(): boolean {
+  return (
+    occupationYearsExceeded.value ||
+    housingYearsExceeded.value ||
+    vehicles.value.some((v) => v.year && vehicleYearExceeded(v.year))
+  );
+}
+
 // La fotografía de fachada la toma el verificador durante la visita de campo
 // (ver components/verificador/VerifyModal.vue), no se captura en el alta.
 const idFrontPath = ref<string | null>(null);
@@ -209,6 +283,18 @@ const submitting = ref(false);
 
 async function onSubmit(event: FormSubmitEvent<Schema>) {
   submitting.value = true;
+
+  if (hasExtraValidationErrors()) {
+    currentStep.value = 3;
+    toast.add({
+      title: "Datos fuera de rango",
+      description:
+        "Revisa la antigüedad, los años viviendo en el domicilio o el año del vehículo: alguno no es congruente con la fecha de nacimiento capturada.",
+      color: "error",
+    });
+    submitting.value = false;
+    return;
+  }
 
   if (!idFrontPath.value || !idBackPath.value || !proofOfAddressPath.value) {
     currentStep.value = 5;
@@ -267,7 +353,9 @@ async function onSubmit(event: FormSubmitEvent<Schema>) {
         },
         housing: {
           ownership_type: data.housing_ownership_type || null,
-          dimensions: data.housing_dimensions || null,
+          // La unidad es fija (m2); se reconstruye aqui porque el backend
+          // sigue guardando dimensions como un string libre.
+          dimensions: data.housing_dimensions ? `${data.housing_dimensions} m2` : null,
           years_at_address: data.housing_years ?? null,
           work_reference: {
             name: data.work_reference_name || null,
@@ -450,15 +538,32 @@ function validateStep(step: number): { success: boolean; errors: { name: string;
   const stepSchema = schema.pick(pickObject);
   const result = stepSchema.safeParse(state);
 
-  if (result.success) {
-    return { success: true, errors: [] };
-  } else {
-    const formattedErrors = result.error.issues.map((err) => ({
-      name: String(err.path[0]),
-      message: err.message,
-    }));
-    return { success: false, errors: formattedErrors };
+  const formattedErrors = result.success
+    ? []
+    : result.error.issues.map((err) => ({
+        name: String(err.path[0]),
+        message: err.message,
+      }));
+
+  // Reglas cruzadas con la edad (no expresables en el schema de zod por
+  // campo): se agregan aqui para que tambien bloqueen el avance del paso 3,
+  // no solo el envio final.
+  if (step === 3) {
+    if (occupationYearsExceeded.value) {
+      formattedErrors.push({
+        name: "occupation_years",
+        message: `No puede ser mayor a ${maxOccupationYears.value} años: es la edad que lleva siendo mayor de edad el solicitante.`,
+      });
+    }
+    if (housingYearsExceeded.value) {
+      formattedErrors.push({
+        name: "housing_years",
+        message: `No puede ser mayor a la edad del solicitante (${maxHousingYears.value} años).`,
+      });
+    }
   }
+
+  return { success: formattedErrors.length === 0, errors: formattedErrors };
 }
 
 async function validateStepAndAdvance(): Promise<boolean> {
@@ -700,10 +805,24 @@ function onFormError(event: any) {
                 <UInput v-model="state.rfc" class="w-full" maxlength="13" />
               </UFormField>
               <UFormField label="Teléfono móvil" name="mobile_phone" required>
-                <UInput v-model="state.mobile_phone" class="w-full" />
+                <UInput
+                  :model-value="state.mobile_phone"
+                  class="w-full"
+                  inputmode="numeric"
+                  maxlength="10"
+                  placeholder="10 dígitos, sin espacios"
+                  @update:model-value="(value) => (state.mobile_phone = onlyDigits(String(value ?? ''), 10))"
+                />
               </UFormField>
               <UFormField label="Otro teléfono de contacto" name="home_phone" required>
-                <UInput v-model="state.home_phone" class="w-full" />
+                <UInput
+                  :model-value="state.home_phone"
+                  class="w-full"
+                  inputmode="numeric"
+                  maxlength="10"
+                  placeholder="10 dígitos, sin espacios"
+                  @update:model-value="(value) => (state.home_phone = onlyDigits(String(value ?? ''), 10))"
+                />
               </UFormField>
               <UFormField label="Correo electrónico" name="email" required>
                 <UInput v-model="state.email" type="email" class="w-full" />
@@ -728,7 +847,14 @@ function onFormError(event: any) {
                 name="external_number"
                 required
               >
-                <UInput v-model="state.external_number" class="w-full" />
+                <UInput
+                  :model-value="state.external_number"
+                  class="w-full"
+                  inputmode="numeric"
+                  maxlength="30"
+                  placeholder="Sin letras ni espacios"
+                  @update:model-value="(value) => (state.external_number = onlyDigits(String(value ?? ''), 30))"
+                />
               </UFormField>
               <UFormField label="Estado" name="state" required>
                 <UInput v-model="state.state" class="w-full" />
@@ -740,7 +866,14 @@ function onFormError(event: any) {
                 <UInput v-model="state.neighborhood" class="w-full" />
               </UFormField>
               <UFormField label="Código postal" name="postal_code" required>
-                <UInput v-model="state.postal_code" class="w-full" />
+                <UInput
+                  :model-value="state.postal_code"
+                  class="w-full"
+                  inputmode="numeric"
+                  maxlength="5"
+                  placeholder="5 dígitos"
+                  @update:model-value="(value) => (state.postal_code = onlyDigits(String(value ?? ''), 5))"
+                />
               </UFormField>
               <UFormField label="Referencias del domicilio" name="street_references" class="md:col-span-2">
                 <UTextarea
@@ -791,7 +924,14 @@ function onFormError(event: any) {
                   />
                 </UFormField>
                 <UFormField label="Teléfono">
-                  <UInput v-model="member.phone" class="w-full" />
+                  <UInput
+                    :model-value="member.phone"
+                    class="w-full"
+                    inputmode="numeric"
+                    maxlength="10"
+                    placeholder="10 dígitos"
+                    @update:model-value="(value) => (member.phone = onlyDigits(String(value ?? ''), 10))"
+                  />
                 </UFormField>
                 <div class="flex items-end gap-2">
                   <UFormField label="Edad" class="flex-1">
@@ -867,18 +1007,31 @@ function onFormError(event: any) {
                     name="occupation_phone"
                     required
                   >
-                    <UInput v-model="state.occupation_phone" class="w-full" />
+                    <UInput
+                      :model-value="state.occupation_phone"
+                      class="w-full"
+                      inputmode="numeric"
+                      maxlength="10"
+                      placeholder="10 dígitos, sin espacios"
+                      @update:model-value="(value) => (state.occupation_phone = onlyDigits(String(value ?? ''), 10))"
+                    />
                   </UFormField>
                   <UFormField
                     label="Antigüedad (años)"
                     name="occupation_years"
                     required
+                    :hint="maxOccupationYears !== null ? `Máximo ${maxOccupationYears} años` : undefined"
                   >
                     <UInputNumber
                       v-model="state.occupation_years"
                       class="w-full"
                       :min="0"
+                      :max="maxOccupationYears ?? undefined"
                     />
+                    <p v-if="occupationYearsExceeded" class="text-xs text-error mt-1">
+                      No puede ser mayor a {{ maxOccupationYears }} años: es la edad que lleva siendo mayor de
+                      edad el solicitante (nació hace {{ applicantAge }} años y la mayoría de edad es a los 18).
+                    </p>
                   </UFormField>
                   <UFormField
                     label="Ganancia al mes"
@@ -925,7 +1078,17 @@ function onFormError(event: any) {
                       <UInput v-model="vehicle.model" class="w-full" />
                     </UFormField>
                     <UFormField label="Año">
-                      <UInput v-model="vehicle.year" class="w-full" />
+                      <UInput
+                        :model-value="vehicle.year"
+                        class="w-full"
+                        inputmode="numeric"
+                        maxlength="4"
+                        :placeholder="`Máx. ${maxVehicleYear}`"
+                        @update:model-value="(value) => (vehicle.year = onlyDigits(String(value ?? ''), 4))"
+                      />
+                      <p v-if="vehicleYearExceeded(vehicle.year)" class="text-xs text-error mt-1">
+                        No puede ser mayor a {{ maxVehicleYear }}.
+                      </p>
                     </UFormField>
                     <UFormField label="Placas">
                       <UInput v-model="vehicle.plates" class="w-full" />
@@ -971,23 +1134,41 @@ function onFormError(event: any) {
                     label="Años viviendo en el domicilio"
                     name="housing_years"
                     required
+                    :hint="maxHousingYears !== null ? `Máximo ${maxHousingYears} años` : undefined"
                   >
                     <UInputNumber
                       v-model="state.housing_years"
                       class="w-full"
                       :min="0"
+                      :max="maxHousingYears ?? undefined"
                     />
+                    <p v-if="housingYearsExceeded" class="text-xs text-error mt-1">
+                      No puede ser mayor a la edad del solicitante ({{ maxHousingYears }} años): no pudo vivir
+                      ahí antes de nacer.
+                    </p>
                   </UFormField>
                   <UFormField
                     label="Dimensiones de la vivienda"
                     name="housing_dimensions"
                     required
+                    hint="Solo números"
                   >
-                    <UInput
-                      v-model="state.housing_dimensions"
-                      placeholder="Ej. 120 m²"
-                      class="w-full"
-                    />
+                    <div class="flex gap-2">
+                      <UInput
+                        :model-value="state.housing_dimensions"
+                        placeholder="Ej. 120"
+                        class="w-full"
+                        inputmode="numeric"
+                        maxlength="6"
+                        @update:model-value="(value) => (state.housing_dimensions = onlyDigits(String(value ?? ''), 6))"
+                      />
+                      <USelect
+                        :model-value="housingDimensionUnit"
+                        :items="housingDimensionUnitItems"
+                        disabled
+                        class="w-40 shrink-0 opacity-70"
+                      />
+                    </div>
                   </UFormField>
                   <div />
                   <UFormField
@@ -1006,8 +1187,12 @@ function onFormError(event: any) {
                     required
                   >
                     <UInput
-                      v-model="state.work_reference_phone"
+                      :model-value="state.work_reference_phone"
                       class="w-full"
+                      inputmode="numeric"
+                      maxlength="10"
+                      placeholder="10 dígitos, sin espacios"
+                      @update:model-value="(value) => (state.work_reference_phone = onlyDigits(String(value ?? ''), 10))"
                     />
                   </UFormField>
                 </div>

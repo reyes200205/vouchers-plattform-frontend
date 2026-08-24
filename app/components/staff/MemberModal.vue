@@ -68,9 +68,13 @@ const schema = z.object({
       ctx.addIssue({ code: 'custom', message: 'RFC con formato inválido' })
     }
   }),
-  mobile_phone: z.string().max(20, 'Muy largo').optional().superRefine((value, ctx) => {
+  mobile_phone: z.string().optional().superRefine((value, ctx) => {
     if (!props.member && !value) {
       ctx.addIssue({ code: 'custom', message: 'Requerido' })
+      return
+    }
+    if (value && !/^\d{10}$/.test(value)) {
+      ctx.addIssue({ code: 'custom', message: 'Debe tener exactamente 10 dígitos, sin espacios ni letras' })
     }
   }),
   street: z.string().max(150, 'Muy largo').optional().superRefine((value, ctx) => {
@@ -81,6 +85,10 @@ const schema = z.object({
   external_number: z.string().max(30, 'Muy largo').optional().superRefine((value, ctx) => {
     if (!props.member && !value) {
       ctx.addIssue({ code: 'custom', message: 'Requerido' })
+      return
+    }
+    if (value && !/^\d+$/.test(value)) {
+      ctx.addIssue({ code: 'custom', message: 'Solo se permiten dígitos, sin letras ni espacios' })
     }
   }),
   neighborhood: z.string().max(120, 'Muy largo').optional().superRefine((value, ctx) => {
@@ -98,9 +106,13 @@ const schema = z.object({
       ctx.addIssue({ code: 'custom', message: 'Requerido' })
     }
   }),
-  postal_code: z.string().max(10, 'Muy largo').optional().superRefine((value, ctx) => {
+  postal_code: z.string().optional().superRefine((value, ctx) => {
     if (!props.member && !value) {
       ctx.addIssue({ code: 'custom', message: 'Requerido' })
+      return
+    }
+    if (value && !/^\d{5}$/.test(value)) {
+      ctx.addIssue({ code: 'custom', message: 'Debe tener exactamente 5 dígitos, sin letras' })
     }
   }),
   username: z.string().email('Correo inválido').max(80, 'Muy largo'),
@@ -350,6 +362,13 @@ async function onSubmit(event: FormSubmitEvent<Schema>) {
 }
 
 const formRef = ref<any>(null)
+
+// Filtra en vivo lo que se escribe en campos que deben ser solo numericos,
+// para que nunca se llegue a mandar una letra o espacio, no solo rechazarlo
+// despues al validar.
+function onlyDigits(value: string, maxLength: number): string {
+  return value.replace(/\D/g, '').slice(0, maxLength)
+}
 </script>
 
 <template>
@@ -416,8 +435,20 @@ const formRef = ref<any>(null)
         </div>
 
         <div class="grid grid-cols-2 gap-4">
-          <UFormField :required="!member" label="Celular" name="mobile_phone">
-            <UInput v-model="state.mobile_phone" class="w-full" />
+          <UFormField
+            :required="!member"
+            label="Celular"
+            name="mobile_phone"
+            hint="10 dígitos"
+          >
+            <UInput
+              :model-value="state.mobile_phone"
+              class="w-full"
+              inputmode="numeric"
+              maxlength="10"
+              placeholder="10 dígitos, sin espacios"
+              @update:model-value="value => state.mobile_phone = onlyDigits(String(value ?? ''), 10)"
+            />
           </UFormField>
         </div>
 
@@ -425,14 +456,38 @@ const formRef = ref<any>(null)
           <UFormField :required="!member" label="Calle" name="street">
             <UInput v-model="state.street" class="w-full" />
           </UFormField>
-          <UFormField :required="!member" label="Número exterior" name="external_number">
-            <UInput v-model="state.external_number" class="w-full" />
+          <UFormField
+            :required="!member"
+            label="Número exterior"
+            name="external_number"
+            hint="Solo dígitos"
+          >
+            <UInput
+              :model-value="state.external_number"
+              class="w-full"
+              inputmode="numeric"
+              maxlength="30"
+              placeholder="Sin letras ni espacios"
+              @update:model-value="value => state.external_number = onlyDigits(String(value ?? ''), 30)"
+            />
           </UFormField>
           <UFormField :required="!member" label="Colonia" name="neighborhood">
             <UInput v-model="state.neighborhood" class="w-full" />
           </UFormField>
-          <UFormField :required="!member" label="C.P." name="postal_code">
-            <UInput v-model="state.postal_code" class="w-full" />
+          <UFormField
+            :required="!member"
+            label="C.P."
+            name="postal_code"
+            hint="5 dígitos"
+          >
+            <UInput
+              :model-value="state.postal_code"
+              class="w-full"
+              inputmode="numeric"
+              maxlength="5"
+              placeholder="5 dígitos"
+              @update:model-value="value => state.postal_code = onlyDigits(String(value ?? ''), 5)"
+            />
           </UFormField>
           <UFormField :required="!member" label="Ciudad" name="city">
             <UInput v-model="state.city" class="w-full" />
