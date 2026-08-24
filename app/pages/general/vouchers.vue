@@ -6,7 +6,6 @@ const { user } = useAuth()
 const { listVouchers, listPendingVoucherRequests } = useVouchers()
 
 const canApprove = computed(() => user.value?.permissions?.includes('vouchers.approve') ?? false)
-const canDisburse = computed(() => user.value?.permissions?.includes('vouchers.disburse') ?? false)
 
 const statusFilter = ref<VoucherStatus | undefined>(undefined)
 const page = ref(1)
@@ -24,10 +23,9 @@ const { data, status, error, refresh } = await useAsyncData<PaginatedData<Vouche
 )
 
 // Solicitudes de vale pendientes (distribuidoras) que la cajera puede
-// aprobar/rechazar desde esta misma pantalla. Aprobar solo crea el vale
-// (estado APROBADO) y le manda un correo al cliente con los datos — la
-// entrega del dinero es un segundo paso separado, cuando el cliente se
-// presenta en persona con la cajera (botón "Entregar vale" más abajo).
+// aprobar/rechazar desde esta misma pantalla. Aprobar YA es entregar: el
+// vale queda ACTIVO de inmediato, con su referencia de pago y numero de
+// autorizacion generados solos (no hay un segundo paso de "Entregar vale").
 // Tenerlo junto a "Vales emitidos" evita que la cajera tenga que buscar al
 // mismo cliente/distribuidora en dos pantallas distintas.
 const requestsPage = ref(1)
@@ -61,14 +59,10 @@ async function onRequestDecided() {
   await Promise.all([refreshRequests(), refresh()])
 }
 
-async function onDisbursed() {
-  await refresh()
-}
-
 // Detalle del vale seleccionado (cajera): permite ver los datos completos,
-// incluida la referencia de transferencia y el número de autorización, para
-// que los pueda anotar en su Excel de conciliación bancaria sin tener que
-// abrir el modal de "Entregar vale" (que solo aplica a vales por entregar).
+// incluida la referencia de transferencia y el número de autorización
+// (generados solos al aprobar), para que los pueda anotar en su Excel de
+// conciliación bancaria.
 const isDetailOpen = ref(false)
 const selectedVoucher = ref<Voucher | null>(null)
 
@@ -130,7 +124,6 @@ function distributorName(voucher: { distributor?: { person?: { first_name: strin
             v-model="statusFilter"
             :items="[
               { label: 'Todos los estados', value: undefined },
-              { label: 'Aprobados', value: 'APROBADO' },
               { label: 'Activos', value: 'ACTIVO' },
               { label: 'Pago parcial', value: 'PAGO_PARCIAL' },
               { label: 'Pagados', value: 'PAGADO' },
@@ -313,11 +306,6 @@ function distributorName(voucher: { distributor?: { person?: { first_name: strin
                   </p>
                 </div>
 
-                <ProductsDisburseVoucherModal
-                  v-if="canDisburse && item.status === 'APROBADO' && !item.is_expired"
-                  :item="item"
-                  @disbursed="onDisbursed"
-                />
               </div>
             </div>
           </div>

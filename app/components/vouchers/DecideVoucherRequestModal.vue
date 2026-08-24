@@ -129,7 +129,7 @@ async function onSubmit(event: FormSubmitEvent<Schema>) {
     toast.add({
       title: 'Decisión registrada',
       description: decision.value === 'APROBADO'
-        ? 'El vale fue aprobado. Cuando el cliente se presente con el correo que ya recibió, entrégale el vale desde "Vales emitidos".'
+        ? 'El vale fue aprobado y ya está activo -- se generaron su referencia de pago y número de autorización.'
         : 'La solicitud de vale fue rechazada.',
       color: 'success'
     })

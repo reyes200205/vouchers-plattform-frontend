@@ -27,6 +27,13 @@ function fmtDate(value: string | null | undefined): string {
   return new Date(year, month - 1, day).toLocaleDateString('es-MX', { day: '2-digit', month: 'short', year: 'numeric' })
 }
 
+// verified_at sí llega como datetime ISO completo (con offset), a diferencia
+// de las fechas puras de arriba -- aquí Date lo interpreta bien sin ayuda.
+function fmtDateTime(value: string | null | undefined): string {
+  if (!value) return '—'
+  return new Date(value).toLocaleString('es-MX', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })
+}
+
 const statusColors: Record<CutoffRelationStatus, 'success' | 'warning' | 'error' | 'info' | 'neutral'> = {
   GENERADA: 'info',
   PAGADA: 'success',
@@ -163,6 +170,18 @@ const totalCommissionForfeited = computed(() => {
           <p v-if="relation.previous_relation_id" class="mt-1 text-xs text-muted">
             Incluye saldo arrastrado de la relación #{{ relation.previous_relation_id }}
             ({{ fmtMoney(relation.total_carryover_received) }})
+          </p>
+        </div>
+
+        <div v-if="relation.retroactive_reconciliation" class="rounded-lg border border-success/40 bg-success/10 p-4 text-sm">
+          <p class="mb-1 text-xs font-medium uppercase text-success">
+            Pagada por conciliación manual
+          </p>
+          <p class="text-muted">
+            El depósito real sí llegó a tiempo según el banco: un gerente lo verificó el
+            {{ fmtDateTime(relation.retroactive_reconciliation.verified_at) }}<span v-if="Number(relation.retroactive_reconciliation.waived_late_fees_total ?? 0) > 0">
+              y se le quitó {{ fmtMoney(relation.retroactive_reconciliation.waived_late_fees_total) }} de recargo por atraso que se había aplicado por error</span>.
+            Esta relación se quedó como CERRADA porque su deuda ya se arrastró a un corte más nuevo, pero ya no tiene ningún adeudo pendiente por esta causa.
           </p>
         </div>
 
