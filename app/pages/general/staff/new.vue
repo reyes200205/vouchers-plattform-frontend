@@ -104,9 +104,16 @@ const roleItems = computed(() => {
 })
 
 const branchItems = computed(() => {
-  const available = isBranchManager.value
-    ? branches.value.filter(b => b.id === branchManagerBranchId.value)
-    : branches.value
+  let available = branches.value
+
+  if (isBranchManager.value) {
+    available = available.filter(b => b.id === branchManagerBranchId.value)
+  } else if (state.role_code === 'general_manager') {
+    // Un gerente general puede tener una sucursal "base" (ej. la matriz), pero
+    // solo si esa sucursal no tiene ya su propio gerente de sucursal dedicado.
+    // Igual conserva acceso a todas las sucursales sin importar cual elija aqui.
+    available = available.filter(b => !b.manager)
+  }
 
   return available.map(b => ({
     label: b.name,
@@ -136,8 +143,12 @@ const state = reactive<Partial<Schema>>({
   branch_id: isBranchManager.value && branchManagerBranchId.value ? String(branchManagerBranchId.value) : undefined,
 })
 
-watch(() => state.role_code, (newRole) => {
-  if (newRole === 'general_manager') {
+// Si la sucursal elegida ya no es valida para el rol recien seleccionado (ej.
+// se cambio a Gerente General y esa sucursal tiene su propio gerente
+// dedicado), la limpiamos para no dejar una seleccion obsoleta sin que se
+// note en la UI.
+watch(() => state.role_code, () => {
+  if (!branchItems.value.some(b => b.value === state.branch_id)) {
     state.branch_id = undefined
   }
 })
@@ -174,7 +185,7 @@ async function onSubmit(event: FormSubmitEvent<Schema>) {
       username: event.data.username,
       password: event.data.password,
       role_code: event.data.role_code,
-      branch_id: Number(event.data.branch_id)
+      branch_id: event.data.branch_id ? Number(event.data.branch_id) : undefined
     })
 
     toast.add({
@@ -327,11 +338,16 @@ const formRef = ref<any>(null)
                   class="w-full"
                 />
               </UFormField>
-              <UFormField :required="state.role_code !== 'general_manager'" label="Sucursal" name="branch_id">
+              <UFormField
+                :required="state.role_code !== 'general_manager'"
+                label="Sucursal"
+                :description="state.role_code === 'general_manager' ? 'Opcional: sucursal base. El gerente general conserva acceso a todas las sucursales.' : undefined"
+                name="branch_id"
+              >
                 <USelect
                   v-model="state.branch_id"
                   :items="branchItems"
-                  :disabled="isBranchManager || state.role_code === 'general_manager'"
+                  :disabled="isBranchManager"
                   placeholder="Seleccionar sucursal..."
                   class="w-full"
                 />

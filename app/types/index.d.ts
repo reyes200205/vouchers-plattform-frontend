@@ -53,6 +53,9 @@ export interface StaffMember {
   id: number
   username: string
   is_active: boolean
+  // Sucursal "base" de un gerente general: solo informativa, no limita sus
+  // permisos (esos siguen siendo globales via `roles`).
+  home_branch: { id: number, name: string } | null
   person: {
     id: number
     first_name: string | null
