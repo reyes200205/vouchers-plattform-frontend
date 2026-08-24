@@ -10,7 +10,7 @@ const UButton = resolveComponent("UButton");
 const { listAuditLogs } = useAuditLogs();
 const { listBranches } = useBranches();
 const { listStaff } = useStaff();
-const { user } = useAuth();
+const { user, fetchMe } = useAuth();
 
 const isBranchManager = computed(
   () => user.value?.roles?.some((r) => r.code === "branch_manager") ?? false,
@@ -22,6 +22,10 @@ const branchManagerBranchId = computed(() => {
     )?.branch_id ?? null
   );
 });
+
+// Ver la misma nota en staff/new.vue: refresca la sesión guardada por si el
+// rol/sucursal del gerente cambió después de su último login.
+await fetchMe();
 
 const { data: branches } = await useAsyncData<Branch[]>(
   "logs-branches",

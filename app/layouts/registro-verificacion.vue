@@ -24,9 +24,14 @@ const links = computed(() => {
       to: '/registro-verificacion/new',
       onSelect: () => { open.value = false }
     }, {
+      label: 'Solicitudes de Distribuidoras',
+      icon: 'i-lucide-inbox',
+      to: '/registro-verificacion/coordinador/list',
+      onSelect: () => { open.value = false }
+    }, {
       label: 'Distribuidores',
       icon: 'i-lucide-users',
-      to: '/registro-verificacion/coordinador/list',
+      to: '/registro-verificacion/coordinador/distributors',
       onSelect: () => { open.value = false }
     })
   } else if (isVerifier) {
