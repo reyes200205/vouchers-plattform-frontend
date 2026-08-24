@@ -14494,17 +14494,17 @@ var virtual_nuxt_node_modules_2F_cache_2Fnuxt_2F_nuxt_2Froutes_default = [
 	{
 		name: "registro-verificacion-coordinador-list",
 		path: "/registro-verificacion/coordinador/list",
-		component: () => import('../build/list-_qKeMtR6.mjs')
+		component: () => import('../build/list-CxVrw1ge.mjs')
 	},
 	{
 		name: "registro-verificacion-verificador-dashboard_verificador",
 		path: "/registro-verificacion/verificador/dashboard_verificador",
-		component: () => import('../build/dashboard_verificador-C6sCeSKw.mjs')
+		component: () => import('../build/dashboard_verificador-CuOoz6J7.mjs')
 	},
 	{
 		name: "registro-verificacion-verificador-solicitudes",
 		path: "/registro-verificacion/verificador/solicitudes",
-		component: () => import('../build/solicitudes-B9kp15OX.mjs')
+		component: () => import('../build/solicitudes-G1isIJqU.mjs')
 	},
 	{
 		name: "general-staff-id",
@@ -14527,7 +14527,7 @@ var virtual_nuxt_node_modules_2F_cache_2Fnuxt_2F_nuxt_2Froutes_default = [
 		name: "distributor-portal-configure_vale",
 		path: "/distributor-portal/configure_vale",
 		meta: { layout: false },
-		component: () => import('../build/configure_vale-DQ7E5gbN.mjs')
+		component: () => import('../build/configure_vale-CpyDbKQ3.mjs')
 	},
 	{
 		name: "distributor-portal-points",
@@ -14544,7 +14544,7 @@ var virtual_nuxt_node_modules_2F_cache_2Fnuxt_2F_nuxt_2Froutes_default = [
 	{
 		name: "general-branches",
 		path: "/general/branches",
-		component: () => import('../build/branches-BTnVq93z.mjs')
+		component: () => import('../build/branches-BrTMje_t.mjs')
 	},
 	{
 		name: "general-categories",
@@ -14562,9 +14562,14 @@ var virtual_nuxt_node_modules_2F_cache_2Fnuxt_2F_nuxt_2Froutes_default = [
 		component: () => import('../build/cutoffs-Cl_IuO9c.mjs')
 	},
 	{
+		name: "general-distributors",
+		path: "/general/distributors",
+		component: () => import('../build/distributors-7dhgAuNE.mjs')
+	},
+	{
 		name: "general-inbox",
 		path: "/general/inbox",
-		component: () => import('../build/inbox-BDIRtAKC.mjs')
+		component: () => import('../build/inbox-gQ1meK3t.mjs')
 	},
 	{
 		name: "general-logs",
@@ -17607,7 +17612,7 @@ function resolveLayoutName(route, name) {
 var virtual_nuxt_node_modules_2F_cache_2Fnuxt_2F_nuxt_2Flayouts_default = {
 	default: defineAsyncComponent(() => import('../build/default-BA_2QT4E.mjs').then((m) => m.default || m)),
 	"distributor-portal": defineAsyncComponent(() => import('../build/distributor-portal-DypUE9zy.mjs').then((m) => m.default || m)),
-	general: defineAsyncComponent(() => import('../build/general-Cw0pkIig.mjs').then((m) => m.default || m)),
+	general: defineAsyncComponent(() => import('../build/general-BME0d8t7.mjs').then((m) => m.default || m)),
 	"registro-verificacion": defineAsyncComponent(() => import('../build/registro-verificacion-knnYSRv0.mjs').then((m) => m.default || m))
 };
 //#endregion

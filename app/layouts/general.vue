@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import type { CommandPaletteItem, NavigationMenuItem } from '@nuxt/ui'
+import { APPROVAL_RESTRICTED_ROLES } from '~/composables/useAuth'
 
 const route = useRoute()
 const toast = useToast()
@@ -8,7 +9,7 @@ const version = config.public.version
 
 const open = ref(false)
 
-const { user } = useAuth()
+const { user, roleCode } = useAuth()
 const { counts } = useInbox()
 
 const inboxCount = ref(0)
@@ -24,7 +25,8 @@ const hasAnyPermission = (permissions: string[]) => {
 onMounted(async () => {
   // Antes se pedía siempre, para cualquier rol (incluida la cajera, que no
   // tiene inbox.view) — eso disparaba una petición que siempre regresaba 403.
-  if (!hasPermission('inbox.view')) {
+  const isRestrictedRole = APPROVAL_RESTRICTED_ROLES.includes(roleCode.value ?? '')
+  if (!hasPermission('inbox.view') || (isRestrictedRole && config.public.channel !== 'vpn')) {
     return
   }
 
@@ -48,7 +50,10 @@ const links = computed(() => {
     }
   })
 
-  if (hasPermission('inbox.view')) {
+  const isRestrictedRole = APPROVAL_RESTRICTED_ROLES.includes(roleCode.value ?? '')
+  const showInbox = hasPermission('inbox.view') && (!isRestrictedRole || config.public.channel === 'vpn')
+
+  if (showInbox) {
     items.push({
       label: 'Bandeja de Aprobaciones',
       icon: 'i-lucide-inbox',
