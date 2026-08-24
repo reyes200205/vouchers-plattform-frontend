@@ -76,7 +76,7 @@ export function useStaff() {
     username: string
     password: string
     role_code: string
-    branch_id: number
+    branch_id?: number
   }) {
     const response = await $fetch<StaffResponse>(`${config.public.apiBase}/staff`, {
       method: 'POST',
@@ -90,7 +90,7 @@ export function useStaff() {
   async function updateStaff(id: number, payload: {
     is_active: boolean
     role_code?: string
-    branch_id?: number
+    branch_id?: number | null
     first_name?: string
     middle_name?: string | null
     last_name?: string

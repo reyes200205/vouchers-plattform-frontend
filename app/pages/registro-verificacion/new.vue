@@ -92,10 +92,10 @@ const schema = z.object({
     .number({ error: "Captura el límite de crédito solicitado" })
     .min(1000, "El límite de crédito solicitado debe ser de al menos $1,000"),
   // Datos adicionales para la distribuidora
-  applicant_age: z
-    .number({ error: "Captura la edad del solicitante" })
-    .min(18, "El solicitante debe ser mayor de edad (18 años o más)"),
   occupation_type: z.string().min(1, "Selecciona la ocupación"),
+  occupation_monthly_income: z
+    .number({ error: "Captura la ganancia al mes" })
+    .min(0, "La ganancia no puede ser negativa"),
   occupation_place: z.string().min(1, "El lugar de ocupación es obligatorio"),
   occupation_position: z.string().min(1, "El puesto o grado es obligatorio"),
   occupation_phone: z
@@ -143,12 +143,12 @@ const state = reactive<Partial<Schema>>({
   notes: "",
   street_references: "",
   requested_credit_limit: undefined,
-  applicant_age: undefined,
   occupation_type: undefined,
   occupation_place: "",
   occupation_position: "",
   occupation_phone: "",
   occupation_years: undefined,
+  occupation_monthly_income: undefined,
   housing_ownership_type: undefined,
   housing_dimensions: "",
   housing_years: undefined,
@@ -257,13 +257,13 @@ async function onSubmit(event: FormSubmitEvent<Schema>) {
             phone: m.phone || null,
             age: m.age ?? null,
           })),
-        applicant_age: data.applicant_age ?? null,
         occupation: {
           type: data.occupation_type || null,
           place_name: data.occupation_place || null,
           position: data.occupation_position || null,
           phone: data.occupation_phone || null,
           years: data.occupation_years ?? null,
+          monthly_income: data.occupation_monthly_income ?? null,
         },
         housing: {
           ownership_type: data.housing_ownership_type || null,
@@ -366,12 +366,12 @@ function getStepForFieldName(name: string): number {
     "postal_code",
   ];
   const step3Fields = [
-    "applicant_age",
     "occupation_type",
     "occupation_place",
     "occupation_position",
     "occupation_phone",
     "occupation_years",
+    "occupation_monthly_income",
     "housing_ownership_type",
     "housing_years",
     "housing_dimensions",
@@ -417,12 +417,12 @@ function getFieldsForStep(step: number): string[] {
   }
   if (step === 3) {
     return [
-      "applicant_age",
       "occupation_type",
       "occupation_place",
       "occupation_position",
       "occupation_phone",
       "occupation_years",
+      "occupation_monthly_income",
       "housing_ownership_type",
       "housing_years",
       "housing_dimensions",
@@ -830,17 +830,6 @@ function onFormError(event: any) {
                 </h4>
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
                   <UFormField
-                    label="Edad del solicitante"
-                    name="applicant_age"
-                    required
-                  >
-                    <UInputNumber
-                      v-model="state.applicant_age"
-                      class="w-full"
-                      :min="0"
-                    />
-                  </UFormField>
-                  <UFormField
                     label="Trabaja o estudia"
                     name="occupation_type"
                     required
@@ -887,6 +876,17 @@ function onFormError(event: any) {
                   >
                     <UInputNumber
                       v-model="state.occupation_years"
+                      class="w-full"
+                      :min="0"
+                    />
+                  </UFormField>
+                  <UFormField
+                    label="Ganancia al mes"
+                    name="occupation_monthly_income"
+                    required
+                  >
+                    <UInputNumber
+                      v-model="state.occupation_monthly_income"
                       class="w-full"
                       :min="0"
                     />

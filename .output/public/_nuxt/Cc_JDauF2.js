@@ -1,1 +1,0 @@
-import{S as e}from"./B4-zoCQv.js";import{c as t,u as n}from"./O8qIydnA.js";import{n as r,t as i}from"./BVrgutA9.js";var a=t(()=>{if(e().public.channel===`vpn`)return;let{roleCode:t}=r();if(i.includes(t.value??``))return n(`/general`)});export{a as default};

@@ -9,13 +9,12 @@ const currentRoute = computed(() => route.path)
 const isInicioActive = computed(() => currentRoute.value === '/distributor-portal' || currentRoute.value === '/distributor-portal/')
 const isClientesActive = computed(() => currentRoute.value.startsWith('/distributor-portal/clientes'))
 const isEstadoCuentaActive = computed(() => currentRoute.value.startsWith('/distributor-portal/estado-cuenta') || currentRoute.value.startsWith('/distributor-portal/collection-relationship'))
-const isPuntosActive = computed(() => currentRoute.value.startsWith('/distributor-portal/puntos'))
+const isPuntosActive = computed(() => currentRoute.value.startsWith('/distributor-portal/points'))
 </script>
 
 <template>
   <div class="layout-shell">
     <div class="layout-wrapper">
-      
       <!-- CONTENIDO DE LA PÁGINA (Slots) -->
       <div class="page-content">
         <slot />
@@ -24,9 +23,9 @@ const isPuntosActive = computed(() => currentRoute.value.startsWith('/distributo
       <!-- BOTTOM NAVIGATION BAR (MENÚ DESPLEGABLE INFERIOR) -->
       <nav class="bottom-nav">
         <!-- INICIO -->
-        <button 
-          type="button" 
-          class="nav-item" 
+        <button
+          type="button"
+          class="nav-item"
           :class="{ active: isInicioActive }"
           @click="navigateTo('/distributor-portal')"
         >
@@ -36,9 +35,9 @@ const isPuntosActive = computed(() => currentRoute.value.startsWith('/distributo
 
         <!-- CLIENTES -->
 
-        <button 
-          type="button" 
-          class="nav-item" 
+        <button
+          type="button"
+          class="nav-item"
           :class="{ active: isClientesActive }"
           @click="navigateTo('/distributor-portal/vales')"
         >
@@ -47,9 +46,9 @@ const isPuntosActive = computed(() => currentRoute.value.startsWith('/distributo
         </button>
 
         <!-- ESTADO DE CUENTA -->
-        <button 
-          type="button" 
-          class="nav-item" 
+        <button
+          type="button"
+          class="nav-item"
           :class="{ active: isEstadoCuentaActive }"
           @click="navigateTo('/distributor-portal/collection-relationship')"
         >
@@ -58,9 +57,9 @@ const isPuntosActive = computed(() => currentRoute.value.startsWith('/distributo
         </button>
 
         <!-- PUNTOS -->
-        <button 
-          type="button" 
-          class="nav-item" 
+        <button
+          type="button"
+          class="nav-item"
           :class="{ active: isPuntosActive }"
           @click="navigateTo('/distributor-portal/points')"
         >
@@ -68,7 +67,6 @@ const isPuntosActive = computed(() => currentRoute.value.startsWith('/distributo
           <span class="nav-label">Puntos</span>
         </button>
       </nav>
-
     </div>
   </div>
 </template>
@@ -104,8 +102,6 @@ const isPuntosActive = computed(() => currentRoute.value.startsWith('/distributo
   overflow-y: auto;
   padding-bottom: 50px; /* Aumentado de 70px a 110px para dar más aire sobre la barra */
 }
-
-
 
 /* BARRA DE NAVEGACIÓN INFERIOR (Estilo Imagen) */
 .bottom-nav {

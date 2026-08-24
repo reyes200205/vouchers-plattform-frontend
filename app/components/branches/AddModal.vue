@@ -9,7 +9,7 @@ const schema = z.object({
   name: z.string().min(2, 'Muy corto'),
   address: z.string().min(1, 'Requerido'),
   phone: z.string().min(1, 'Requerido'),
-  manager_user_id: z.string().min(1, 'Selecciona un gerente')
+  manager_user_id: z.string().optional()
 })
 const open = ref(false)
 
@@ -50,7 +50,7 @@ async function onSubmit(event: FormSubmitEvent<Schema>) {
       name: event.data.name,
       address: event.data.address,
       phone: event.data.phone,
-      manager_user_id: Number(event.data.manager_user_id)
+      manager_user_id: event.data.manager_user_id ? Number(event.data.manager_user_id) : undefined
     })
 
     toast.add({
@@ -112,11 +112,11 @@ async function onSubmit(event: FormSubmitEvent<Schema>) {
         >
           <UInput v-model="state.phone" class="w-full" />
         </UFormField>
-        <UFormField required label="Gerente" name="manager_user_id">
+        <UFormField label="Gerente" description="Opcional: puedes dejar la sucursal sin gerente y asignarlo después." name="manager_user_id">
           <USelect
             v-model="state.manager_user_id"
             :items="managerItems"
-            placeholder="Seleccionar gerente..."
+            placeholder="Seleccionar gerente (opcional)..."
             class="w-full"
           />
         </UFormField>

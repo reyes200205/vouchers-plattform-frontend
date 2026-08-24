@@ -32,26 +32,53 @@ const state = reactive<Partial<Schema>>({
   notes: ''
 })
 
-const { submitVerification, uploadVerificationPhoto } = useApplications()
+const { submitVerification, uploadVerificationPhoto, getApplication } = useApplications()
 const toast = useToast()
 const submitting = ref(false)
 
 const frontPhotoPath = ref<string | null>(null)
-const idWithPersonPhotoPath = ref<string | null>(null)
-const proofOfAddressPhotoPath = ref<string | null>(null)
-
 const frontPhotoRef = useTemplateRef('frontPhotoRef')
-const idWithPersonPhotoRef = useTemplateRef('idWithPersonPhotoRef')
-const proofOfAddressPhotoRef = useTemplateRef('proofOfAddressPhotoRef')
+
+// La INE y el comprobante ya los subio el coordinador al capturar la
+// solicitud; el verificador solo los revisa aqui para confirmar que los
+// datos coinciden con la visita, no los vuelve a subir. `application` (la
+// fila de la lista) no trae esas URLs firmadas, asi que se piden aparte con
+// el detalle completo cada vez que se abre el modal.
+const documentDetail = ref<Application | null>(null)
+const documentDetailLoading = ref(false)
+
+async function loadDocumentDetail() {
+  if (!props.application) {
+    documentDetail.value = null
+    return
+  }
+
+  documentDetailLoading.value = true
+  try {
+    documentDetail.value = await getApplication(props.application.id)
+  } catch (e) {
+    console.error(e)
+    documentDetail.value = null
+  } finally {
+    documentDetailLoading.value = false
+  }
+}
 
 watch(() => props.application, () => {
   state.result = undefined
   state.visit_date = new Date().toISOString().slice(0, 10)
   state.notes = ''
   frontPhotoRef.value?.reset()
-  idWithPersonPhotoRef.value?.reset()
-  proofOfAddressPhotoRef.value?.reset()
+  loadDocumentDetail()
 }, { immediate: true })
+
+const previewImage = ref<{ url: string, label: string } | null>(null)
+const isPreviewOpen = ref(false)
+
+function openPreview(url: string, label: string) {
+  previewImage.value = { url, label }
+  isPreviewOpen.value = true
+}
 
 const applicantName = computed(() => {
   const p = props.application?.applicant
@@ -62,8 +89,6 @@ const applicantName = computed(() => {
 const missingEvidence = computed(() => {
   const missing: string[] = []
   if (!frontPhotoPath.value) missing.push('la fotografía de fachada')
-  if (!idWithPersonPhotoPath.value) missing.push('la foto del solicitante con su INE')
-  if (!proofOfAddressPhotoPath.value) missing.push('la foto del comprobante de domicilio')
   return missing
 })
 
@@ -86,9 +111,7 @@ async function onSubmit(event: FormSubmitEvent<Schema>) {
       result: event.data.result,
       visit_date: event.data.visit_date,
       notes: event.data.notes || undefined,
-      front_photo: frontPhotoPath.value!,
-      id_with_person_photo: idWithPersonPhotoPath.value!,
-      proof_of_address_photo: proofOfAddressPhotoPath.value!
+      front_photo: frontPhotoPath.value!
     })
 
     toast.add({
@@ -168,22 +191,38 @@ async function onSubmit(event: FormSubmitEvent<Schema>) {
               />
             </UFormField>
 
-            <UFormField label="Solicitante sosteniendo su INE" required>
-              <ApplicationsEvidencePhotoCapture
-                ref="idWithPersonPhotoRef"
-                v-model="idWithPersonPhotoPath"
-                :upload="file => uploadVerificationPhoto(application!.id, file, 'id_with_person_photo')"
-                label="Solicitante con su INE"
-              />
+            <UFormField label="INE cargada por el coordinador">
+              <div v-if="documentDetailLoading" class="flex h-40 w-full max-w-xs items-center justify-center rounded-lg border border-default">
+                <UIcon name="i-lucide-loader-circle" class="size-5 animate-spin text-muted" />
+              </div>
+              <button
+                v-else-if="documentDetail?.id_front_url"
+                type="button"
+                class="block w-full max-w-xs overflow-hidden rounded-lg border border-default"
+                @click="openPreview(documentDetail.id_front_url, 'INE (frente)')"
+              >
+                <img :src="documentDetail.id_front_url" alt="INE (frente)" class="h-40 w-full object-cover">
+              </button>
+              <p v-else class="text-xs text-dimmed">
+                El coordinador no cargó la foto de la INE.
+              </p>
             </UFormField>
 
-            <UFormField label="Comprobante de domicilio" required>
-              <ApplicationsEvidencePhotoCapture
-                ref="proofOfAddressPhotoRef"
-                v-model="proofOfAddressPhotoPath"
-                :upload="file => uploadVerificationPhoto(application!.id, file, 'proof_of_address_photo')"
-                label="Comprobante de domicilio"
-              />
+            <UFormField label="Comprobante cargado por el coordinador">
+              <div v-if="documentDetailLoading" class="flex h-40 w-full max-w-xs items-center justify-center rounded-lg border border-default">
+                <UIcon name="i-lucide-loader-circle" class="size-5 animate-spin text-muted" />
+              </div>
+              <button
+                v-else-if="documentDetail?.proof_of_address_url"
+                type="button"
+                class="block w-full max-w-xs overflow-hidden rounded-lg border border-default"
+                @click="openPreview(documentDetail.proof_of_address_url, 'Comprobante de domicilio')"
+              >
+                <img :src="documentDetail.proof_of_address_url" alt="Comprobante de domicilio" class="h-40 w-full object-cover">
+              </button>
+              <p v-else class="text-xs text-dimmed">
+                El coordinador no cargó el comprobante de domicilio.
+              </p>
             </UFormField>
           </div>
 
@@ -219,6 +258,21 @@ async function onSubmit(event: FormSubmitEvent<Schema>) {
           </div>
         </UForm>
       </div>
+    </template>
+  </UModal>
+
+  <UModal
+    v-model:open="isPreviewOpen"
+    :title="previewImage?.label ?? 'Vista previa'"
+    :ui="{ content: 'max-w-3xl' }"
+  >
+    <template #body>
+      <img
+        v-if="previewImage"
+        :src="previewImage.url"
+        :alt="previewImage.label"
+        class="max-h-[75vh] w-full rounded-lg object-contain"
+      >
     </template>
   </UModal>
 </template>

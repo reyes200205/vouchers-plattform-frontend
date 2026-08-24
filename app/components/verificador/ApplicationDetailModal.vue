@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import * as z from 'zod'
 import type { FormSubmitEvent } from '@nuxt/ui'
-import { applicantFullName, APPLICATION_STATUS_LABELS, type Application, type ApplicationFamilyMember, type ApplicationVehicle } from '~/composables/useApplications'
+import { applicantFullName, APPLICATION_STATUS_LABELS, type Application } from '~/composables/useApplications'
 
 const props = defineProps<{
   applicationId: number | null
@@ -60,9 +60,28 @@ const schema = z.object({
   last_name: z.string().min(2, 'Muy corto').max(100, 'Muy largo'),
   second_last_name: z.string().max(100, 'Muy largo').optional(),
   gender: z.enum(['M', 'F', 'OTHER']).optional(),
-  birth_date: z.string().optional(),
-  curp: z.string().length(18, 'CURP inválida (18 caracteres)'),
-  rfc: z.string().length(13, 'RFC inválido (13 caracteres)'),
+  birth_date: z.string().min(1, 'La fecha de nacimiento es obligatoria').superRefine((value, ctx) => {
+    const birthDate = new Date(value)
+    const today = new Date()
+    let age = today.getFullYear() - birthDate.getFullYear()
+    const monthDiff = today.getMonth() - birthDate.getMonth()
+    if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
+      age--
+    }
+    if (age < 18) {
+      ctx.addIssue({ code: 'custom', message: 'El solicitante debe ser mayor de 18 años' })
+    }
+  }),
+  curp: z.string().length(18, 'CURP inválida (18 caracteres)').superRefine((value, ctx) => {
+    if (!isValidCurp(value)) {
+      ctx.addIssue({ code: 'custom', message: 'CURP con formato inválido' })
+    }
+  }),
+  rfc: z.string().length(13, 'RFC inválido (13 caracteres)').superRefine((value, ctx) => {
+    if (!isValidRfc(value)) {
+      ctx.addIssue({ code: 'custom', message: 'RFC con formato inválido' })
+    }
+  }),
   home_phone: z.string().max(30, 'Muy largo').optional(),
   mobile_phone: z.string().max(30, 'Muy largo').optional(),
   email: z.string().email('Correo inválido'),
@@ -75,8 +94,8 @@ const schema = z.object({
   street_references: z.string().optional(),
   notes: z.string().optional(),
   requested_credit_limit: z.union([z.number().positive(), z.string().regex(/^\d+(\.\d{1,2})?$/)]),
-  applicant_age: z.number().min(18, 'Debe ser mayor de edad').optional(),
   occupation_type: z.string().optional(),
+  occupation_monthly_income: z.number().min(0).optional(),
   occupation_place: z.string().optional(),
   occupation_position: z.string().optional(),
   occupation_phone: z.string().optional(),
@@ -90,10 +109,26 @@ const schema = z.object({
 
 type Schema = z.output<typeof schema>
 
+// Estado local de edicion: sin null (a diferencia de ApplicationFamilyMember/
+// ApplicationVehicle) porque UInput/USelect no aceptan null en su v-model.
+interface EditableFamilyMember {
+  name: string
+  relationship: string
+  phone: string
+  age: number | null
+}
+
+interface EditableVehicle {
+  brand: string
+  model: string
+  year: string
+  plates: string
+}
+
 const state = reactive<Partial<Schema>>({})
 
-const familyMembers = ref<ApplicationFamilyMember[]>([])
-const vehicles = ref<ApplicationVehicle[]>([])
+const familyMembers = ref<EditableFamilyMember[]>([])
+const vehicles = ref<EditableVehicle[]>([])
 
 function addFamilyMember() {
   familyMembers.value.push({ name: '', relationship: '', phone: '', age: null })
@@ -137,24 +172,34 @@ function startEditing() {
   state.requested_credit_limit = detail.value.requested_credit_limit ?? undefined
 
   const familyData = detail.value.family_data_json
-  state.applicant_age = familyData?.applicant_age ?? undefined
   state.occupation_type = familyData?.occupation?.type ?? ''
   state.occupation_place = familyData?.occupation?.place_name ?? ''
   state.occupation_position = familyData?.occupation?.position ?? ''
   state.occupation_phone = familyData?.occupation?.phone ?? ''
   state.occupation_years = familyData?.occupation?.years ?? undefined
+  state.occupation_monthly_income = familyData?.occupation?.monthly_income ?? undefined
   state.housing_ownership_type = familyData?.housing?.ownership_type ?? ''
   state.housing_dimensions = familyData?.housing?.dimensions ?? ''
   state.housing_years = familyData?.housing?.years_at_address ?? undefined
   state.work_reference_name = familyData?.housing?.work_reference?.name ?? ''
   state.work_reference_phone = familyData?.housing?.work_reference?.phone ?? ''
 
-  familyMembers.value = (familyData?.members ?? []).map(m => ({ ...m }))
+  familyMembers.value = (familyData?.members ?? []).map(m => ({
+    name: m.name ?? '',
+    relationship: m.relationship ?? '',
+    phone: m.phone ?? '',
+    age: m.age ?? null
+  }))
   if (familyMembers.value.length === 0) {
     familyMembers.value.push({ name: '', relationship: '', phone: '', age: null })
   }
 
-  vehicles.value = (detail.value.vehicles_json ?? []).map(v => ({ ...v }))
+  vehicles.value = (detail.value.vehicles_json ?? []).map(v => ({
+    brand: v.brand ?? '',
+    model: v.model ?? '',
+    year: v.year ?? '',
+    plates: v.plates ?? ''
+  }))
 
   editing.value = true
 }
@@ -196,13 +241,13 @@ async function onSubmit(event: FormSubmitEvent<Schema>) {
             phone: m.phone || null,
             age: m.age ?? null
           })),
-        applicant_age: event.data.applicant_age ?? null,
         occupation: {
           type: event.data.occupation_type || null,
           place_name: event.data.occupation_place || null,
           position: event.data.occupation_position || null,
           phone: event.data.occupation_phone || null,
-          years: event.data.occupation_years ?? null
+          years: event.data.occupation_years ?? null,
+          monthly_income: event.data.occupation_monthly_income ?? null
         },
         housing: {
           ownership_type: event.data.housing_ownership_type || null,
@@ -339,9 +384,6 @@ async function onSubmit(event: FormSubmitEvent<Schema>) {
                 <UFormField required label="RFC" name="rfc">
                   <UInput v-model="state.rfc" class="w-full uppercase" />
                 </UFormField>
-                <UFormField label="Edad del solicitante" name="applicant_age">
-                  <UInputNumber v-model="state.applicant_age" :min="0" class="w-full" />
-                </UFormField>
                 <UFormField label="Teléfono de casa" name="home_phone">
                   <UInput v-model="state.home_phone" class="w-full" />
                 </UFormField>
@@ -470,6 +512,9 @@ async function onSubmit(event: FormSubmitEvent<Schema>) {
                 </UFormField>
                 <UFormField label="Antigüedad (años)" name="occupation_years">
                   <UInputNumber v-model="state.occupation_years" class="w-full" :min="0" />
+                </UFormField>
+                <UFormField label="Ganancia al mes" name="occupation_monthly_income">
+                  <UInputNumber v-model="state.occupation_monthly_income" class="w-full" :min="0" />
                 </UFormField>
               </div>
             </div>

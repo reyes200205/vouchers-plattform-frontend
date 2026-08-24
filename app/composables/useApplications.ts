@@ -80,6 +80,7 @@ export interface ApplicationOccupation {
   position: string | null
   phone: string | null
   years: number | null
+  monthly_income: number | null
 }
 
 export interface ApplicationWorkReference {

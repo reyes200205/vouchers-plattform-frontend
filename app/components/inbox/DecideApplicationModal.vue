@@ -32,7 +32,32 @@ const schema = z.object({
   credit_limit: z.union([z.number().positive(), z.string().regex(/^\d+(\.\d{1,2})?$/)])
     .optional(),
   category_id: z.string().optional(),
-  rejection_reason: z.string().min(1, 'El motivo es obligatorio').optional()
+  rejection_reason: z.string().optional()
+}).superRefine((data, ctx) => {
+  if (data.decision === 'APPROVE') {
+    if (!data.credit_limit) {
+      ctx.addIssue({
+        path: ['credit_limit'],
+        code: 'custom',
+        message: 'El límite de crédito es obligatorio al aprobar'
+      })
+    }
+    if (!data.category_id) {
+      ctx.addIssue({
+        path: ['category_id'],
+        code: 'custom',
+        message: 'La categoría es obligatoria al aprobar'
+      })
+    }
+  } else if (data.decision === 'REJECT') {
+    if (!data.rejection_reason || data.rejection_reason.trim() === '') {
+      ctx.addIssue({
+        path: ['rejection_reason'],
+        code: 'custom',
+        message: 'El motivo de rechazo es obligatorio'
+      })
+    }
+  }
 })
 const open = ref(false)
 const decision = ref<'APPROVE' | 'REJECT'>('APPROVE')
@@ -50,6 +75,7 @@ const { decideApplication } = useInbox()
 const { listBranchCategories } = useCategories()
 const toast = useToast()
 const submitting = ref(false)
+const formRef = ref<any>(null)
 
 const categories = ref<DistributorCategory[]>([])
 const categoryItems = computed(() => {
@@ -108,10 +134,19 @@ async function onSubmit(event: FormSubmitEvent<Schema>) {
 
     open.value = false
     emit('decided')
-  } catch {
+  } catch (e: any) {
+    const apiErrors = e?.data?.errors
+    if ((e?.status === 422 || e?.statusCode === 422) && apiErrors) {
+      const formattedErrors = Object.entries(apiErrors).map(([field, messages]) => ({
+        name: field,
+        message: (messages as string[])[0] || 'Dato inválido'
+      }))
+      formRef.value?.setErrors(formattedErrors)
+    }
+
     toast.add({
       title: 'Error',
-      description: 'No se pudo registrar la decisión. Intenta de nuevo.',
+      description: extractApiErrorMessage(e, 'No se pudo registrar la decisión. Intenta de nuevo.'),
       color: 'error'
     })
   } finally {
@@ -168,6 +203,7 @@ async function onSubmit(event: FormSubmitEvent<Schema>) {
       </div>
 
       <UForm
+        ref="formRef"
         :schema="schema"
         :state="state"
         class="mt-6 space-y-4"
@@ -182,7 +218,7 @@ async function onSubmit(event: FormSubmitEvent<Schema>) {
         />
 
         <template v-if="decision === 'APPROVE'">
-          <UFormField label="Límite de crédito inicial (MXN)" name="credit_limit">
+          <UFormField required label="Límite de crédito inicial (MXN)" name="credit_limit">
             <UInput
               v-model="state.credit_limit"
               type="number"
@@ -193,7 +229,7 @@ async function onSubmit(event: FormSubmitEvent<Schema>) {
             />
           </UFormField>
 
-          <UFormField label="Categoría de distribuidora" name="category_id">
+          <UFormField required label="Categoría de distribuidora" name="category_id">
             <USelect
               v-model="state.category_id"
               :items="categoryItems"
@@ -203,7 +239,7 @@ async function onSubmit(event: FormSubmitEvent<Schema>) {
           </UFormField>
         </template>
 
-        <UFormField v-else label="Motivo de rechazo" name="rejection_reason">
+        <UFormField v-else required label="Motivo de rechazo" name="rejection_reason">
           <UTextarea v-model="state.rejection_reason" placeholder="El motivo por el cual se rechaza..." class="w-full" />
         </UFormField>
 
