@@ -108,9 +108,16 @@ const roleItems = computed(() => {
 })
 
 const branchItems = computed(() => {
-  const available = isBranchManager.value
-    ? branches.value.filter(b => b.id === branchManagerBranchId.value)
-    : branches.value
+  let available = branches.value
+
+  if (isBranchManager.value) {
+    available = available.filter(b => b.id === branchManagerBranchId.value)
+  } else if (state.role_code === 'general_manager') {
+    // Un gerente general puede tener una sucursal "base" (ej. la matriz), pero
+    // solo si esa sucursal no tiene ya su propio gerente de sucursal dedicado.
+    // Igual conserva acceso a todas las sucursales sin importar cual elija aqui.
+    available = available.filter(b => !b.manager || b.id === member.value?.home_branch?.id)
+  }
 
   return available.map(b => ({
     label: b.name,
@@ -159,13 +166,21 @@ watch(member, (val) => {
     state.postal_code = val.person?.postal_code || ''
     state.username = val.username
     state.role_code = val.roles.find(r => r.is_primary)?.code ?? val.roles[0]?.code
-    state.branch_id = String(val.roles.find(r => r.is_primary)?.branch_id ?? val.roles[0]?.branch_id ?? '')
+    state.branch_id = state.role_code === 'general_manager'
+      ? (val.home_branch ? String(val.home_branch.id) : undefined)
+      : String(val.roles.find(r => r.is_primary)?.branch_id ?? val.roles[0]?.branch_id ?? '')
     state.is_active = val.is_active
   }
 }, { immediate: true })
 
-watch(() => state.role_code, (newRole) => {
-  if (newRole === 'general_manager') {
+// Si el rol cambia (a mano, en el formulario ya abierto) y la sucursal
+// seleccionada ya no es valida para el rol nuevo (ej. paso a Gerente General
+// y esa sucursal tiene su propio gerente dedicado), la limpiamos para no
+// enviar un branch_id obsoleto sin que se note en la UI. No se dispara al
+// hidratar desde member (arriba) porque branchItems ya refleja el rol y la
+// sucursal recien asignados para ese momento.
+watch(() => state.role_code, () => {
+  if (!branchItems.value.some(b => b.value === state.branch_id)) {
     state.branch_id = undefined
   }
 })
@@ -185,7 +200,7 @@ async function onSubmit(event: FormSubmitEvent<Schema>) {
     await updateStaff(memberId, {
       is_active: event.data.is_active,
       role_code: event.data.role_code,
-      branch_id: Number(event.data.branch_id),
+      branch_id: event.data.branch_id ? Number(event.data.branch_id) : null,
       first_name: event.data.first_name,
       middle_name: event.data.middle_name || null,
       last_name: event.data.last_name,
@@ -363,11 +378,16 @@ const formRef = ref<any>(null)
                   class="w-full"
                 />
               </UFormField>
-              <UFormField :required="state.role_code !== 'general_manager'" label="Sucursal" name="branch_id">
+              <UFormField
+                :required="state.role_code !== 'general_manager'"
+                label="Sucursal"
+                :description="state.role_code === 'general_manager' ? 'Opcional: sucursal base. El gerente general conserva acceso a todas las sucursales.' : undefined"
+                name="branch_id"
+              >
                 <USelect
                   v-model="state.branch_id"
                   :items="branchItems"
-                  :disabled="isBranchManager || state.role_code === 'general_manager'"
+                  :disabled="isBranchManager"
                   placeholder="Seleccionar sucursal..."
                   class="w-full"
                 />
