@@ -1,9 +1,9 @@
 //#region app/pages/distributor-portal/clientes/index.vue?vue&type=style&index=0&scoped=0f3676ca&inline&used&lang.css
 var index_vue_vue_type_style_index_0_scoped_0f3676ca_inline_used_lang_default = ".form-shell[data-v-0f3676ca]{background-color:#f8fafc;width:100vw;height:100vh;font-family:system-ui,-apple-system,BlinkMacSystemFont,Segoe UI,Roboto,sans-serif;position:fixed;inset:0;overflow-y:auto}.form-wrapper[data-v-0f3676ca]{background-color:#fff;flex-direction:column;width:100%;max-width:440px;min-height:100vh;margin:0 auto;display:flex}.top-navbar[data-v-0f3676ca]{color:#fff;z-index:10;background-color:#002366;align-items:center;height:56px;padding:0 16px;display:flex;position:sticky;top:0}.back-btn[data-v-0f3676ca]{color:#fff;cursor:pointer;background:0 0;border:none;margin-right:16px;padding:0;font-size:24px}.nav-title[data-v-0f3676ca]{margin:0;font-size:18px;font-weight:700}.form-body[data-v-0f3676ca]{flex-direction:column;gap:16px;padding:20px 16px 110px;display:flex}.error-banner[data-v-0f3676ca]{color:#991b1b;background-color:#fee2e2;border-radius:10px;margin:0;padding:10px 14px;font-size:13px;font-weight:600}.section-title[data-v-0f3676ca]{color:#002366;text-transform:uppercase;letter-spacing:.02em;border-bottom:1px solid #e2e8f0;margin:8px 0 -4px;padding-bottom:6px;font-size:13px;font-weight:800}.input-row[data-v-0f3676ca]{grid-template-columns:1fr 1fr;gap:12px;display:grid}.input-group[data-v-0f3676ca]{flex-direction:column;gap:6px;display:flex}.input-group label[data-v-0f3676ca]{color:#002366;text-transform:uppercase;font-size:12px;font-weight:700}.app-input[data-v-0f3676ca]{color:#0f172a;box-sizing:border-box;border:1px solid #cbd5e1;border-radius:10px;outline:none;width:100%;padding:12px 14px;font-size:14px}.app-input[data-v-0f3676ca]:focus{border-color:#002366}.uppercase[data-v-0f3676ca]{text-transform:uppercase}.textarea[data-v-0f3676ca]{resize:none}.submit-btn[data-v-0f3676ca]{color:#0d2747;cursor:pointer;background-color:#84cc16;border:none;border-radius:12px;margin-top:10px;padding:14px;font-size:15px;font-weight:800}.submit-btn[data-v-0f3676ca]:active{opacity:.9}.submit-btn[data-v-0f3676ca]:disabled{opacity:.6;cursor:not-allowed}";
 
-const indexStyles4_G9Fuqpc1 = [
+const indexStyles_B40BjVlz = [
   index_vue_vue_type_style_index_0_scoped_0f3676ca_inline_used_lang_default
 ];
 
-export { indexStyles4_G9Fuqpc1 as default };
-//# sourceMappingURL=index-styles-4.G9Fuqpc1.mjs.map
+export { indexStyles_B40BjVlz as default };
+//# sourceMappingURL=index-styles.B40BjVlz.mjs.map

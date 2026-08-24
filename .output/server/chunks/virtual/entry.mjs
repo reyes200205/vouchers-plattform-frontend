@@ -14569,7 +14569,8 @@ var virtual_nuxt_node_modules_2F_cache_2Fnuxt_2F_nuxt_2Froutes_default = [
 	{
 		name: "general-inbox",
 		path: "/general/inbox",
-		component: () => import('../build/inbox-gQ1meK3t.mjs')
+		meta: { "middleware": "approvals-inbox-channel" },
+		component: () => import('../build/inbox-DkuU8MXd.mjs')
 	},
 	{
 		name: "general-logs",

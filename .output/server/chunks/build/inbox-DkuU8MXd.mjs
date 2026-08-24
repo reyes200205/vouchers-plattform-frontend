@@ -2061,4 +2061,4 @@ inbox_vue_vue_type_script_setup_true_lang_default.setup = (props, ctx) => {
 var inbox_default = inbox_vue_vue_type_script_setup_true_lang_default;
 
 export { inbox_default as default };
-//# sourceMappingURL=inbox-gQ1meK3t.mjs.map
+//# sourceMappingURL=inbox-DkuU8MXd.mjs.map
