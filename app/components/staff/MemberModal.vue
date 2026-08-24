@@ -36,6 +36,18 @@ const schema = z.object({
   birth_date: z.string().optional().superRefine((value, ctx) => {
     if (!props.member && !value) {
       ctx.addIssue({ code: 'custom', message: 'Requerido' })
+      return
+    }
+    if (!value) return
+    const birthDate = new Date(value)
+    const today = new Date()
+    let age = today.getFullYear() - birthDate.getFullYear()
+    const monthDiff = today.getMonth() - birthDate.getMonth()
+    if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
+      age--
+    }
+    if (age < 18) {
+      ctx.addIssue({ code: 'custom', message: 'El miembro de personal debe ser mayor de 18 años' })
     }
   }),
   curp: z.string().max(18, 'CURP inválida').optional().superRefine((value, ctx) => {
