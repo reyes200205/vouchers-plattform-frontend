@@ -14489,7 +14489,7 @@ var virtual_nuxt_node_modules_2F_cache_2Fnuxt_2F_nuxt_2Froutes_default = [
 	{
 		name: "general-staff-new",
 		path: "/general/staff/new",
-		component: () => import('../build/new-DL37vxDZ.mjs')
+		component: () => import('../build/new-C03JnM_p.mjs')
 	},
 	{
 		name: "registro-verificacion-coordinador-list",
@@ -14504,18 +14504,18 @@ var virtual_nuxt_node_modules_2F_cache_2Fnuxt_2F_nuxt_2Froutes_default = [
 	{
 		name: "registro-verificacion-verificador-solicitudes",
 		path: "/registro-verificacion/verificador/solicitudes",
-		component: () => import('../build/solicitudes-DCp_qchS.mjs')
+		component: () => import('../build/solicitudes-B9kp15OX.mjs')
 	},
 	{
 		name: "general-staff-id",
 		path: "/general/staff/:id()",
-		component: () => import('../build/_id_-DHQwiKIA.mjs')
+		component: () => import('../build/_id_-C8G-xjhH.mjs')
 	},
 	{
 		name: "distributor-portal-clientes",
 		path: "/distributor-portal/clientes",
 		meta: { layout: false },
-		component: () => import('../build/clientes-UQy2O0Bt.mjs')
+		component: () => import('../build/clientes-DPE7dPrM.mjs')
 	},
 	{
 		name: "distributor-portal-collection-relationship",
