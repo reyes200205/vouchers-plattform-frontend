@@ -119,8 +119,12 @@ async function onDownloadPdf() {
   <div class="estado-cuenta-container">
     <!-- NAVBAR AZUL -->
     <header class="top-navbar">
-      <button type="button" class="back-btn" @click="volver">←</button>
-      <h1 class="nav-title">Estado de cuenta</h1>
+      <button type="button" class="back-btn" @click="volver">
+        ←
+      </button>
+      <h1 class="nav-title">
+        Estado de cuenta
+      </h1>
       <button
         v-if="selectedRelation"
         type="button"
@@ -129,99 +133,100 @@ async function onDownloadPdf() {
         title="Descargar PDF"
         @click="onDownloadPdf"
       >
-        <span v-if="downloadingPdf" class="spinner-icon"></span>
+        <span v-if="downloadingPdf" class="spinner-icon" />
         <span v-else>⬇</span>
       </button>
     </header>
 
     <div class="content-body">
+      <p v-if="loading" class="state-text">
+        Cargando…
+      </p>
 
-        <p v-if="loading" class="state-text">
-          Cargando…
-        </p>
+      <p v-else-if="errorMessage" class="state-text error">
+        {{ errorMessage }}
+      </p>
 
-        <p v-else-if="errorMessage" class="state-text error">
-          {{ errorMessage }}
-        </p>
+      <p v-else-if="relations.length === 0" class="state-text">
+        Todavía no tienes relaciones de cobro generadas.
+      </p>
 
-        <p v-else-if="relations.length === 0" class="state-text">
-          Todavía no tienes relaciones de cobro generadas.
-        </p>
+      <template v-else>
+        <!-- SELECTOR DE RELACIÓN (si hay más de una) -->
+        <select
+          v-if="relations.length > 1"
+          v-model.number="selectedRelationId"
+          class="relation-select"
+        >
+          <option v-for="r in relations" :key="r.id" :value="r.id">
+            {{ relationPeriodLabel(r) }} · {{ r.relation_number }} · {{ statusLabels[r.status ?? 'GENERADA'] }}
+          </option>
+        </select>
 
-        <template v-else>
-          <!-- SELECTOR DE RELACIÓN (si hay más de una) -->
-          <select
-            v-if="relations.length > 1"
-            v-model.number="selectedRelationId"
-            class="relation-select"
-          >
-            <option v-for="r in relations" :key="r.id" :value="r.id">
-              {{ relationPeriodLabel(r) }} · {{ r.relation_number }} · {{ statusLabels[r.status ?? 'GENERADA'] }}
-            </option>
-          </select>
+        <template v-if="selectedRelation">
+          <!-- RESUMEN DE COBRO -->
+          <div class="summary-card">
+            <div class="summary-item">
+              <span class="summary-label">Quincenas del periodo</span>
+              <span class="summary-amount">${{ totalEsperado.toLocaleString('es-MX') }}</span>
+            </div>
+            <div class="summary-divider" />
+            <div class="summary-item">
+              <span class="summary-label">Total a remitir</span>
+              <span class="summary-amount success">${{ totalARemitir.toLocaleString('es-MX') }}</span>
+            </div>
+          </div>
 
-          <template v-if="selectedRelation">
-            <!-- RESUMEN DE COBRO -->
-            <div class="summary-card">
-              <div class="summary-item">
-                <span class="summary-label">Quincenas del periodo</span>
-                <span class="summary-amount">${{ totalEsperado.toLocaleString('es-MX') }}</span>
-              </div>
-              <div class="summary-divider"></div>
-              <div class="summary-item">
-                <span class="summary-label">Total a remitir</span>
-                <span class="summary-amount success">${{ totalARemitir.toLocaleString('es-MX') }}</span>
-              </div>
+          <p class="period-line">
+            Periodo: <strong>{{ relationPeriodLabel(selectedRelation) }}</strong>
+            · Vence: <strong>{{ fmtFullDate(selectedRelation.payment_due_date) }}</strong>
+          </p>
+
+          <p class="ref-line">
+            Referencia: <strong>{{ selectedRelation.payment_reference ?? '—' }}</strong>
+            <span class="status-chip" :class="(selectedRelation.status ?? 'GENERADA').toLowerCase()">
+              {{ statusLabels[selectedRelation.status ?? 'GENERADA'] }}
+            </span>
+          </p>
+
+          <!-- LISTA DE COBROS -->
+          <section class="cobros-section">
+            <label class="section-label">Vales incluidos</label>
+
+            <div v-if="cobros.length === 0" class="state-text">
+              Esta relación no incluye vales (solo saldo arrastrado).
             </div>
 
-            <p class="period-line">
-              Periodo: <strong>{{ relationPeriodLabel(selectedRelation) }}</strong>
-              · Vence: <strong>{{ fmtFullDate(selectedRelation.payment_due_date) }}</strong>
-            </p>
-
-            <p class="ref-line">
-              Referencia: <strong>{{ selectedRelation.payment_reference ?? '—' }}</strong>
-              <span class="status-chip" :class="(selectedRelation.status ?? 'GENERADA').toLowerCase()">
-                {{ statusLabels[selectedRelation.status ?? 'GENERADA'] }}
-              </span>
-            </p>
-
-            <!-- LISTA DE COBROS -->
-            <section class="cobros-section">
-              <label class="section-label">Vales incluidos</label>
-
-              <div v-if="cobros.length === 0" class="state-text">
-                Esta relación no incluye vales (solo saldo arrastrado).
-              </div>
-
-              <div v-else class="cobro-list">
-                <div v-for="item in cobros" :key="item.id" class="cobro-item">
-                  <div class="cobro-info">
-                    <span v-if="isCarryover(item)" class="origin-tag origin-tag--carryover">
-                      ⤷ Arrastre de corte anterior
-                    </span>
-                    <span v-else class="origin-tag origin-tag--normal">
-                      Quincena de este periodo
-                    </span>
-                    <h3 class="cliente-nombre">{{ itemClientName(item) }}</h3>
-                    <p class="cobro-detail">
-                      {{ item.product_name_snapshot ?? `Vale #${item.voucher_id}` }} · Quincena {{ item.installment_number ?? '—' }}/{{ item.total_payments }}
-                    </p>
-                  </div>
-                  <div class="cobro-monto-col">
-                    <span class="monto">${{ Number(item.payment_amount).toLocaleString('es-MX') }}</span>
-                    <span
-                      class="badge-status"
-                      :class="item.is_late_payment ? 'vencida' : 'pendiente'"
-                    >
-                      {{ item.is_late_payment ? 'Atrasado' : 'A tiempo' }}
-                    </span>
-                  </div>
+            <div v-else class="cobro-list">
+              <div v-for="item in cobros" :key="item.id" class="cobro-item">
+                <div class="cobro-info">
+                  <span v-if="isCarryover(item)" class="origin-tag origin-tag--carryover">
+                    ⤷ Arrastre de corte anterior
+                  </span>
+                  <span v-else class="origin-tag origin-tag--normal">
+                    Quincena de este periodo
+                  </span>
+                  <h3 class="cliente-nombre">
+                    {{ itemClientName(item) }}
+                  </h3>
+                  <p class="cobro-detail">
+                    {{ item.product_name_snapshot ?? `Vale #${item.voucher_id}` }} · Quincena {{ item.installment_number ?? '—' }}/{{ item.total_payments }}
+                  </p>
+                </div>
+                <div class="cobro-monto-col">
+                  <span class="monto">${{ Number(item.payment_amount).toLocaleString('es-MX') }}</span>
+                  <span
+                    class="badge-status"
+                    :class="item.is_late_payment ? 'vencida' : 'pendiente'"
+                  >
+                    {{ item.is_late_payment ? 'Atrasado' : 'A tiempo' }}
+                  </span>
                 </div>
               </div>
-            </section>
-          </template>
+            </div>
+          </section>
         </template>
+      </template>
     </div>
   </div>
 </template>
@@ -230,19 +235,23 @@ async function onDownloadPdf() {
 .estado-cuenta-container {
   display: flex;
   flex-direction: column;
+  background-color: #f1f5f9;
+  min-height: 100%;
 }
 
 .top-navbar {
-  background-color: #002366;
+  background: linear-gradient(135deg, #0a2472 0%, #001845 100%);
   color: #ffffff;
-  height: 56px;
+  padding: 16px 20px;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 0 16px;
+  gap: 14px;
   position: sticky;
   top: 0;
   z-index: 10;
+  border-radius: 0 0 20px 20px;
+  box-shadow: 0 10px 24px -12px rgba(0, 24, 69, 0.5);
 }
 
 .top-navbar .nav-title {
@@ -250,18 +259,24 @@ async function onDownloadPdf() {
 }
 
 .back-btn {
-  background: none;
-  border: none;
+  width: 36px;
+  height: 36px;
+  flex-shrink: 0;
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 10px;
   color: #ffffff;
-  font-size: 24px;
+  font-size: 18px;
   cursor: pointer;
   padding: 0;
-  margin-right: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .nav-title {
-  font-size: 18px;
-  font-weight: 700;
+  font-size: clamp(15px, 4.4vw, 18px);
+  font-weight: 800;
   margin: 0;
 }
 
@@ -274,24 +289,26 @@ async function onDownloadPdf() {
 
 .relation-select {
   width: 100%;
-  padding: 10px 12px;
-  border-radius: 10px;
+  padding: 12px 14px;
+  border-radius: 12px;
   border: 1px solid #e2e8f0;
   font-size: 13px;
-  font-weight: 600;
+  font-weight: 700;
   color: #1e293b;
   background-color: #ffffff;
+  box-shadow: 0 1px 3px rgba(2, 6, 23, 0.04);
 }
 
 /* TARJETA DE RESUMEN */
 .summary-card {
   display: flex;
-  background-color: #002366;
+  background: linear-gradient(135deg, #0a2472 0%, #0b347f 55%, #001845 100%);
   color: #ffffff;
-  padding: 16px;
-  border-radius: 16px;
+  padding: 18px;
+  border-radius: 18px;
   align-items: center;
   justify-content: space-around;
+  box-shadow: 0 10px 24px -10px rgba(10, 36, 114, 0.4);
 }
 
 .summary-item {
@@ -428,10 +445,11 @@ async function onDownloadPdf() {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 12px;
+  padding: 14px;
   border: 1px solid #e2e8f0;
-  border-radius: 12px;
+  border-radius: 14px;
   background-color: #ffffff;
+  box-shadow: 0 1px 3px rgba(2, 6, 23, 0.04);
 }
 
 .origin-tag {

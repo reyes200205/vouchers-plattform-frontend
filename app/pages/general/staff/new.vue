@@ -70,7 +70,7 @@ const schema = z.object({
 
 type Schema = z.output<typeof schema>
 
-const { user } = useAuth()
+const { user, fetchMe } = useAuth()
 const { listSystemRoles, createStaff } = useStaff()
 const { listBranches } = useBranches()
 const toast = useToast()
@@ -83,6 +83,13 @@ const branchManagerBranchId = computed(() => {
 
 const isBranchManager = computed(() => user.value?.roles?.some(r => r.code === 'branch_manager') ?? false)
 const isSuperAdmin = computed(() => user.value?.roles?.some(r => r.code === 'super-admin') ?? false)
+
+// El rol/sucursal del gerente guardado en la cookie puede estar desactualizado
+// si se le asignó o cambió la sucursal después de su último login (o si la
+// sesión es de antes del último despliegue). Sin este refresh, un gerente de
+// sucursal legítimo puede ver el selector de sucursales vacío aunque el
+// backend sí le devuelva su sucursal — ver el mismo caso en configure_vale/index.vue.
+await fetchMe()
 
 const { data: branches } = await useAsyncData<Branch[]>('staff-new-branches', () => listBranches(), { default: () => [] })
 
