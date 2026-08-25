@@ -622,6 +622,13 @@ export interface CutoffRelationItem {
   customer?: CutoffRelationItemCustomer | null
 }
 
+export interface CutoffRelationRetroactiveReconciliation {
+  id: number
+  verified_at: string | null
+  reconciled_amount: string
+  waived_late_fees_total: string | null
+}
+
 export interface CutoffRelation {
   id: number
   cutoff_id: number
@@ -645,6 +652,7 @@ export interface CutoffRelation {
   generated_at: string | null
   distributor: CutoffRelationDistributor | null
   items?: CutoffRelationItem[]
+  retroactive_reconciliation?: CutoffRelationRetroactiveReconciliation | null
 }
 
 export interface Cutoff {

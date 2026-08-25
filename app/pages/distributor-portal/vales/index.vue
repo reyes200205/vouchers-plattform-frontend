@@ -102,6 +102,13 @@ const volver = () => {
           <span class="add-text">Nuevo cliente</span>
         </button>
 
+        <button class="add-contact-btn" @click="navigateTo('/distributor-portal/transferencias')">
+          <div class="plus-circle transfer">
+            🔁
+          </div>
+          <span class="add-text">Transferencias de cliente</span>
+        </button>
+
         <p v-if="loading" class="state-text">
           Cargando clientes…
         </p>
@@ -283,6 +290,11 @@ const volver = () => {
   align-items: center;
   justify-content: center;
   box-shadow: 0 4px 10px rgba(132, 204, 22, 0.35);
+}
+
+.plus-circle.transfer {
+  background-color: #0284c7;
+  font-size: 18px;
 }
 
 .add-text {

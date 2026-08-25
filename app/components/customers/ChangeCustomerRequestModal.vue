@@ -10,7 +10,7 @@ const props = defineProps<{
 
 const emit = defineEmits<{
   'update:open': [boolean]
-  changed: []
+  'changed': []
 }>()
 
 const schema = z.object({
@@ -93,16 +93,32 @@ async function onSubmit(event: FormSubmitEvent<Schema>) {
     })
 
     emit('changed')
-  } catch {
+  } catch (e: unknown) {
+    const apiError = e as { status?: number, statusCode?: number, data?: { errors?: Record<string, string[]> } }
+    const apiErrors = apiError?.data?.errors
+    if ((apiError?.status === 422 || apiError?.statusCode === 422) && apiErrors) {
+      const formattedErrors = Object.entries(apiErrors).map(([field, messages]) => ({
+        // El backend valida bajo "new_values.curp" / "new_values.rfc"; el
+        // formulario solo conoce el campo por su nombre corto ("curp"),
+        // asi que se recorta el prefijo para que el error sí se marque en
+        // el input correcto en vez de perderse.
+        name: field.startsWith('new_values.') ? field.slice('new_values.'.length) : field,
+        message: messages[0] || 'Dato inválido'
+      }))
+      formRef.value?.setErrors(formattedErrors)
+    }
+
     toast.add({
-      title: 'Error',
-      description: 'No se pudo enviar la solicitud. Intenta de nuevo.',
+      title: 'No se pudo enviar la solicitud',
+      description: extractApiErrorMessage(e, 'Verifica los datos e intenta de nuevo.'),
       color: 'error'
     })
   } finally {
     submitting.value = false
   }
 }
+
+const formRef = ref()
 </script>
 
 <template>
@@ -115,6 +131,7 @@ async function onSubmit(event: FormSubmitEvent<Schema>) {
   >
     <template #body>
       <UForm
+        ref="formRef"
         :schema="schema"
         :state="state"
         class="space-y-4"
@@ -132,6 +149,7 @@ async function onSubmit(event: FormSubmitEvent<Schema>) {
           <UFormField
             v-for="field in activeFields"
             :key="field"
+            :name="field"
             :label="labels[field]"
           >
             <UInput

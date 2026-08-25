@@ -27,6 +27,13 @@ function fmtDate(value: string | null | undefined): string {
   return new Date(year, month - 1, day).toLocaleDateString('es-MX', { day: '2-digit', month: 'short', year: 'numeric' })
 }
 
+// verified_at sí llega como datetime ISO completo (con offset), a diferencia
+// de las fechas puras de arriba -- aquí Date lo interpreta bien sin ayuda.
+function fmtDateTime(value: string | null | undefined): string {
+  if (!value) return '—'
+  return new Date(value).toLocaleString('es-MX', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })
+}
+
 const statusColors: Record<CutoffRelationStatus, 'success' | 'warning' | 'error' | 'info' | 'neutral'> = {
   GENERADA: 'info',
   PAGADA: 'success',
@@ -84,6 +91,24 @@ const hasCarryover = computed(() => (props.relation?.items ?? []).some(isCarryov
 // que la distribuidora sí se queda (0 en los vales atrasados).
 const totalCommissionForfeited = computed(() => {
   return (props.relation?.items ?? []).reduce((sum, item) => sum + Number(item.commission_forfeited_amount ?? 0), 0)
+})
+
+// La tabla de "Vales incluidos" antes se mostraba en el orden en que venían
+// del backend, que intercala vales de distintos clientes sin ningún orden
+// -- salteado. Aquí se agrupan por cliente (alfabético) y, dentro de cada
+// cliente, por número de quincena, para que sea legible.
+const sortedItems = computed(() => {
+  const items = props.relation?.items ?? []
+
+  function customerLabel(item: typeof items[number]): string {
+    return item.customer?.person ? customerFullName(item.customer.person) : `Cliente #${item.customer_id}`
+  }
+
+  return [...items].sort((a, b) => {
+    const nameCompare = customerLabel(a).localeCompare(customerLabel(b), 'es-MX')
+    if (nameCompare !== 0) return nameCompare
+    return (a.installment_number ?? 0) - (b.installment_number ?? 0)
+  })
 })
 </script>
 
@@ -166,6 +191,18 @@ const totalCommissionForfeited = computed(() => {
           </p>
         </div>
 
+        <div v-if="relation.retroactive_reconciliation" class="rounded-lg border border-success/40 bg-success/10 p-4 text-sm">
+          <p class="mb-1 text-xs font-medium uppercase text-success">
+            Pagada por conciliación manual
+          </p>
+          <p class="text-muted">
+            El depósito real sí llegó a tiempo según el banco: un gerente lo verificó el
+            {{ fmtDateTime(relation.retroactive_reconciliation.verified_at) }}<span v-if="Number(relation.retroactive_reconciliation.waived_late_fees_total ?? 0) > 0">
+              y se le quitó {{ fmtMoney(relation.retroactive_reconciliation.waived_late_fees_total) }} de recargo por atraso que se había aplicado por error</span>.
+            Esta relación se quedó como CERRADA porque su deuda ya se arrastró a un corte más nuevo, pero ya no tiene ningún adeudo pendiente por esta causa.
+          </p>
+        </div>
+
         <div v-if="hasCarryover" class="rounded-lg border border-warning/40 bg-warning/10 p-4 text-sm">
           <p class="mb-1 text-xs font-medium uppercase text-warning">
             Desglose del adeudo
@@ -214,7 +251,7 @@ const totalCommissionForfeited = computed(() => {
                 </tr>
               </thead>
               <tbody>
-                <tr v-for="item in relation.items" :key="item.id" class="border-b border-default last:border-0">
+                <tr v-for="item in sortedItems" :key="item.id" class="border-b border-default last:border-0">
                   <td class="py-2 pr-3">
                     <UBadge
                       :color="isCarryover(item) ? 'warning' : 'neutral'"

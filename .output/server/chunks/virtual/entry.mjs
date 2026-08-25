@@ -14489,12 +14489,17 @@ var virtual_nuxt_node_modules_2F_cache_2Fnuxt_2F_nuxt_2Froutes_default = [
 	{
 		name: "general-staff-new",
 		path: "/general/staff/new",
-		component: () => import('../build/new-C03JnM_p.mjs')
+		component: () => import('../build/new-GPIyobNq.mjs')
+	},
+	{
+		name: "registro-verificacion-coordinador-distributors",
+		path: "/registro-verificacion/coordinador/distributors",
+		component: () => import('../build/distributors-DLlBIai6.mjs')
 	},
 	{
 		name: "registro-verificacion-coordinador-list",
 		path: "/registro-verificacion/coordinador/list",
-		component: () => import('../build/list-CxVrw1ge.mjs')
+		component: () => import('../build/list-NHjPT82s.mjs')
 	},
 	{
 		name: "registro-verificacion-verificador-dashboard_verificador",
@@ -14509,37 +14514,49 @@ var virtual_nuxt_node_modules_2F_cache_2Fnuxt_2F_nuxt_2Froutes_default = [
 	{
 		name: "general-staff-id",
 		path: "/general/staff/:id()",
-		component: () => import('../build/_id_-C8G-xjhH.mjs')
+		component: () => import('../build/_id_-CAktEC2e.mjs')
 	},
 	{
 		name: "distributor-portal-clientes",
 		path: "/distributor-portal/clientes",
 		meta: { layout: false },
-		component: () => import('../build/clientes-DPE7dPrM.mjs')
+		component: () => import('../build/clientes-DfnmDCLZ.mjs')
 	},
 	{
 		name: "distributor-portal-collection-relationship",
 		path: "/distributor-portal/collection-relationship",
 		meta: { layout: "distributor-portal" },
-		component: () => import('../build/collection-relationship-BiSa0wzn.mjs')
+		component: () => import('../build/collection-relationship-Cb_58c22.mjs')
 	},
 	{
 		name: "distributor-portal-configure_vale",
 		path: "/distributor-portal/configure_vale",
 		meta: { layout: false },
-		component: () => import('../build/configure_vale-CpyDbKQ3.mjs')
+		component: () => import('../build/configure_vale-BEKd3g1O.mjs')
+	},
+	{
+		name: "distributor-portal-mis-vales",
+		path: "/distributor-portal/mis-vales",
+		meta: { layout: false },
+		component: () => import('../build/mis-vales-BxbKwo2V.mjs')
 	},
 	{
 		name: "distributor-portal-points",
 		path: "/distributor-portal/points",
 		meta: { layout: "distributor-portal" },
-		component: () => import('../build/points-Celu8ZLX.mjs')
+		component: () => import('../build/points-Hs-TGCXZ.mjs')
+	},
+	{
+		name: "distributor-portal-transferencias",
+		path: "/distributor-portal/transferencias",
+		meta: { layout: false },
+		component: () => import('../build/transferencias-DUW_FHb8.mjs')
 	},
 	{
 		name: "distributor-portal-vales",
 		path: "/distributor-portal/vales",
 		meta: { layout: false },
-		component: () => import('../build/vales-B20QPZRK.mjs')
+		component: () => import('../build/vales-D1jk0nH_.mjs')
 	},
 	{
 		name: "general-branches",
@@ -14549,7 +14566,7 @@ var virtual_nuxt_node_modules_2F_cache_2Fnuxt_2F_nuxt_2Froutes_default = [
 	{
 		name: "general-categories",
 		path: "/general/categories",
-		component: () => import('../build/categories-DLNyOnqm.mjs')
+		component: () => import('../build/categories-BYNE6SwZ.mjs')
 	},
 	{
 		name: "general-customers",
@@ -14559,7 +14576,7 @@ var virtual_nuxt_node_modules_2F_cache_2Fnuxt_2F_nuxt_2Froutes_default = [
 	{
 		name: "general-cutoffs",
 		path: "/general/cutoffs",
-		component: () => import('../build/cutoffs-Cl_IuO9c.mjs')
+		component: () => import('../build/cutoffs-BLwH-l4I.mjs')
 	},
 	{
 		name: "general-distributors",
@@ -14570,12 +14587,12 @@ var virtual_nuxt_node_modules_2F_cache_2Fnuxt_2F_nuxt_2Froutes_default = [
 		name: "general-inbox",
 		path: "/general/inbox",
 		meta: { "middleware": "approvals-inbox-channel" },
-		component: () => import('../build/inbox-DkuU8MXd.mjs')
+		component: () => import('../build/inbox-Cd60rs2r.mjs')
 	},
 	{
 		name: "general-logs",
 		path: "/general/logs",
-		component: () => import('../build/logs-P_El1qhv.mjs')
+		component: () => import('../build/logs-Cc-kN9my.mjs')
 	},
 	{
 		name: "general-point-redemptions-payout",
@@ -14585,17 +14602,17 @@ var virtual_nuxt_node_modules_2F_cache_2Fnuxt_2F_nuxt_2Froutes_default = [
 	{
 		name: "general-products",
 		path: "/general/products",
-		component: () => import('../build/products-Zbw1O3xa.mjs')
+		component: () => import('../build/products-DkVRS4dY.mjs')
 	},
 	{
 		name: "general-reconciliations",
 		path: "/general/reconciliations",
-		component: () => import('../build/reconciliations-Do9NJypD.mjs')
+		component: () => import('../build/reconciliations-DTjN-_3n.mjs')
 	},
 	{
 		name: "general-settings",
 		path: "/general/settings",
-		component: () => import('../build/settings-CxcIO6dy.mjs')
+		component: () => import('../build/settings--q4lgfAt.mjs')
 	},
 	{
 		name: "general-staff",
@@ -14605,23 +14622,23 @@ var virtual_nuxt_node_modules_2F_cache_2Fnuxt_2F_nuxt_2Froutes_default = [
 	{
 		name: "general-voucher-requests",
 		path: "/general/voucher-requests",
-		component: () => import('../build/voucher-requests-DcpGSEV6.mjs')
+		component: () => import('../build/voucher-requests-CBtmyKFQ.mjs')
 	},
 	{
 		name: "general-vouchers",
 		path: "/general/vouchers",
-		component: () => import('../build/vouchers-HDD9Q8lE.mjs')
+		component: () => import('../build/vouchers-C3SyclbC.mjs')
 	},
 	{
 		name: "registro-verificacion-new",
 		path: "/registro-verificacion/new",
-		component: () => import('../build/new-eJG2OQhY.mjs')
+		component: () => import('../build/new-ByaaRhKW.mjs')
 	},
 	{
 		name: "distributor-portal",
 		path: "/distributor-portal",
 		meta: { layout: "distributor-portal" },
-		component: () => import('../build/distributor-portal-BDNafAVW.mjs')
+		component: () => import('../build/distributor-portal-CKvu4vba.mjs')
 	},
 	{
 		name: "forgot-password",
@@ -14636,7 +14653,7 @@ var virtual_nuxt_node_modules_2F_cache_2Fnuxt_2F_nuxt_2Froutes_default = [
 	{
 		name: "login",
 		path: "/login",
-		component: () => import('../build/login-WoGepBRC.mjs')
+		component: () => import('../build/login-BSB141h6.mjs')
 	},
 	{
 		name: "registro-verificacion",
@@ -17612,9 +17629,9 @@ function resolveLayoutName(route, name) {
 //#region virtual:nuxt:node_modules%2F.cache%2Fnuxt%2F.nuxt%2Flayouts.mjs
 var virtual_nuxt_node_modules_2F_cache_2Fnuxt_2F_nuxt_2Flayouts_default = {
 	default: defineAsyncComponent(() => import('../build/default-BA_2QT4E.mjs').then((m) => m.default || m)),
-	"distributor-portal": defineAsyncComponent(() => import('../build/distributor-portal-DypUE9zy.mjs').then((m) => m.default || m)),
+	"distributor-portal": defineAsyncComponent(() => import('../build/distributor-portal-HPWzVVM0.mjs').then((m) => m.default || m)),
 	general: defineAsyncComponent(() => import('../build/general-BME0d8t7.mjs').then((m) => m.default || m)),
-	"registro-verificacion": defineAsyncComponent(() => import('../build/registro-verificacion-knnYSRv0.mjs').then((m) => m.default || m))
+	"registro-verificacion": defineAsyncComponent(() => import('../build/registro-verificacion-42JxO6iF.mjs').then((m) => m.default || m))
 };
 //#endregion
 //#region node_modules/.pnpm/nuxt@4.5.2_@babel+plugin-sy_8d3ee09fd7864d66cfa01977225356c6/node_modules/nuxt/dist/app/components/nuxt-layout.js
