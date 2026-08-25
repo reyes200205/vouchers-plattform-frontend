@@ -287,10 +287,11 @@ const formRef = ref<any>(null)
                   v-model="state.curp"
                   class="w-full uppercase"
                   placeholder="18 caracteres"
+                  maxlength="18"
                 />
               </UFormField>
               <UFormField required label="RFC" name="rfc">
-                <UInput v-model="state.rfc" class="w-full uppercase" />
+                <UInput v-model="state.rfc" class="w-full uppercase" maxlength="13" />
               </UFormField>
               <UFormField required label="Celular" name="mobile_phone" class="md:col-span-1 lg:col-span-1">
                 <UInput v-model="state.mobile_phone" class="w-full" />
