@@ -60,7 +60,13 @@ const initTurnstile = () => {
         'sitekey': siteKey,
         'callback': (token: string) => {
           turnstileToken.value = token
-          errorMessage.value = ''
+          // Solo se limpia el error de "falta captcha" que este mismo
+          // formulario puso -- nunca un error real de login (p.ej. el 503
+          // de servicio no disponible), que antes desaparecia solo cuando
+          // Turnstile terminaba de verificar en segundo plano.
+          if (errorMessage.value === 'Por favor, completa el captcha de seguridad.') {
+            errorMessage.value = ''
+          }
         },
         'expired-callback': () => {
           turnstileToken.value = ''
