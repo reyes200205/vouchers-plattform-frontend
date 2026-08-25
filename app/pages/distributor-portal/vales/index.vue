@@ -158,7 +158,7 @@ const volver = () => {
   bottom: 0;
   width: 100vw;
   height: 100vh;
-  background-color: #ffffff;
+  background-color: #f1f5f9;
   overflow-y: auto;
   overflow-x: hidden;
   font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
@@ -166,41 +166,48 @@ const volver = () => {
 
 .contacts-wrapper {
   width: 100%;
-  max-width: 440px;
+  max-width: 480px;
   margin: 0 auto;
   min-height: 100vh;
   display: flex;
   flex-direction: column;
+  background-color: #f1f5f9;
 }
 
 /* TOP NAVBAR */
 .top-navbar {
-  background-color: #002366;
+  background: linear-gradient(135deg, #0a2472 0%, #001845 100%);
   color: #ffffff;
-  height: 56px;
+  padding: 16px 20px;
   display: flex;
   align-items: center;
-  padding: 0 16px;
+  gap: 14px;
   position: sticky;
   top: 0;
   z-index: 10;
+  border-radius: 0 0 20px 20px;
+  box-shadow: 0 10px 24px -12px rgba(0, 24, 69, 0.5);
 }
 
 .back-btn {
-  background: none;
-  border: none;
+  width: 36px;
+  height: 36px;
+  flex-shrink: 0;
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 10px;
   color: #ffffff;
-  font-size: 24px;
+  font-size: 18px;
   cursor: pointer;
   padding: 0;
-  margin-right: 16px;
   display: flex;
   align-items: center;
+  justify-content: center;
 }
 
 .nav-title {
-  font-size: 18px;
-  font-weight: 700;
+  font-size: clamp(16px, 4.6vw, 19px);
+  font-weight: 800;
   margin: 0;
 }
 
@@ -220,17 +227,24 @@ const volver = () => {
 
 .search-input {
   width: 100%;
-  padding: 12px 40px 12px 16px;
-  border-radius: 24px;
-  border: 1px solid #94a3b8;
+  padding: 13px 44px 13px 18px;
+  border-radius: 16px;
+  border: 1px solid #e2e8f0;
+  background-color: #ffffff;
   font-size: 15px;
   color: #1e293b;
   box-sizing: border-box;
   outline: none;
+  box-shadow: 0 1px 3px rgba(2, 6, 23, 0.04);
+  transition: border-color 0.15s ease;
+}
+
+.search-input:focus {
+  border-color: #1d4ed8;
 }
 
 .search-input::placeholder {
-  color: #64748b;
+  color: #94a3b8;
   font-weight: 600;
 }
 
@@ -239,7 +253,7 @@ const volver = () => {
   right: 16px;
   top: 50%;
   transform: translateY(-50%);
-  font-size: 18px;
+  font-size: 16px;
   color: #64748b;
   pointer-events: none;
 }
@@ -249,24 +263,31 @@ const volver = () => {
   display: flex;
   align-items: center;
   gap: 12px;
-  background: none;
-  border: none;
-  padding: 8px 0;
+  background-color: #ffffff;
+  border: 1px dashed #cbd5e1;
+  border-radius: 16px;
+  padding: 12px 14px;
   cursor: pointer;
   text-align: left;
+}
+
+.add-contact-btn:active {
+  background-color: #f8fafc;
 }
 
 .plus-circle {
   width: 40px;
   height: 40px;
+  flex-shrink: 0;
   border-radius: 50%;
-  background-color: #84cc16;
-  color: #ffffff;
-  font-size: 24px;
-  font-weight: 700;
+  background: linear-gradient(135deg, #84cc16 0%, #65a30d 100%);
+  color: #052e16;
+  font-size: 22px;
+  font-weight: 800;
   display: flex;
   align-items: center;
   justify-content: center;
+  box-shadow: 0 4px 10px rgba(132, 204, 22, 0.35);
 }
 
 .plus-circle.transfer {
@@ -275,9 +296,9 @@ const volver = () => {
 }
 
 .add-text {
-  font-size: 16px;
+  font-size: 15px;
   font-weight: 700;
-  color: #1e293b;
+  color: #0a2472;
 }
 
 .state-text {
@@ -295,15 +316,20 @@ const volver = () => {
 .contacts-list {
   display: flex;
   flex-direction: column;
+  gap: 10px;
 }
 
 .contact-item {
   display: flex;
   align-items: center;
   gap: 14px;
-  padding: 12px 0;
-  border-bottom: 1px solid #f1f5f9;
+  padding: 12px 14px;
+  background-color: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 16px;
+  box-shadow: 0 1px 3px rgba(2, 6, 23, 0.04);
   cursor: pointer;
+  transition: transform 0.12s ease;
 }
 
 .contact-item.disabled {
@@ -312,14 +338,15 @@ const volver = () => {
 }
 
 .contact-item:not(.disabled):active {
+  transform: scale(0.99);
   background-color: #f8fafc;
 }
 
 .avatar-circle {
   width: 46px;
   height: 46px;
-  border-radius: 50%;
-  background-color: #002366;
+  border-radius: 14px;
+  background: linear-gradient(135deg, #0a2472 0%, #1d4ed8 100%);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -327,7 +354,7 @@ const volver = () => {
 }
 
 .avatar-icon {
-  font-size: 22px;
+  font-size: 20px;
   color: #ffffff;
 }
 
@@ -341,27 +368,32 @@ const volver = () => {
 
 .contact-name {
   margin: 0;
-  font-size: 15px;
+  font-size: 14px;
   font-weight: 700;
   color: #0f172a;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .contact-phone {
   margin: 0;
-  font-size: 13px;
-  color: #475569;
+  font-size: 12px;
+  color: #64748b;
   font-weight: 600;
 }
 
 .status-badge {
+  flex-shrink: 0;
   font-size: 10px;
-  font-weight: 700;
+  font-weight: 800;
   text-transform: uppercase;
-  padding: 4px 8px;
+  padding: 5px 10px;
   border-radius: 999px;
   white-space: nowrap;
   background-color: #f1f5f9;
   color: #475569;
+  letter-spacing: 0.2px;
 }
 
 .status-badge.activo {
@@ -383,5 +415,16 @@ const volver = () => {
 .status-badge.inactivo {
   background-color: #f1f5f9;
   color: #64748b;
+}
+
+@media (max-width: 360px) {
+  .top-navbar {
+    padding: 14px 14px;
+  }
+
+  .content-body {
+    padding: 12px;
+    gap: 12px;
+  }
 }
 </style>

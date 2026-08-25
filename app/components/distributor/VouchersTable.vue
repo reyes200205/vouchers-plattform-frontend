@@ -1,30 +1,31 @@
 <script setup lang="ts">
-export interface Voucher {
+import { CircleDollarSign, FileClock, UserRound } from 'lucide-vue-next'
+
+export interface VoucherRow {
   id: string
   cliente: string
   monto: string
-  estatus: 'Activo' | 'Surtido' | 'Cancelado'
+  estatusLabel: string
+  estatusVariant: 'success' | 'warning' | 'danger'
   fecha: string
 }
 
 defineProps<{
-  vouchers: Voucher[]
+  vouchers: VoucherRow[]
 }>()
 
-const emit = defineEmits<{
-  (e: 'viewDetail', id: string): void
-}>()
+function iconFor(row: VoucherRow) {
+  if (row.id.startsWith('SOL')) return UserRound
+  return row.estatusVariant === 'warning' ? FileClock : CircleDollarSign
+}
 </script>
 
 <template>
   <div class="vouchers-container">
     <div class="vouchers-header">
-      <div>
-        <h3>Vales Recientes</h3>
-        <p>Listado de folios activos</p>
-      </div>
-      <button class="btn-link" @click="navigateTo('/distributor-portal/vales')">
-        Ver todos ➔
+      <h3>Actividad reciente</h3>
+      <button class="btn-link" type="button" @click="navigateTo('/distributor-portal/mis-vales')">
+        Mis vales
       </button>
     </div>
 
@@ -32,32 +33,24 @@ const emit = defineEmits<{
       <article
         v-for="item in vouchers"
         :key="item.id"
-        class="voucher-card"
-        @click="emit('viewDetail', item.id)"
+        class="voucher-row"
       >
-        <div class="voucher-top">
-          <div class="voucher-info">
-            <span class="folio">{{ item.id }}</span>
-            <h4 class="cliente">{{ item.cliente }}</h4>
-          </div>
-          <div class="voucher-monto">
-            <span class="amount">{{ item.monto }}</span>
-            <span class="fecha">{{ item.fecha }}</span>
-          </div>
+        <div class="voucher-icon" :class="item.estatusVariant">
+          <component :is="iconFor(item)" :size="16" />
         </div>
 
-        <div class="voucher-bottom">
-          <span
-            class="status-pill"
-            :class="{
-              'status-active': item.estatus === 'Activo',
-              'status-filled': item.estatus === 'Surtido',
-              'status-cancelled': item.estatus === 'Cancelado'
-            }"
-          >
-            {{ item.estatus }}
-          </span>
-          <span class="arrow-icon">❯</span>
+        <div class="voucher-info">
+          <h4 class="cliente">
+            {{ item.cliente }}
+          </h4>
+          <p class="detail">
+            {{ item.id }} · {{ item.estatusLabel }}
+          </p>
+        </div>
+
+        <div class="voucher-monto">
+          <span class="amount" :class="item.estatusVariant">{{ item.monto }}</span>
+          <span class="fecha">{{ item.fecha }}</span>
         </div>
       </article>
     </div>
@@ -68,7 +61,7 @@ const emit = defineEmits<{
 .vouchers-container {
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 4px;
 }
 
 .vouchers-header {
@@ -79,69 +72,77 @@ const emit = defineEmits<{
 }
 
 .vouchers-header h3 {
-  font-size: 16px;
+  font-size: clamp(14px, 4vw, 16px);
   font-weight: 800;
-  color: #002b66;
+  color: #0f172a;
   margin: 0;
-}
-
-.vouchers-header p {
-  font-size: 11px;
-  color: #94a3b8;
-  margin: 2px 0 0 0;
 }
 
 .btn-link {
   background: none;
   border: none;
-  color: #002b66;
-  font-weight: 800;
+  color: #1d4ed8;
+  font-weight: 700;
   font-size: 12px;
   cursor: pointer;
+  padding: 4px;
 }
 
 .vouchers-list {
   display: flex;
   flex-direction: column;
-  gap: 8px;
-}
-
-.voucher-card {
   background: #ffffff;
-  border-radius: 12px;
   border: 1px solid #e2e8f0;
-  padding: 12px;
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  cursor: pointer;
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.03);
+  border-radius: 16px;
+  overflow: hidden;
+  box-shadow: 0 1px 3px rgba(2, 6, 23, 0.04);
 }
 
-.voucher-top {
+.voucher-row {
   display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-  gap: 8px;
+  align-items: center;
+  gap: 10px;
+  padding: 11px 14px;
+  border-bottom: 1px solid #f1f5f9;
 }
+
+.voucher-row:last-child {
+  border-bottom: none;
+}
+
+.voucher-icon {
+  flex-shrink: 0;
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.voucher-icon.success { background: #dcfce7; color: #16a34a; }
+.voucher-icon.warning { background: #dbeafe; color: #1d4ed8; }
+.voucher-icon.danger { background: #ffe4e6; color: #e11d48; }
 
 .voucher-info {
-  display: flex;
-  flex-direction: column;
+  flex: 1;
   min-width: 0;
 }
 
-.folio {
-  font-size: 10px;
-  font-weight: 800;
-  color: #64748b;
-}
-
 .cliente {
-  margin: 2px 0 0 0;
+  margin: 0;
   font-size: 13px;
   font-weight: 700;
   color: #0f172a;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.detail {
+  margin: 1px 0 0 0;
+  font-size: 11px;
+  color: #94a3b8;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -152,41 +153,21 @@ const emit = defineEmits<{
   flex-direction: column;
   align-items: flex-end;
   flex-shrink: 0;
+  gap: 1px;
 }
 
 .amount {
-  font-size: 13px;
+  font-size: 12.5px;
   font-weight: 800;
-  color: #002b66;
+  white-space: nowrap;
 }
+
+.amount.success { color: #16a34a; }
+.amount.warning { color: #1d4ed8; }
+.amount.danger { color: #e11d48; }
 
 .fecha {
   font-size: 10px;
   color: #94a3b8;
-}
-
-.voucher-bottom {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  border-top: 1px solid #f1f5f9;
-  padding-top: 6px;
-}
-
-.status-pill {
-  font-size: 9px;
-  font-weight: 800;
-  padding: 2px 6px;
-  border-radius: 4px;
-  text-transform: uppercase;
-}
-
-.status-active { background: #dcfce7; color: #15803d; }
-.status-filled { background: #e0f2fe; color: #0369a1; }
-.status-cancelled { background: #ffe4e6; color: #be123c; }
-
-.arrow-icon {
-  font-size: 12px;
-  color: #2563eb;
 }
 </style>

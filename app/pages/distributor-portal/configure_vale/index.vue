@@ -337,47 +337,55 @@ const volver = () => {
   bottom: 0;
   width: 100vw;
   height: 100vh;
-  background-color: #f8fafc;
+  background-color: #f1f5f9;
   overflow-y: auto;
   font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
 }
 
 .config-wrapper {
   width: 100%;
-  max-width: 440px;
+  max-width: 480px;
   margin: 0 auto;
   min-height: 100vh;
   display: flex;
   flex-direction: column;
-  background-color: #ffffff;
+  background-color: #f1f5f9;
   position: relative;
 }
 
 .top-navbar {
-  background-color: #002366;
+  background: linear-gradient(135deg, #0a2472 0%, #001845 100%);
   color: #ffffff;
-  height: 56px;
+  padding: 16px 20px;
   display: flex;
   align-items: center;
-  padding: 0 16px;
+  gap: 14px;
   position: sticky;
   top: 0;
   z-index: 10;
+  border-radius: 0 0 20px 20px;
+  box-shadow: 0 10px 24px -12px rgba(0, 24, 69, 0.5);
 }
 
 .back-btn {
-  background: none;
-  border: none;
+  width: 36px;
+  height: 36px;
+  flex-shrink: 0;
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 10px;
   color: #ffffff;
-  font-size: 24px;
+  font-size: 18px;
   cursor: pointer;
   padding: 0;
-  margin-right: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .nav-title {
-  font-size: 18px;
-  font-weight: 700;
+  font-size: clamp(16px, 4.6vw, 19px);
+  font-weight: 800;
   margin: 0;
 }
 
@@ -385,7 +393,7 @@ const volver = () => {
   padding: 16px;
   display: flex;
   flex-direction: column;
-  gap: 20px;
+  gap: 18px;
 }
 
 /* CLIENTE SELECCIONADO */
@@ -393,17 +401,18 @@ const volver = () => {
   display: flex;
   align-items: center;
   gap: 12px;
-  padding: 12px;
+  padding: 14px;
   border: 1px solid #e2e8f0;
   border-radius: 16px;
   background-color: #ffffff;
+  box-shadow: 0 1px 3px rgba(2, 6, 23, 0.04);
 }
 
 .avatar-circle {
   width: 48px;
   height: 48px;
-  border-radius: 50%;
-  background-color: #002366;
+  border-radius: 14px;
+  background: linear-gradient(135deg, #0a2472 0%, #1d4ed8 100%);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -411,7 +420,7 @@ const volver = () => {
 }
 
 .avatar-icon {
-  font-size: 24px;
+  font-size: 22px;
   color: #ffffff;
 }
 
@@ -425,6 +434,9 @@ const volver = () => {
   font-size: 15px;
   font-weight: 700;
   color: #0f172a;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .client-detail {
@@ -434,12 +446,17 @@ const volver = () => {
 }
 
 .disponible-badge {
-  background-color: #f0f6ff;
-  color: #002366;
-  padding: 10px 16px;
-  border-radius: 12px;
+  background: linear-gradient(135deg, #0a2472 0%, #1d4ed8 100%);
+  color: #ffffff;
+  padding: 12px 16px;
+  border-radius: 14px;
   font-size: 13px;
   text-align: center;
+  box-shadow: 0 4px 14px rgba(10, 36, 114, 0.25);
+}
+
+.disponible-badge strong {
+  font-size: 16px;
 }
 
 .state-text {
@@ -462,8 +479,8 @@ const volver = () => {
 
 .section-label {
   font-size: 15px;
-  font-weight: 700;
-  color: #1e293b;
+  font-weight: 800;
+  color: #0a2472;
 }
 
 .product-list {
@@ -474,25 +491,34 @@ const volver = () => {
 
 .product-card {
   text-align: left;
-  border: 1px solid #cbd5e1;
+  border: 1.5px solid #e2e8f0;
   background-color: #ffffff;
-  border-radius: 14px;
-  padding: 12px 14px;
+  border-radius: 16px;
+  padding: 14px 16px;
   cursor: pointer;
   display: flex;
   flex-direction: column;
   gap: 4px;
+  box-shadow: 0 1px 3px rgba(2, 6, 23, 0.04);
+  transition: border-color 0.15s ease, background-color 0.15s ease, transform 0.1s ease;
+}
+
+.product-card:active {
+  transform: scale(0.99);
 }
 
 .product-card.active {
-  border-color: #4f46e5;
-  background-color: #eef2ff;
+  border-color: #1d4ed8;
+  background-color: #eff4ff;
+  box-shadow: 0 4px 14px rgba(29, 78, 216, 0.15);
 }
 
 .product-head {
   display: flex;
   justify-content: space-between;
   align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
 }
 
 .product-name {
@@ -502,9 +528,9 @@ const volver = () => {
 }
 
 .product-amount {
-  font-size: 16px;
+  font-size: 17px;
   font-weight: 800;
-  color: #002366;
+  color: #0a2472;
 }
 
 .product-detail {
@@ -525,16 +551,17 @@ const volver = () => {
 }
 
 .summary-card {
-  background-color: #f8fafc;
-  border-radius: 12px;
-  padding: 12px 16px;
+  background-color: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 14px;
+  padding: 13px 16px;
   display: flex;
   justify-content: space-between;
   align-items: center;
 }
 
 .summary-label {
-  font-size: 14px;
+  font-size: 13px;
   font-weight: 700;
   color: #1e293b;
 }
@@ -552,25 +579,33 @@ const volver = () => {
 
 .summary-value.bold {
   font-weight: 800;
+  color: #0a2472;
 }
 
 /* BOTÓN PRINCIPAL */
 .submit-btn {
   width: 100%;
-  background-color: #002366;
-  color: #ffffff;
+  background: linear-gradient(135deg, #84cc16 0%, #65a30d 100%);
+  color: #052e16;
   border: none;
-  padding: 14px;
-  border-radius: 24px;
+  padding: 15px;
+  border-radius: 100px;
   font-size: 16px;
-  font-weight: 700;
+  font-weight: 800;
   cursor: pointer;
-  margin-top: 8px;
+  margin-top: 4px;
+  box-shadow: 0 8px 20px rgba(132, 204, 22, 0.3);
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.submit-btn:active:not(:disabled) {
+  transform: scale(0.99);
 }
 
 .submit-btn:disabled {
   opacity: 0.5;
   cursor: not-allowed;
+  box-shadow: none;
 }
 
 /* MODAL Y ANIMACIONES */
@@ -580,7 +615,7 @@ const volver = () => {
   left: 0;
   right: 0;
   bottom: 0;
-  background-color: rgba(15, 23, 42, 0.6);
+  background-color: rgba(0, 15, 45, 0.6);
   backdrop-filter: blur(4px);
   display: flex;
   align-items: center;
@@ -606,7 +641,7 @@ const volver = () => {
   margin: 16px 0 8px 0;
   font-size: 22px;
   font-weight: 800;
-  color: #0f172a;
+  color: #0a2472;
 }
 
 .modal-subtitle {
@@ -637,14 +672,15 @@ const volver = () => {
 
 .modal-btn {
   width: 100%;
-  background-color: #84cc16;
-  color: #0d2747;
+  background: linear-gradient(135deg, #84cc16 0%, #65a30d 100%);
+  color: #052e16;
   border: none;
-  padding: 12px;
-  border-radius: 12px;
+  padding: 13px;
+  border-radius: 14px;
   font-size: 15px;
   font-weight: 800;
   cursor: pointer;
+  box-shadow: 0 8px 20px rgba(132, 204, 22, 0.3);
 }
 
 /* ANIMACIÓN CHECKMARK */

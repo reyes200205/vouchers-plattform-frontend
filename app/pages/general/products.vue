@@ -8,7 +8,7 @@ const { listBranchProducts, updateProduct } = useProducts()
 const { listBranchCategories } = useCategories()
 const { getBranchSettings } = useSettings()
 const { listBranches } = useBranches()
-const { user } = useAuth()
+const { user, fetchMe } = useAuth()
 
 const canManage = computed(() => user.value?.permissions?.includes('products.manage') ?? false)
 const isGeneralManager = computed(() => user.value?.permissions?.includes('categories.manage') ?? false)
@@ -18,6 +18,11 @@ const showBranchSelector = computed(() => isGeneralManager.value || isSuperAdmin
 const branchManagerBranchId = computed(() => {
   return user.value?.roles?.find(r => r.code === 'branch_manager' && r.branch_id !== null)?.branch_id ?? null
 })
+
+// Ver la misma nota en staff/new.vue: refresca la sesión guardada por si el
+// rol/sucursal del gerente cambió después de su último login — si no, el
+// selector de categorías se queda vacío aunque la sucursal sí las tenga.
+await fetchMe()
 
 const { data: branches } = await useAsyncData<Branch[]>('product-branches', () => listBranches(), { default: () => [] })
 

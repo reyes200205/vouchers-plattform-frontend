@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { computed } from 'vue'
+import { House, Users, FileText, Coins } from 'lucide-vue-next'
 
 const route = useRoute()
 
@@ -7,7 +8,7 @@ const route = useRoute()
 const currentRoute = computed(() => route.path)
 
 const isInicioActive = computed(() => currentRoute.value === '/distributor-portal' || currentRoute.value === '/distributor-portal/')
-const isClientesActive = computed(() => currentRoute.value.startsWith('/distributor-portal/clientes'))
+const isClientesActive = computed(() => currentRoute.value.startsWith('/distributor-portal/clientes') || currentRoute.value.startsWith('/distributor-portal/vales') || currentRoute.value.startsWith('/distributor-portal/configure_vale'))
 const isEstadoCuentaActive = computed(() => currentRoute.value.startsWith('/distributor-portal/estado-cuenta') || currentRoute.value.startsWith('/distributor-portal/collection-relationship'))
 const isPuntosActive = computed(() => currentRoute.value.startsWith('/distributor-portal/points'))
 </script>
@@ -20,20 +21,19 @@ const isPuntosActive = computed(() => currentRoute.value.startsWith('/distributo
         <slot />
       </div>
 
-      <!-- BOTTOM NAVIGATION BAR (MENÚ DESPLEGABLE INFERIOR) -->
+      <!-- BOTTOM NAVIGATION BAR -->
       <nav class="bottom-nav">
-        <!-- INICIO -->
         <button
           type="button"
           class="nav-item"
           :class="{ active: isInicioActive }"
           @click="navigateTo('/distributor-portal')"
         >
-          <span class="nav-icon">🏠</span>
+          <span class="nav-icon-wrap">
+            <House :size="20" />
+          </span>
           <span class="nav-label">Inicio</span>
         </button>
-
-        <!-- CLIENTES -->
 
         <button
           type="button"
@@ -41,29 +41,33 @@ const isPuntosActive = computed(() => currentRoute.value.startsWith('/distributo
           :class="{ active: isClientesActive }"
           @click="navigateTo('/distributor-portal/vales')"
         >
-          <span class="nav-icon">👥</span>
+          <span class="nav-icon-wrap">
+            <Users :size="20" />
+          </span>
           <span class="nav-label">Clientes</span>
         </button>
 
-        <!-- ESTADO DE CUENTA -->
         <button
           type="button"
           class="nav-item"
           :class="{ active: isEstadoCuentaActive }"
           @click="navigateTo('/distributor-portal/collection-relationship')"
         >
-          <span class="nav-icon">📊</span>
+          <span class="nav-icon-wrap">
+            <FileText :size="20" />
+          </span>
           <span class="nav-label">Estado Cuenta</span>
         </button>
 
-        <!-- PUNTOS -->
         <button
           type="button"
           class="nav-item"
           :class="{ active: isPuntosActive }"
           @click="navigateTo('/distributor-portal/points')"
         >
-          <span class="nav-icon">⭐</span>
+          <span class="nav-icon-wrap">
+            <Coins :size="20" />
+          </span>
           <span class="nav-label">Puntos</span>
         </button>
       </nav>
@@ -74,49 +78,51 @@ const isPuntosActive = computed(() => currentRoute.value.startsWith('/distributo
 <style scoped>
 .layout-shell {
   position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
+  inset: 0;
   width: 100vw;
+  height: 100dvh;
   height: 100vh;
-  background-color: #0d1322; /* Fondo oscuro estilo app móvil */
   display: flex;
   justify-content: center;
+  background: radial-gradient(circle at 50% 0%, #0a2472 0%, #001845 55%, #000d29 100%);
   font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
 }
 
 .layout-wrapper {
   width: 100%;
-  max-width: 440px;
+  max-width: 480px;
+  height: 100dvh;
   height: 100vh;
   display: flex;
   flex-direction: column;
-  background-color: #ffffff;
+  background-color: #f4f7fc;
   position: relative;
-  box-shadow: 0 0 20px rgba(0, 0, 0, 0.2);
+  box-shadow: 0 0 40px rgba(0, 0, 0, 0.35);
+  overflow: hidden;
 }
 
 .page-content {
   flex: 1;
+  min-height: 0;
   overflow-y: auto;
-  padding-bottom: 50px; /* Aumentado de 70px a 110px para dar más aire sobre la barra */
+  overflow-x: hidden;
+  -webkit-overflow-scrolling: touch;
 }
 
-/* BARRA DE NAVEGACIÓN INFERIOR (Estilo Imagen) */
+/* BARRA DE NAVEGACIÓN INFERIOR — siempre en el mismo lugar, mismo tamaño,
+   sin importar el contenido de la página (evita que los botones "brinquen"
+   entre pantallas). */
 .bottom-nav {
-  position: absolute;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  height: 64px;
-  background-color: #0f172a; /* Fondo oscuro tipo la captura */
+  flex-shrink: 0;
   display: flex;
-  align-items: center;
+  align-items: stretch;
   justify-content: space-around;
-  border-top: 1px solid #1e293b;
+  height: calc(64px + env(safe-area-inset-bottom));
+  padding-bottom: env(safe-area-inset-bottom);
+  background: linear-gradient(180deg, #041b4d 0%, #001845 100%);
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+  box-shadow: 0 -8px 24px rgba(0, 12, 40, 0.25);
   z-index: 50;
-  padding: 0 8px;
 }
 
 .nav-item {
@@ -126,30 +132,49 @@ const isPuntosActive = computed(() => currentRoute.value.startsWith('/distributo
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 3px;
-  color: #64748b;
+  gap: 4px;
+  color: #7e93c2;
   cursor: pointer;
   flex: 1;
+  min-width: 0;
   height: 100%;
-  transition: all 0.2s ease;
+  padding: 6px 2px;
+  transition: color 0.2s ease;
+  -webkit-tap-highlight-color: transparent;
 }
 
-.nav-icon {
-  font-size: 18px;
-  line-height: 1;
+.nav-icon-wrap {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  border-radius: 10px;
+  transition: background-color 0.2s ease, transform 0.2s ease;
 }
 
 .nav-label {
-  font-size: 10px;
-  font-weight: 600;
-  letter-spacing: 0.2px;
+  font-size: 10.5px;
+  font-weight: 700;
+  letter-spacing: 0.1px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
 }
 
 .nav-item.active {
-  color: #38bdf8; /* Azul cyan brillante cuando está activo */
+  color: #d9f99d;
 }
 
-.nav-item.active .nav-icon {
-  transform: translateY(-2px);
+.nav-item.active .nav-icon-wrap {
+  background-color: rgba(132, 204, 22, 0.18);
+  transform: translateY(-1px);
+}
+
+@media (max-width: 340px) {
+  .nav-label {
+    font-size: 9.5px;
+  }
 }
 </style>
