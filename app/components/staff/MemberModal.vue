@@ -208,7 +208,11 @@ watch(() => props.member, (member) => {
     state.last_name = member.person?.last_name || ''
     state.second_last_name = member.person?.second_last_name || ''
     state.gender = member.person?.gender ?? undefined
-    state.birth_date = member.person?.birth_date || ''
+    // Mismo caso que ApplicationDetailModal.vue: el backend serializa
+    // birth_date como datetime completo (ej. "1990-01-01T00:00:00Z"), y un
+    // <input type="date"> lo rechaza en silencio si trae la hora pegada.
+    // Se recorta a "YYYY-MM-DD" para que sí se muestre.
+    state.birth_date = (member.person?.birth_date || '').slice(0, 10)
     state.curp = member.person?.curp || ''
     state.rfc = member.person?.rfc || ''
     state.mobile_phone = member.person?.mobile_phone || ''

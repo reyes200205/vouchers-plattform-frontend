@@ -155,7 +155,13 @@ function startEditing() {
   state.last_name = p?.last_name ?? ''
   state.second_last_name = p?.second_last_name ?? ''
   state.gender = (p?.gender as 'M' | 'F' | 'OTHER' | undefined) ?? undefined
-  state.birth_date = p?.birth_date ?? ''
+  // El backend guarda birth_date como datetime (con hora 00:00:00 de
+  // relleno) y lo serializa como ISO completo (ej. "1990-01-01T00:00:00Z").
+  // Un <input type="date"> exige EXACTAMENTE "YYYY-MM-DD": con la hora
+  // pegada, el navegador simplemente no muestra nada en el campo (aunque
+  // el dato sí llegó y sí se guarda bien al reenviarlo). Se recorta a los
+  // primeros 10 caracteres para quedarnos solo con la fecha.
+  state.birth_date = (p?.birth_date ?? '').slice(0, 10)
   state.curp = p?.curp ?? ''
   state.rfc = p?.rfc ?? ''
   state.home_phone = p?.home_phone ?? ''
