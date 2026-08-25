@@ -392,8 +392,9 @@ async function onDownloadPdf() {
 }
 
 .download-icon-btn {
-  width: 32px;
-  height: 32px;
+  width: 38px;
+  height: 38px;
+  flex-shrink: 0;
   border-radius: 50%;
   border: 1px solid rgba(255, 255, 255, 0.5);
   background: none;
@@ -404,7 +405,6 @@ async function onDownloadPdf() {
   display: flex;
   align-items: center;
   justify-content: center;
-  flex-shrink: 0;
 }
 
 .download-icon-btn:disabled {

@@ -316,6 +316,7 @@ function statusLabel(status: PointRedemption['status']) {
 
 .redeem-btn {
   width: 100%;
+  min-height: 50px;
   background: linear-gradient(135deg, #84cc16 0%, #65a30d 100%);
   color: #052e16;
   border: none;
@@ -328,6 +329,7 @@ function statusLabel(status: PointRedemption['status']) {
   position: relative;
   z-index: 1;
   transition: transform 0.15s ease;
+  box-sizing: border-box;
 }
 
 .redeem-btn:active:not(:disabled) {
@@ -393,6 +395,7 @@ function statusLabel(status: PointRedemption['status']) {
 
 .submit-btn {
   width: 100%;
+  min-height: 50px;
   background: linear-gradient(135deg, #0a2472 0%, #001845 100%);
   color: #ffffff;
   border: none;
@@ -402,6 +405,7 @@ function statusLabel(status: PointRedemption['status']) {
   font-weight: 800;
   cursor: pointer;
   box-shadow: 0 8px 20px -6px rgba(10, 36, 114, 0.4);
+  box-sizing: border-box;
 }
 
 .submit-btn:disabled {
@@ -466,11 +470,15 @@ function statusLabel(status: PointRedemption['status']) {
   padding: 28px 20px;
   width: 100%;
   max-width: 360px;
+  max-height: 90vh;
+  max-height: 90dvh;
+  overflow-y: auto;
   text-align: center;
   box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
   display: flex;
   flex-direction: column;
   align-items: center;
+  box-sizing: border-box;
 }
 
 .modal-title {
@@ -504,6 +512,7 @@ function statusLabel(status: PointRedemption['status']) {
 
 .modal-btn {
   width: 100%;
+  min-height: 48px;
   background: linear-gradient(135deg, #84cc16 0%, #65a30d 100%);
   color: #052e16;
   border: none;
@@ -513,6 +522,7 @@ function statusLabel(status: PointRedemption['status']) {
   font-weight: 800;
   cursor: pointer;
   box-shadow: 0 8px 20px rgba(132, 204, 22, 0.3);
+  box-sizing: border-box;
 }
 
 .success-checkmark {

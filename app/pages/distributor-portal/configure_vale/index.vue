@@ -336,9 +336,9 @@ const volver = () => {
   right: 0;
   bottom: 0;
   width: 100vw;
-  height: 100vh;
   background-color: #f1f5f9;
   overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
   font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
 }
 
@@ -347,6 +347,7 @@ const volver = () => {
   max-width: 480px;
   margin: 0 auto;
   min-height: 100vh;
+  min-height: 100dvh;
   display: flex;
   flex-direction: column;
   background-color: #f1f5f9;
@@ -390,10 +391,11 @@ const volver = () => {
 }
 
 .content-body {
-  padding: 16px;
+  padding: 16px 16px calc(24px + env(safe-area-inset-bottom)) 16px;
   display: flex;
   flex-direction: column;
   gap: 18px;
+  box-sizing: border-box;
 }
 
 /* CLIENTE SELECCIONADO */
@@ -585,6 +587,7 @@ const volver = () => {
 /* BOTÓN PRINCIPAL */
 .submit-btn {
   width: 100%;
+  min-height: 50px;
   background: linear-gradient(135deg, #84cc16 0%, #65a30d 100%);
   color: #052e16;
   border: none;
@@ -596,6 +599,7 @@ const volver = () => {
   margin-top: 4px;
   box-shadow: 0 8px 20px rgba(132, 204, 22, 0.3);
   transition: transform 0.15s ease, box-shadow 0.15s ease;
+  box-sizing: border-box;
 }
 
 .submit-btn:active:not(:disabled) {
@@ -630,11 +634,15 @@ const volver = () => {
   padding: 28px 20px;
   width: 100%;
   max-width: 360px;
+  max-height: 90vh;
+  max-height: 90dvh;
+  overflow-y: auto;
   text-align: center;
   box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
   display: flex;
   flex-direction: column;
   align-items: center;
+  box-sizing: border-box;
 }
 
 .modal-title {
@@ -672,6 +680,7 @@ const volver = () => {
 
 .modal-btn {
   width: 100%;
+  min-height: 48px;
   background: linear-gradient(135deg, #84cc16 0%, #65a30d 100%);
   color: #052e16;
   border: none;
@@ -681,6 +690,8 @@ const volver = () => {
   font-weight: 800;
   cursor: pointer;
   box-shadow: 0 8px 20px rgba(132, 204, 22, 0.3);
+  box-sizing: border-box;
+  flex-shrink: 0;
 }
 
 /* ANIMACIÓN CHECKMARK */

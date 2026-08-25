@@ -100,8 +100,8 @@ const money = (value: number, maximumFractionDigits = 0) => {
 }
 
 .logout-btn {
-  width: 30px;
-  height: 30px;
+  width: 34px;
+  height: 34px;
   flex-shrink: 0;
   border: 1px solid #e2e8f0;
   border-radius: 9px;

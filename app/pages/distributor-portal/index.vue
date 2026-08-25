@@ -7,7 +7,7 @@ definePageMeta({
   layout: 'distributor-portal'
 })
 
-const { user, logout } = useAuth()
+const { user, logout, fetchMe } = useAuth()
 const { listMyVouchers, listMyVoucherRequests } = useVouchers()
 
 const loading = ref(true)
@@ -96,7 +96,14 @@ async function loadVouchers() {
   }
 }
 
-onMounted(loadVouchers)
+onMounted(() => {
+  // El crédito disponible puede haber cambiado (se aparta desde que se
+  // solicita un vale, no hasta que se aprueba) desde la última vez que se
+  // guardó la sesión, así que se refresca cada vez que se entra a esta
+  // pantalla en vez de confiar en el dato viejo de la cookie.
+  fetchMe()
+  loadVouchers()
+})
 
 const distributorName = computed(() => {
   const person = user.value?.person

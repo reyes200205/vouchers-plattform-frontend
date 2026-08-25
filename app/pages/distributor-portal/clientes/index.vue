@@ -345,9 +345,9 @@ const volver = () => {
   right: 0;
   bottom: 0;
   width: 100vw;
-  height: 100vh;
   background-color: #f1f5f9;
   overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
   font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
 }
 
@@ -356,6 +356,7 @@ const volver = () => {
   max-width: 480px;
   margin: 0 auto;
   min-height: 100vh;
+  min-height: 100dvh;
   display: flex;
   flex-direction: column;
   background-color: #f1f5f9;
@@ -398,10 +399,11 @@ const volver = () => {
 }
 
 .form-body {
-  padding: 18px 16px 110px 16px;
+  padding: 18px 16px calc(32px + env(safe-area-inset-bottom)) 16px;
   display: flex;
   flex-direction: column;
   gap: 16px;
+  box-sizing: border-box;
 }
 
 .error-banner {
@@ -474,6 +476,8 @@ const volver = () => {
 }
 
 .submit-btn {
+  width: 100%;
+  min-height: 50px;
   margin-top: 10px;
   background: linear-gradient(135deg, #84cc16 0%, #65a30d 100%);
   color: #052e16;
@@ -485,6 +489,7 @@ const volver = () => {
   cursor: pointer;
   box-shadow: 0 8px 20px rgba(132, 204, 22, 0.3);
   transition: transform 0.15s ease, box-shadow 0.15s ease;
+  box-sizing: border-box;
 }
 
 .submit-btn:active {

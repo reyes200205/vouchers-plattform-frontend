@@ -79,11 +79,9 @@ const isPuntosActive = computed(() => currentRoute.value.startsWith('/distributo
 .layout-shell {
   position: fixed;
   inset: 0;
-  width: 100vw;
-  height: 100dvh;
-  height: 100vh;
   display: flex;
   justify-content: center;
+  align-items: stretch;
   background: radial-gradient(circle at 50% 0%, #0a2472 0%, #001845 55%, #000d29 100%);
   font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
 }
@@ -91,8 +89,6 @@ const isPuntosActive = computed(() => currentRoute.value.startsWith('/distributo
 .layout-wrapper {
   width: 100%;
   max-width: 480px;
-  height: 100dvh;
-  height: 100vh;
   display: flex;
   flex-direction: column;
   background-color: #f4f7fc;

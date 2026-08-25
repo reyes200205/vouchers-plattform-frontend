@@ -150,10 +150,10 @@ const volver = () => {
   right: 0;
   bottom: 0;
   width: 100vw;
-  height: 100vh;
   background-color: #f1f5f9;
   overflow-y: auto;
   overflow-x: hidden;
+  -webkit-overflow-scrolling: touch;
   font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
 }
 
@@ -162,6 +162,7 @@ const volver = () => {
   max-width: 480px;
   margin: 0 auto;
   min-height: 100vh;
+  min-height: 100dvh;
   display: flex;
   flex-direction: column;
   background-color: #f1f5f9;
@@ -206,10 +207,11 @@ const volver = () => {
 
 /* CUERPO DE CONTENIDO */
 .content-body {
-  padding: 16px;
+  padding: 16px 16px calc(20px + env(safe-area-inset-bottom)) 16px;
   display: flex;
   flex-direction: column;
   gap: 16px;
+  box-sizing: border-box;
 }
 
 /* BUSCADOR */
