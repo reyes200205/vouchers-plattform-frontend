@@ -37,8 +37,6 @@ function fmtGender(value: string | null | undefined) {
   return GENDER_LABELS[value] ?? value
 }
 
-
-
 // family_data_json llega anidado tal cual lo arma registro-verificacion/new.vue
 // (members / occupation / housing.work_reference), no como pares planos — ver
 // ApplicationFamilyData en useApplications.ts.
@@ -73,20 +71,34 @@ const corrections = computed(() => props.detail.verifier_corrections_json ?? [])
 // Evidencia fotográfica de las DOS etapas: lo que subió la coordinadora al
 // capturar la solicitud (INE, comprobante) y lo que subió el verificador en
 // la visita (fachada, identificación con la persona).
-const coordinatorPhotos = computed(() => {
-  const items: { label: string, url: string }[] = []
-  if (props.detail.id_front_url) items.push({ label: 'INE (frente)', url: props.detail.id_front_url })
-  if (props.detail.id_back_url) items.push({ label: 'INE (reverso)', url: props.detail.id_back_url })
-  if (props.detail.proof_of_address_url) items.push({ label: 'Comprobante de domicilio', url: props.detail.proof_of_address_url })
+//
+// Se distingue "nunca se subió" (no hay *_path -> no aparece en la lista) de
+// "se subió pero ahora mismo no se pudo generar el link" (hay *_path pero
+// *_url vino null porque SpacesStorageService::temporaryUrlFor() atrapo un
+// error -- credenciales, red, etc. -- y lo reporto en el log en vez de
+// tumbar toda la pantalla). Antes ambos casos se veian identicos: la foto
+// simplemente no aparecia, como si jamas se hubiera cargado, lo cual
+// confundia "esto nunca se subio" con "esto fallo al mostrarse ahora".
+interface EvidencePhoto {
+  label: string
+  url: string | null
+  broken: boolean
+}
+
+const coordinatorPhotos = computed<EvidencePhoto[]>(() => {
+  const items: EvidencePhoto[] = []
+  if (props.detail.id_front_path) items.push({ label: 'INE (frente)', url: props.detail.id_front_url ?? null, broken: !props.detail.id_front_url })
+  if (props.detail.id_back_path) items.push({ label: 'INE (reverso)', url: props.detail.id_back_url ?? null, broken: !props.detail.id_back_url })
+  if (props.detail.proof_of_address_path) items.push({ label: 'Comprobante de domicilio', url: props.detail.proof_of_address_url ?? null, broken: !props.detail.proof_of_address_url })
   return items
 })
 
-const verifierPhotos = computed(() => {
+const verifierPhotos = computed<EvidencePhoto[]>(() => {
   const verification = props.detail.verification
-  const items: { label: string, url: string }[] = []
-  if (verification?.front_photo_url) items.push({ label: 'Foto de fachada', url: verification.front_photo_url })
-  if (verification?.id_with_person_photo_url) items.push({ label: 'Identificación con la persona', url: verification.id_with_person_photo_url })
-  if (verification?.proof_of_address_photo_url) items.push({ label: 'Comprobante de domicilio (visita)', url: verification.proof_of_address_photo_url })
+  const items: EvidencePhoto[] = []
+  if (verification?.front_photo) items.push({ label: 'Foto de fachada', url: verification.front_photo_url ?? null, broken: !verification.front_photo_url })
+  if (verification?.id_with_person_photo) items.push({ label: 'Identificación con la persona', url: verification.id_with_person_photo_url ?? null, broken: !verification.id_with_person_photo_url })
+  if (verification?.proof_of_address_photo) items.push({ label: 'Comprobante de domicilio (visita)', url: verification.proof_of_address_photo_url ?? null, broken: !verification.proof_of_address_photo_url })
   return items
 })
 </script>
@@ -461,13 +473,23 @@ const verifierPhotos = computed(() => {
         <div class="grid grid-cols-2 gap-3 sm:grid-cols-3">
           <a
             v-for="photo in coordinatorPhotos"
-            :key="photo.url"
-            :href="photo.url"
-            target="_blank"
+            :key="photo.label"
+            :href="photo.url ?? undefined"
+            :target="photo.url ? '_blank' : undefined"
             rel="noopener"
-            class="group block overflow-hidden rounded-lg border border-default"
+            class="group block overflow-hidden rounded-lg border"
+            :class="photo.broken ? 'border-error/40 cursor-default' : 'border-default'"
           >
-            <img :src="photo.url" :alt="photo.label" class="aspect-square w-full object-cover transition group-hover:opacity-80">
+            <div v-if="photo.broken" class="flex aspect-square w-full flex-col items-center justify-center gap-1 bg-error/5 p-2 text-center">
+              <UIcon name="i-lucide-image-off" class="size-5 text-error" />
+              <p class="text-[11px] text-error">No se pudo cargar</p>
+            </div>
+            <img
+              v-else
+              :src="photo.url!"
+              :alt="photo.label"
+              class="aspect-square w-full object-cover transition group-hover:opacity-80"
+            >
             <p class="truncate px-2 py-1 text-xs text-muted">{{ photo.label }}</p>
           </a>
         </div>
@@ -480,13 +502,23 @@ const verifierPhotos = computed(() => {
         <div class="grid grid-cols-2 gap-3 sm:grid-cols-3">
           <a
             v-for="photo in verifierPhotos"
-            :key="photo.url"
-            :href="photo.url"
-            target="_blank"
+            :key="photo.label"
+            :href="photo.url ?? undefined"
+            :target="photo.url ? '_blank' : undefined"
             rel="noopener"
-            class="group block overflow-hidden rounded-lg border border-default"
+            class="group block overflow-hidden rounded-lg border"
+            :class="photo.broken ? 'border-error/40 cursor-default' : 'border-default'"
           >
-            <img :src="photo.url" :alt="photo.label" class="aspect-square w-full object-cover transition group-hover:opacity-80">
+            <div v-if="photo.broken" class="flex aspect-square w-full flex-col items-center justify-center gap-1 bg-error/5 p-2 text-center">
+              <UIcon name="i-lucide-image-off" class="size-5 text-error" />
+              <p class="text-[11px] text-error">No se pudo cargar</p>
+            </div>
+            <img
+              v-else
+              :src="photo.url!"
+              :alt="photo.label"
+              class="aspect-square w-full object-cover transition group-hover:opacity-80"
+            >
             <p class="truncate px-2 py-1 text-xs text-muted">{{ photo.label }}</p>
           </a>
         </div>
