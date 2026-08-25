@@ -14510,7 +14510,7 @@ var virtual_nuxt_node_modules_2F_cache_2Fnuxt_2F_nuxt_2Froutes_default = [
 	{
 		name: "registro-verificacion-verificador-solicitudes",
 		path: "/registro-verificacion/verificador/solicitudes",
-		component: () => import('../build/solicitudes-CuN8cgS3.mjs')
+		component: () => import('../build/solicitudes-GTqTouWJ.mjs')
 	},
 	{
 		name: "general-staff-id",
@@ -14588,7 +14588,7 @@ var virtual_nuxt_node_modules_2F_cache_2Fnuxt_2F_nuxt_2Froutes_default = [
 		name: "general-inbox",
 		path: "/general/inbox",
 		meta: { "middleware": "approvals-inbox-channel" },
-		component: () => import('../build/inbox-Cd60rs2r.mjs')
+		component: () => import('../build/inbox-D75abCNL.mjs')
 	},
 	{
 		name: "general-logs",
