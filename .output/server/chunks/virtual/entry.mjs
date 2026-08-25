@@ -14489,17 +14489,17 @@ var virtual_nuxt_node_modules_2F_cache_2Fnuxt_2F_nuxt_2Froutes_default = [
 	{
 		name: "general-staff-new",
 		path: "/general/staff/new",
-		component: () => import('../build/new-CwC77sGn.mjs')
+		component: () => import('../build/new-GPIyobNq.mjs')
 	},
 	{
 		name: "registro-verificacion-coordinador-distributors",
 		path: "/registro-verificacion/coordinador/distributors",
-		component: () => import('../build/distributors-zeP3hNDX.mjs')
+		component: () => import('../build/distributors-DLlBIai6.mjs')
 	},
 	{
 		name: "registro-verificacion-coordinador-list",
 		path: "/registro-verificacion/coordinador/list",
-		component: () => import('../build/list-4-RfRcWm.mjs')
+		component: () => import('../build/list-NHjPT82s.mjs')
 	},
 	{
 		name: "registro-verificacion-verificador-dashboard_verificador",
@@ -14514,7 +14514,7 @@ var virtual_nuxt_node_modules_2F_cache_2Fnuxt_2F_nuxt_2Froutes_default = [
 	{
 		name: "general-staff-id",
 		path: "/general/staff/:id()",
-		component: () => import('../build/_id_-Cv3cRvcx.mjs')
+		component: () => import('../build/_id_-CAktEC2e.mjs')
 	},
 	{
 		name: "distributor-portal-clientes",
@@ -14547,10 +14547,16 @@ var virtual_nuxt_node_modules_2F_cache_2Fnuxt_2F_nuxt_2Froutes_default = [
 		component: () => import('../build/points-Hs-TGCXZ.mjs')
 	},
 	{
+		name: "distributor-portal-transferencias",
+		path: "/distributor-portal/transferencias",
+		meta: { layout: false },
+		component: () => import('../build/transferencias-DUW_FHb8.mjs')
+	},
+	{
 		name: "distributor-portal-vales",
 		path: "/distributor-portal/vales",
 		meta: { layout: false },
-		component: () => import('../build/vales-2Xopq1IU.mjs')
+		component: () => import('../build/vales-D1jk0nH_.mjs')
 	},
 	{
 		name: "general-branches",
@@ -14570,7 +14576,7 @@ var virtual_nuxt_node_modules_2F_cache_2Fnuxt_2F_nuxt_2Froutes_default = [
 	{
 		name: "general-cutoffs",
 		path: "/general/cutoffs",
-		component: () => import('../build/cutoffs-dvwh37pL.mjs')
+		component: () => import('../build/cutoffs-BLwH-l4I.mjs')
 	},
 	{
 		name: "general-distributors",
@@ -14581,7 +14587,7 @@ var virtual_nuxt_node_modules_2F_cache_2Fnuxt_2F_nuxt_2Froutes_default = [
 		name: "general-inbox",
 		path: "/general/inbox",
 		meta: { "middleware": "approvals-inbox-channel" },
-		component: () => import('../build/inbox-BnF2dO5m.mjs')
+		component: () => import('../build/inbox-Cd60rs2r.mjs')
 	},
 	{
 		name: "general-logs",
@@ -14647,7 +14653,7 @@ var virtual_nuxt_node_modules_2F_cache_2Fnuxt_2F_nuxt_2Froutes_default = [
 	{
 		name: "login",
 		path: "/login",
-		component: () => import('../build/login-WoGepBRC.mjs')
+		component: () => import('../build/login-BSB141h6.mjs')
 	},
 	{
 		name: "registro-verificacion",
