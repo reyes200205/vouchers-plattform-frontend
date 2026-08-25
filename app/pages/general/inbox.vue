@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import type { CustomerChangeRequest, InboxData, PaginatedData } from '~/types'
+import { useCustomerTransfers, type CustomerTransferRequest } from '~/composables/useCustomerTransfers'
 
 definePageMeta({
   middleware: 'approvals-inbox-channel'
@@ -8,6 +9,7 @@ definePageMeta({
 const { listInbox } = useInbox()
 const { listBranches } = useBranches()
 const { listCustomerChangeRequests } = useCustomers()
+const { listCoordinatorTransfers } = useCustomerTransfers()
 const { user } = useAuth()
 
 const toast = useToast()
@@ -15,6 +17,7 @@ const branchId = ref<number | null>(null)
 const branches = ref<{ id: number, name: string }[]>([])
 
 const canApproveCustomers = computed(() => user.value?.permissions?.includes('customers.update.approve') ?? false)
+const canDecideTransfers = computed(() => user.value?.permissions?.includes('customers.transfer.decide') ?? false)
 
 const emptyChangeRequestsPage: PaginatedData<CustomerChangeRequest> = {
   data: [],
@@ -30,6 +33,21 @@ const { data: customerRequests, refresh: refreshCustomerRequests } = await useAs
 })
 
 const pendingCustomerRequests = computed(() => customerRequests.value.data ?? [])
+
+const emptyTransfersPage: PaginatedData<CustomerTransferRequest> = {
+  data: [],
+  links: [],
+  meta: { current_page: 1, last_page: 1, per_page: 15, total: 0 }
+}
+
+const { data: transferRequests, refresh: refreshTransferRequests } = await useAsyncData('inbox-customer-transfers', () => {
+  if (!canDecideTransfers.value) return Promise.resolve(emptyTransfersPage)
+  return listCoordinatorTransfers({ status: 'PENDIENTE_COORDINADOR' })
+}, {
+  default: () => emptyTransfersPage
+})
+
+const pendingTransferRequests = computed(() => transferRequests.value.data ?? [])
 
 const tabItems = computed(() => {
   const totals = data.value
@@ -52,6 +70,13 @@ const tabItems = computed(() => {
     items.push({
       label: `Clientes (${pendingCustomerRequests.value.length})`,
       value: 'customers'
+    })
+  }
+
+  if (canDecideTransfers.value) {
+    items.push({
+      label: `Transferencias (${pendingTransferRequests.value.length})`,
+      value: 'transfers'
     })
   }
 
@@ -99,6 +124,7 @@ watch(error, async (e) => {
 async function onDecided() {
   await refresh()
   await refreshCustomerRequests()
+  await refreshTransferRequests()
 
   toast.add({
     title: 'Lista actualizada',
@@ -166,6 +192,10 @@ async function onDecided() {
 
         <div v-else-if="selectedTab === 'customers'" class="h-full overflow-y-auto">
           <InboxCustomersPanel :items="pendingCustomerRequests" @decided="onDecided" />
+        </div>
+
+        <div v-else-if="selectedTab === 'transfers'" class="h-full overflow-y-auto">
+          <InboxCustomerTransfersPanel :items="pendingTransferRequests" @decided="onDecided" />
         </div>
 
         <div v-else-if="selectedTab === 'reconciliations'" class="h-full overflow-y-auto">
