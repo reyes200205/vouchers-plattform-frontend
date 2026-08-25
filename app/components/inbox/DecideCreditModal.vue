@@ -99,7 +99,7 @@ async function onSubmit(event: FormSubmitEvent<Schema>) {
           <UInput
             v-model="state.approved_amount"
             type="number"
-            min="0.01"
+            min="0"
             step="100"
             placeholder="20000"
             class="w-full"

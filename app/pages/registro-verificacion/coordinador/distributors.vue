@@ -85,6 +85,11 @@ const columns: TableColumn<Distributor>[] = [
     }
   },
   {
+    accessorKey: 'available_credit',
+    header: 'Crédito Disponible',
+    cell: ({ row }) => money.format(Number(row.original.available_credit || 0))
+  },
+  {
     accessorKey: 'branch',
     header: 'Sucursal',
     cell: ({ row }) => row.original.branch?.name ?? '—'

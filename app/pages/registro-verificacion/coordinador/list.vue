@@ -5,6 +5,9 @@ import { applicantFullName, verifierDisplayName, APPLICATION_STATUS_LABELS } fro
 import type { Application, ApplicationStatus } from '~/composables/useApplications'
 import type { PendingVoucherRequest } from '~/types'
 import type { CreditIncreaseRequest, CreditIncreaseRequestStatus } from '~/composables/useCreditIncrease'
+import type { CustomerTransferRequest } from '~/composables/useCustomerTransfers'
+import { CUSTOMER_TRANSFER_STATUS_LABELS } from '~/composables/useCustomerTransfers'
+import { customerFullName } from '~/composables/useCustomers'
 
 const UButton = resolveComponent('UButton')
 const UBadge = resolveComponent('UBadge')
@@ -14,6 +17,7 @@ const { roleCode, user } = useAuth()
 const isCoordinator = computed(() => roleCode.value === 'coordinator')
 const canApproveVouchers = computed(() => user.value?.permissions?.includes('vouchers.approve') ?? false)
 const canPreAuthorizeCredit = computed(() => user.value?.permissions?.includes('credit-increase.pre-authorize') ?? false)
+const canDecideTransfers = computed(() => user.value?.permissions?.includes('customers.transfer.decide') ?? false)
 
 const { listApplications } = useApplications()
 const { listPendingVoucherRequests } = useVouchers()
@@ -143,6 +147,9 @@ const tabItems = computed(() => {
   ]
   if (canApproveVouchers.value) {
     items.push({ label: 'Vales Digitales', value: 'vouchers', icon: 'i-lucide-ticket' })
+  }
+  if (canDecideTransfers.value) {
+    items.push({ label: 'Transferencias de Cliente', value: 'transfers', icon: 'i-lucide-repeat' })
   }
   return items
 })
@@ -307,6 +314,64 @@ const creditIncreaseColumns: TableColumn<CreditIncreaseRequest>[] = [
     ])
   }
 ]
+
+// Tab "Transferencias de Cliente": solicitudes en PENDIENTE_COORDINADOR (ya
+// aceptadas por la distribuidora destino, esperando la autorización del
+// coordinador de la sucursal de origen -- GET /customer-transfer-requests ya
+// viene filtrado por sucursal en el backend, ver
+// Coordinator\CustomerTransferController::index).
+const { listCoordinatorTransfers } = useCustomerTransfers()
+
+const { data: transferRequestsData, status: transferRequestsStatus, refresh: refreshTransferRequests } = await useAsyncData(
+  'registro-verificacion-coordinador-transfers',
+  async () => {
+    if (!isCoordinator.value || !canDecideTransfers.value) {
+      return { data: [], meta: { current_page: 1, last_page: 1, per_page: 15, total: 0 } }
+    }
+    return listCoordinatorTransfers({ status: 'PENDIENTE_COORDINADOR' })
+  },
+  { default: () => ({ data: [], meta: { current_page: 1, last_page: 1, per_page: 15, total: 0 } }) }
+)
+
+const transferRequests = computed(() => transferRequestsData.value.data ?? [])
+
+async function onTransferDecided() {
+  await refreshTransferRequests()
+}
+
+const transferColumns: TableColumn<CustomerTransferRequest>[] = [
+  {
+    accessorKey: 'customer',
+    header: 'Cliente',
+    cell: ({ row }) => customerFullName(row.original.customer?.person)
+  },
+  {
+    accessorKey: 'source_distributor',
+    header: 'Distribuidora origen',
+    cell: ({ row }) => row.original.source_distributor?.distributor_number ?? `#${row.original.source_distributor_id}`
+  },
+  {
+    accessorKey: 'destination_distributor',
+    header: 'Distribuidora destino',
+    cell: ({ row }) => row.original.destination_distributor?.distributor_number ?? `#${row.original.destination_distributor_id}`
+  },
+  {
+    accessorKey: 'status',
+    header: 'Estado',
+    cell: ({ row }) => h(UBadge, { variant: 'subtle', color: 'warning' }, () => CUSTOMER_TRANSFER_STATUS_LABELS[row.original.status])
+  },
+  {
+    accessorKey: 'created_at',
+    header: 'Fecha',
+    cell: ({ row }) => fmtDate(row.original.created_at)
+  },
+  {
+    id: 'actions',
+    cell: ({ row }) => h('div', { class: 'text-right' }, [
+      h(resolveComponent('CustomerTransfersDecideModal'), { item: row.original, onDecided: onTransferDecided })
+    ])
+  }
+]
 </script>
 
 <template>
@@ -457,6 +522,42 @@ const creditIncreaseColumns: TableColumn<CreditIncreaseRequest>[] = [
               :items-per-page="voucherRequestsMeta.per_page"
             />
           </div>
+        </div>
+
+        <div v-else-if="selectedTab === 'transfers'" class="space-y-4">
+          <h3 class="font-semibold text-base">
+            Transferencias de Cliente Pendientes de Autorización
+          </h3>
+
+          <UAlert
+            v-if="!canDecideTransfers"
+            color="warning"
+            variant="subtle"
+            icon="i-lucide-lock"
+            title="Sin permiso"
+            description="Tu usuario no tiene la habilidad customers.transfer.decide necesaria para ver estas solicitudes."
+          />
+
+          <UTable
+            v-else
+            :data="transferRequests"
+            :columns="transferColumns"
+            :loading="transferRequestsStatus === 'pending'"
+            :ui="{
+              base: 'table-fixed border-separate border-spacing-0',
+              thead: '[&>tr]:bg-elevated/50 [&>tr]:after:content-none',
+              tbody: '[&>tr]:last:[&>td]:border-b-0',
+              th: 'py-2 first:rounded-l-lg last:rounded-r-lg border-y border-default first:border-l last:border-r',
+              td: 'border-b border-default',
+              separator: 'h-0'
+            }"
+          >
+            <template #empty>
+              <div class="text-sm text-center py-8 text-dimmed">
+                No hay transferencias de cliente pendientes de autorización.
+              </div>
+            </template>
+          </UTable>
         </div>
 
         <ApplicationsAssignVerifierModal
