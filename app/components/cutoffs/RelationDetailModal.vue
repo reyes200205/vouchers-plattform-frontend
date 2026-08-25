@@ -92,6 +92,24 @@ const hasCarryover = computed(() => (props.relation?.items ?? []).some(isCarryov
 const totalCommissionForfeited = computed(() => {
   return (props.relation?.items ?? []).reduce((sum, item) => sum + Number(item.commission_forfeited_amount ?? 0), 0)
 })
+
+// La tabla de "Vales incluidos" antes se mostraba en el orden en que venían
+// del backend, que intercala vales de distintos clientes sin ningún orden
+// -- salteado. Aquí se agrupan por cliente (alfabético) y, dentro de cada
+// cliente, por número de quincena, para que sea legible.
+const sortedItems = computed(() => {
+  const items = props.relation?.items ?? []
+
+  function customerLabel(item: typeof items[number]): string {
+    return item.customer?.person ? customerFullName(item.customer.person) : `Cliente #${item.customer_id}`
+  }
+
+  return [...items].sort((a, b) => {
+    const nameCompare = customerLabel(a).localeCompare(customerLabel(b), 'es-MX')
+    if (nameCompare !== 0) return nameCompare
+    return (a.installment_number ?? 0) - (b.installment_number ?? 0)
+  })
+})
 </script>
 
 <template>
@@ -233,7 +251,7 @@ const totalCommissionForfeited = computed(() => {
                 </tr>
               </thead>
               <tbody>
-                <tr v-for="item in relation.items" :key="item.id" class="border-b border-default last:border-0">
+                <tr v-for="item in sortedItems" :key="item.id" class="border-b border-default last:border-0">
                   <td class="py-2 pr-3">
                     <UBadge
                       :color="isCarryover(item) ? 'warning' : 'neutral'"
