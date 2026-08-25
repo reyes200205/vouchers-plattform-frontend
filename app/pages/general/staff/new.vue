@@ -53,7 +53,12 @@ const schema = z.object({
   state: z.string().min(1, 'El estado es obligatorio').max(120, 'Muy largo'),
   postal_code: z.string().min(5, 'Código postal inválido').max(10, 'Muy largo'),
   username: z.string().email('Correo inválido').max(80, 'Muy largo'),
-  password: z.string().min(8, 'Mínimo 8 caracteres'),
+  password: z.string()
+    .min(22, 'Mínimo 22 caracteres')
+    .regex(/[a-z]/, 'Debe contener al menos una letra minúscula')
+    .regex(/[A-Z]/, 'Debe contener al menos una letra mayúscula')
+    .regex(/[0-9]/, 'Debe contener al menos un número')
+    .regex(/[^A-Za-z0-9]/, 'Debe contener al menos un carácter especial o símbolo'),
   role_code: z.string().min(1, 'Selecciona un rol'),
   branch_id: z.any().optional(),
 }).superRefine((data, ctx) => {
@@ -76,6 +81,48 @@ const { listBranches } = useBranches()
 const toast = useToast()
 const router = useRouter()
 const submitting = ref(false)
+const showPassword = ref(false)
+
+const generateStrongPassword = () => {
+  const lower = 'abcdefghijklmnopqrstuvwxyz'
+  const upper = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'
+  const number = '0123456789'
+  const special = '!@#$%^&*()_+?~'
+  
+  let password = ''
+  // Asegurar al menos uno de cada conjunto para cumplir la validación fuerte
+  password += lower[Math.floor(Math.random() * lower.length)]
+  password += upper[Math.floor(Math.random() * upper.length)]
+  password += number[Math.floor(Math.random() * number.length)]
+  password += special[Math.floor(Math.random() * special.length)]
+  
+  // Rellenar hasta 24 caracteres
+  const allChars = lower + upper + number + special
+  for (let i = 0; i < 20; i++) {
+    password += allChars[Math.floor(Math.random() * allChars.length)]
+  }
+  
+  // Barajar caracteres
+  password = password.split('').sort(() => 0.5 - Math.random()).join('')
+  
+  state.password = password
+  showPassword.value = true // Mostrarla para que sea visible
+  
+  if (navigator.clipboard) {
+    navigator.clipboard.writeText(password)
+    toast.add({
+      title: 'Contraseña generada',
+      description: 'Contraseña generada y copiada al portapapeles.',
+      color: 'success'
+    })
+  } else {
+    toast.add({
+      title: 'Contraseña generada',
+      description: `Contraseña: ${password}`,
+      color: 'success'
+    })
+  }
+}
 
 const branchManagerBranchId = computed(() => {
   return user.value?.roles?.find(r => r.code === 'branch_manager' && r.branch_id !== null)?.branch_id ?? null
@@ -331,12 +378,33 @@ const formRef = ref<any>(null)
               <h3 class="font-semibold text-base">Datos de Acceso y Permisos</h3>
             </template>
 
-            <div class="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-4">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
               <UFormField required label="Nombre de usuario (Email)" name="username">
                 <UInput v-model="state.username" class="w-full" />
               </UFormField>
               <UFormField required label="Contraseña" name="password">
-                <UInput v-model="state.password" type="password" class="w-full" />
+                <div class="flex gap-2 items-center w-full">
+                  <UInput
+                    v-model="state.password"
+                    :type="showPassword ? 'text' : 'password'"
+                    class="flex-1"
+                    placeholder="Contraseña del usuario"
+                  />
+                  <UButton
+                    type="button"
+                    color="neutral"
+                    variant="subtle"
+                    :icon="showPassword ? 'i-lucide-eye-off' : 'i-lucide-eye'"
+                    @click="showPassword = !showPassword"
+                  />
+                  <UButton
+                    type="button"
+                    color="primary"
+                    variant="solid"
+                    label="Generar"
+                    @click="generateStrongPassword"
+                  />
+                </div>
               </UFormField>
               <UFormField required label="Rol" name="role_code">
                 <USelect
