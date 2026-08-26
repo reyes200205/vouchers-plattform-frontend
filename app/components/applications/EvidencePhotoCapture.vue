@@ -78,8 +78,8 @@ async function uploadPhoto(file: File) {
   } catch (e) {
     console.error(e)
     toast.add({
-      title: 'Error',
-      description: `No se pudo subir "${props.label}". Intenta de nuevo.`,
+      title: 'No se pudo subir la imagen',
+      description: extractApiErrorMessage(e, `No se pudo subir "${props.label}". Intenta de nuevo.`),
       color: 'error'
     })
     if (previewUrl.value) URL.revokeObjectURL(previewUrl.value)
